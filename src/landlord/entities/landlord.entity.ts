@@ -5,6 +5,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
   Relation,
@@ -23,18 +24,23 @@ export class Landlord extends BaseEntity {
   landLordName: string;
 
   // documents ----
-  @Column({ nullable: true })
+  @OneToOne(() => File, { nullable: true, eager: true })
   govermentIdDocument: Relation<File>;
 
-  @Column({ nullable: true })
+  @OneToOne(() => File, { nullable: true, eager: true })
   landSurveyDocument: Relation<File>;
 
-  @Column({ nullable: true })
+  @OneToOne(() => File, { nullable: true, eager: true })
   proofOfOwnershipDocument: Relation<File>;
 
-  @Column({ nullable: true })
+  @OneToOne(() => File, { nullable: true, eager: true })
   taxIdentificationNumberDocument: Relation<File>;
-  // --- documents
+
+  @ManyToOne(() => User, { nullable: true, eager: true })
+  approvedBy: Relation<User>;
+
+  @Column({ nullable: true })
+  approvedDate: Date;
 
   @Column({ default: true })
   isActive: boolean;

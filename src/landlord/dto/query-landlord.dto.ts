@@ -1,4 +1,11 @@
-import { IsBoolean, IsOptional, IsString, IsUUID } from 'class-validator';
+import {
+  IsBoolean,
+  IsNumber,
+  // IsNumberString,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 
 export class QueryLandlordDto {
   @IsUUID('all')
@@ -20,4 +27,12 @@ export class QueryLandlordDto {
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;
+
+  @IsNumber()
+  @IsOptional()
+  page?: number;
+
+  @IsNumber()
+  @IsOptional()
+  limit?: number;
 }

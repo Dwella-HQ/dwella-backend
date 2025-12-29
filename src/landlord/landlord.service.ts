@@ -6,6 +6,9 @@ import { Landlord } from './entities/landlord.entity';
 import { Repository } from 'typeorm';
 import { UserService } from 'src/user/user.service';
 import { FileService } from 'src/file/file.service';
+import { User } from 'src/user/entities/user.entity';
+import { EmailService } from 'src/notification/email/email.service';
+import { QueryLandlordDto } from './dto/query-landlord.dto';
 
 @Injectable()
 export class LandlordService {
@@ -14,6 +17,7 @@ export class LandlordService {
     private readonly landlordRepository: Repository<Landlord>,
     private readonly userService: UserService,
     private readonly fileService: FileService,
+    private readonly emailService: EmailService,
   ) {}
   async create(createLandlordDto: CreateLandlordDto) {
     const user = await this.userService.findOne(createLandlordDto.userId);
@@ -51,8 +55,90 @@ export class LandlordService {
     return await this.landlordRepository.save(landlord);
   }
 
+  async approveLandlord(id: string, approvedBy: User) {
+    const landlord = await this.findOne(id);
+    landlord.isApproved = true;
+    landlord.approvedBy = approvedBy;
+    landlord.approvedDate = new Date();
+    const updatedLandlord = await this.landlordRepository.save(landlord);
+    await this.emailService.sendMailToUser({
+      context: {
+        name: landlord.landLordName,
+        dashboardLink: `${process.env.FRONTEND_URL}/landlord/dashboard`,
+      },
+      subject: 'Your Landlord Application is Approved',
+      template: 'landlord-approval',
+      user: landlord.user,
+    });
+    return updatedLandlord;
+  }
+
   findAll() {
-    return `This action returns all landlord`;
+    const landlords = this.landlordRepository.find({
+      relations: {
+        govermentIdDocument: true,
+        landSurveyDocument: true,
+        proofOfOwnershipDocument: true,
+        taxIdentificationNumberDocument: true,
+        user: true,
+      },
+    });
+    return landlords;
+  }
+
+  async query(queryLandlordDto: QueryLandlordDto) {
+    const {
+      isActive,
+      isApproved,
+      landLordName,
+      landlordId,
+      userId,
+      limit = 10,
+      page = 1,
+    } = queryLandlordDto;
+
+    const queryBuilder = this.landlordRepository
+      .createQueryBuilder('landlord')
+      .leftJoinAndSelect('landlord.user', 'user')
+      .leftJoinAndSelect('landlord.govermentIdDocument', 'govermentIdDocument')
+      .leftJoinAndSelect('landlord.landSurveyDocument', 'landSurveyDocument')
+      .leftJoinAndSelect(
+        'landlord.proofOfOwnershipDocument',
+        'proofOfOwnershipDocument',
+      )
+      .leftJoinAndSelect(
+        'landlord.taxIdentificationNumberDocument',
+        'taxIdentificationNumberDocument',
+      );
+
+    if (isActive !== undefined) {
+      queryBuilder.andWhere('landlord.isActive = :isActive', { isActive });
+    }
+
+    if (isApproved !== undefined) {
+      queryBuilder.andWhere('landlord.isApproved = :isApproved', {
+        isApproved,
+      });
+    }
+
+    if (landLordName) {
+      queryBuilder.andWhere('landlord.landLordName ILIKE :landLordName', {
+        landLordName: `%${landLordName}%`,
+      });
+    }
+
+    if (landlordId) {
+      queryBuilder.andWhere('landlord.id = :landlordId', { landlordId });
+    }
+
+    if (userId) {
+      queryBuilder.andWhere('user.id = :userId', { userId });
+    }
+
+    queryBuilder.skip((page - 1) * limit).take(limit);
+
+    const landlords = await queryBuilder.getMany();
+    return landlords;
   }
 
   async findOne(id: string) {
