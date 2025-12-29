@@ -23,6 +23,7 @@ import { TenantModule } from './tenant/tenant.module';
 import { NotificationModule } from './notification/notification.module';
 import { JwtModule } from '@nestjs/jwt';
 import { ServicesModule } from './services/services.module';
+import { FileModule } from './file/file.module';
 
 @Module({
   imports: [
@@ -104,6 +105,7 @@ import { ServicesModule } from './services/services.module';
     TenantModule,
     NotificationModule,
     ServicesModule,
+    FileModule,
   ],
   controllers: [AppController],
   providers: [AppService],

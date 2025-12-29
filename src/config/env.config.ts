@@ -122,6 +122,25 @@ export class EnvironmentVariables {
   @IsString()
   @IsNotEmpty()
   FACEBOOK_APP_SECRET: string;
+
+  @IsString()
+  @IsNotEmpty()
+  AWS_ACCESS_KEY_ID: string;
+
+  @IsString()
+  @IsNotEmpty()
+  AWS_SECRET_KEY: string;
+
+  @IsString()
+  @IsNotEmpty()
+  AWS_REGION: string;
+
+  @IsString()
+  @IsNotEmpty()
+  AWS_S3_BUCKET_NAME: string;
+
+  @IsNumber()
+  AWS_S3_SIGNED_URL_EXPIRATION_SECONDS: number;
 }
 
 export function validateEnv(config: Record<string, unknown>) {
