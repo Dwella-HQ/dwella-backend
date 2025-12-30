@@ -4,6 +4,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinTable,
   ManyToMany,
   OneToMany,
@@ -12,18 +13,22 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Permission } from './permission.entity';
+import { Exclude, instanceToPlain } from 'class-transformer';
+import { USER_ROLES } from 'src/utils/constants';
 
 @Entity()
 export class Role extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ unique: true })
-  name: string;
+  @Index()
+  @Column({ unique: true, type: 'varchar', length: 255, nullable: true })
+  name: USER_ROLES;
 
   @Column({ nullable: true })
   description: string;
 
+  @Exclude()
   @JoinTable()
   @ManyToMany(() => Permission, (permission) => permission.roles)
   permissions: Relation<Permission>[];
@@ -36,4 +41,8 @@ export class Role extends BaseEntity {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  toJSON() {
+    return instanceToPlain(this);
+  }
 }

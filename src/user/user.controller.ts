@@ -8,6 +8,7 @@ import {
   Delete,
   Req,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -16,9 +17,14 @@ import { Request } from 'express';
 import { User } from './entities/user.entity';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { RolesGuard } from 'src/rbac/guards/role.guard';
+import { PermissionsGuard } from 'src/rbac/guards/permission.guard';
+import { QueryUserDto } from './dto/query-user.dto';
+import { RequirePermissions } from 'src/rbac/decorators/permission.decorator';
+import { PERMISSIONS } from 'src/utils/constants';
 
 @ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt'), RolesGuard, PermissionsGuard)
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -41,6 +47,17 @@ export class UserController {
   @Get()
   findAll() {
     return this.userService.findAll();
+  }
+
+  @RequirePermissions(PERMISSIONS.READ_USER)
+  @Get('query')
+  async query(@Query() queryUserDto: QueryUserDto) {
+    const data = await this.userService.query(queryUserDto);
+    return {
+      message: 'Users queried successfully',
+      data,
+      success: true,
+    };
   }
 
   @Get(':id')

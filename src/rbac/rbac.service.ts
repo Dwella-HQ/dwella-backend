@@ -45,24 +45,35 @@ export class RbacService {
     const permissions: Permission[] = [];
 
     for (const permData of permissionsData) {
-      const result = await this.permissionRepository.upsert(
-        { name: permData.name },
-        ['name'],
-      );
-      const permission = result.identifiers[0] as Permission;
-      permissions.push(permission);
+      const permission = await this.permissionRepository.findOne({
+        where: { name: permData.name },
+      });
+      if (!permission) {
+        const newPermission = this.permissionRepository.create(permData);
+        const savedPermission =
+          await this.permissionRepository.save(newPermission);
+        permissions.push(savedPermission);
+      } else {
+        permissions.push(permission);
+      }
     }
 
-    const result = await this.roleRepository.upsert(
-      {
+    const role = await this.roleRepository.findOne({
+      where: { name },
+    });
+
+    if (role) {
+      role.description = description;
+      role.permissions = permissions;
+      return this.roleRepository.save(role);
+    } else {
+      const newRole = this.roleRepository.create({
         name,
         description,
         permissions,
-      },
-      ['name'],
-    );
-
-    return result.identifiers[0] as Role;
+      });
+      return this.roleRepository.save(newRole);
+    }
   }
 
   async getAllRoles() {

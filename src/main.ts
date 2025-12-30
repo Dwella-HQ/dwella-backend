@@ -4,7 +4,7 @@ import { AppModule } from './app.module';
 import { configureSwagger } from './config/swagger.config';
 import { ConfigService } from '@nestjs/config';
 import { EnvironmentVariables } from './config/env.config';
-import { Logger } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -13,7 +13,8 @@ async function bootstrap() {
   app.enableCors({
     origin: true,
   });
-  configureSwagger(app, 'documentation');
+  await configureSwagger(app, 'documentation');
+  app.useGlobalPipes(new ValidationPipe());
   await app.listen(
     app.get(ConfigService<EnvironmentVariables>).get('PORT')!,
     '0.0.0.0',

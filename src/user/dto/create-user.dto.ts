@@ -7,7 +7,7 @@ import {
   IsString,
   IsStrongPassword,
 } from 'class-validator';
-import { RegistrationTypeEnum } from 'src/utils/constants';
+import { RegistrationTypeEnum, USER_ROLES } from 'src/utils/constants';
 
 export class CreateUserDto {
   @IsEmail()
@@ -22,8 +22,7 @@ export class CreateUserDto {
   })
   password: string;
 
-  @IsString()
-  @IsNotEmpty()
+  @IsEnum(USER_ROLES)
   roleName: string;
 
   @IsString()

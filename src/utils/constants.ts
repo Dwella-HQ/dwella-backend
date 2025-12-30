@@ -9,6 +9,20 @@ export enum USER_ROLES {
   TENANT = 'tenant',
 }
 
+export const NonAdminRoles = [
+  USER_ROLES.LANDLORD,
+  USER_ROLES.PROPERTY_MANAGER,
+  USER_ROLES.AGENT,
+  USER_ROLES.MAINTENANCE_STAFF,
+  USER_ROLES.TENANT,
+];
+
+export const AdminRoles = [
+  USER_ROLES.SUPER_ADMIN,
+  USER_ROLES.ADMIN,
+  USER_ROLES.SUB_ADMIN,
+];
+
 export enum PERMISSIONS {
   //Role Management
   CREATE_ROLE = 'create_role',
@@ -35,6 +49,13 @@ export enum PERMISSIONS {
   UPDATE_PROPERTY = 'update_property',
   DELETE_PROPERTY = 'delete_property',
   APPROVE_PROPERTY = 'approve_property',
+
+  // User Management
+  CREATE_USER = 'create_user',
+  READ_USER = 'read_user',
+  UPDATE_USER = 'update_user',
+  DELETE_USER = 'delete_user',
+  ASSIGN_ROLE = 'assign_role',
 }
 
 export enum RegistrationTypeEnum {

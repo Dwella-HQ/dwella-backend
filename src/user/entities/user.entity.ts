@@ -16,7 +16,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import bcrypt from 'bcrypt';
-import { instanceToPlain } from 'class-transformer';
+import { Exclude, instanceToPlain } from 'class-transformer';
 import { RegistrationTypeEnum } from 'src/utils/constants';
 import { Landlord } from 'src/landlord/entities/landlord.entity';
 import { Address } from 'src/address/entities/address.entity';
@@ -33,6 +33,7 @@ export class User extends BaseEntity {
   @Column({ type: 'text', default: RegistrationTypeEnum.EMAIL })
   registrationType: RegistrationTypeEnum;
 
+  @Exclude()
   @Column()
   password: string;
 

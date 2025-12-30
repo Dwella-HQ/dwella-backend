@@ -38,8 +38,35 @@ export class SeederService implements OnModuleInit {
   }
 
   private async seedRoles() {
-    const rolesData = {
+    const rolesData: Record<string, PERMISSIONS[]> = {
       [USER_ROLES.SUPER_ADMIN]: Object.values(PERMISSIONS),
+      [USER_ROLES.ADMIN]: [
+        PERMISSIONS.APPROVE_LANDLORD,
+        PERMISSIONS.APPROVE_PROPERTY,
+        PERMISSIONS.CREATE_LANDLORD,
+        PERMISSIONS.CREATE_PERMISSION,
+        PERMISSIONS.CREATE_PROPERTY,
+        PERMISSIONS.CREATE_ROLE,
+        PERMISSIONS.DELETE_LANDLORD,
+        PERMISSIONS.DELETE_PERMISSION,
+        PERMISSIONS.DELETE_PROPERTY,
+        PERMISSIONS.DELETE_ROLE,
+        PERMISSIONS.READ_LANDLORD,
+        PERMISSIONS.READ_PERMISSION,
+        PERMISSIONS.READ_PROPERTY,
+        PERMISSIONS.READ_ROLE,
+        PERMISSIONS.UPDATE_LANDLORD,
+        PERMISSIONS.UPDATE_PERMISSION,
+        PERMISSIONS.UPDATE_PROPERTY,
+        PERMISSIONS.UPDATE_ROLE,
+      ],
+      [USER_ROLES.LANDLORD]: [
+        PERMISSIONS.CREATE_LANDLORD,
+        PERMISSIONS.CREATE_PROPERTY,
+        PERMISSIONS.READ_PROPERTY,
+        PERMISSIONS.UPDATE_PROPERTY,
+        PERMISSIONS.DELETE_PROPERTY,
+      ],
     };
     for (const [roleName, perms] of Object.entries(rolesData)) {
       const permissionsData = perms.map((perm) => ({

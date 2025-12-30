@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {
   BadRequestException,
   Inject,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -18,6 +20,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import ms from 'ms';
 import { RegistrationTypeEnum } from 'src/utils/constants';
+import { QueryUserDto } from './dto/query-user.dto';
 
 @Injectable()
 export class UserService {
@@ -48,8 +51,14 @@ export class UserService {
       }
       await queryRunner.commitTransaction();
       return user;
-    } catch (error) {
+    } catch (error: any) {
+      console.log(error);
+
       await queryRunner.rollbackTransaction();
+      if (error?.code == '23505') {
+        throw new BadRequestException(error.detail);
+      }
+      throw new InternalServerErrorException(error.detail);
       throw error;
     } finally {
       await queryRunner.release();
@@ -62,13 +71,13 @@ export class UserService {
     );
     let verificationLink = '';
     if (token) {
-      verificationLink = `${this.configService.get('BACKEND_URL')}/vendor/auth/verify-email?email=${user.email}&token=${token}`;
+      verificationLink = `${this.configService.get('BACKEND_URL')}/auth/verify-email?email=${user.email}&token=${token}`;
     } else {
       const payload = { sub: user.id, email: user.email };
       const newToken = this.jwtService.sign(payload, {
         expiresIn: this.configService.get('JWT_EXPIRES_IN'),
       });
-      verificationLink = `${this.configService.get('BACKEND_URL')}/vendor/auth/verify-email?email=${user.email}&token=${newToken}`;
+      verificationLink = `${this.configService.get('BACKEND_URL')}/auth/verify-email?email=${user.email}&token=${newToken}`;
       await this.cacheManager.set(
         `email-verification-token-${user.id}`,
         newToken,
@@ -141,6 +150,70 @@ export class UserService {
   async findAll() {
     const users = await this.userRepository.find();
     return users;
+  }
+
+  async query(queryUserDto: QueryUserDto) {
+    const {
+      email,
+      phoneNumber,
+      isActive,
+      isVerified,
+      name,
+      roleName,
+      search,
+      userId,
+      page = 1,
+      limit = 10,
+    } = queryUserDto;
+
+    const queryBuilder = this.userRepository.createQueryBuilder('user');
+
+    if (email) {
+      queryBuilder.andWhere('user.email = :email', { email });
+    }
+    if (phoneNumber) {
+      queryBuilder.andWhere('user.phoneNumber = :phoneNumber', { phoneNumber });
+    }
+    if (isActive !== undefined) {
+      queryBuilder.andWhere('user.isActive = :isActive', {
+        isActive: isActive === 'true',
+      });
+    }
+    if (isVerified !== undefined) {
+      queryBuilder.andWhere('user.isEmailVerified = :isVerified', {
+        isVerified: isVerified === 'true',
+      });
+    }
+    if (name) {
+      queryBuilder.andWhere('user.fullName ILIKE :name', { name: `%${name}%` });
+    }
+    if (roleName) {
+      queryBuilder
+        .leftJoinAndSelect('user.role', 'role')
+        .andWhere('role.name = :roleName', { roleName });
+    }
+    if (search) {
+      queryBuilder.andWhere(
+        '(user.fullName ILIKE :search OR user.email ILIKE :search OR user.phoneNumber ILIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+    if (userId) {
+      queryBuilder.andWhere('user.id = :userId', { userId });
+    }
+    queryBuilder.skip((page - 1) * limit).take(limit);
+
+    const [users, total] = await queryBuilder.getManyAndCount();
+
+    return {
+      data: users,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findOne(id: string) {
