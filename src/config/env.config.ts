@@ -40,6 +40,9 @@ export class EnvironmentVariables {
   FRONTEND_URL: string;
 
   @IsString()
+  SETTINGS_ID: string;
+
+  @IsString()
   @IsNotEmpty()
   SUPER_ADMIN_EMAIL: string;
 

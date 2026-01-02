@@ -24,6 +24,9 @@ import { NotificationModule } from './notification/notification.module';
 import { JwtModule } from '@nestjs/jwt';
 import { ServicesModule } from './services/services.module';
 import { FileModule } from './file/file.module';
+import { PropertyModule } from './property/property.module';
+import { WalletModule } from './wallet/wallet.module';
+import { SettingsModule } from './settings/settings.module';
 
 @Module({
   imports: [
@@ -106,6 +109,9 @@ import { FileModule } from './file/file.module';
     NotificationModule,
     ServicesModule,
     FileModule,
+    PropertyModule,
+    WalletModule,
+    SettingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

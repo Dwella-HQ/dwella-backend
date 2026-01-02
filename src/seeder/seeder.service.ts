@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EnvironmentVariables } from 'src/config/env.config';
 import { RbacService } from 'src/rbac/rbac.service';
+import { SettingsService } from 'src/settings/settings.service';
 import { UserService } from 'src/user/user.service';
 import { PERMISSIONS, USER_ROLES } from 'src/utils/constants';
 
@@ -11,6 +12,7 @@ export class SeederService implements OnModuleInit {
   constructor(
     private readonly rbacService: RbacService,
     private readonly userService: UserService,
+    private readonly settingsService: SettingsService,
     private readonly configService: ConfigService<EnvironmentVariables>,
   ) {}
 
@@ -18,6 +20,7 @@ export class SeederService implements OnModuleInit {
     await this.seedPermissions();
     await this.seedRoles();
     await this.seedAdminUser();
+    await this.seedSettings();
   }
 
   private async seedPermissions() {
@@ -59,7 +62,10 @@ export class SeederService implements OnModuleInit {
         PERMISSIONS.UPDATE_PERMISSION,
         PERMISSIONS.UPDATE_PROPERTY,
         PERMISSIONS.UPDATE_ROLE,
+        PERMISSIONS.MANAGE_WALLET,
+        PERMISSIONS.MANAGE_SETTINGS,
       ],
+      [USER_ROLES.SUB_ADMIN]: [],
       [USER_ROLES.LANDLORD]: [
         PERMISSIONS.CREATE_LANDLORD,
         PERMISSIONS.CREATE_PROPERTY,
@@ -109,6 +115,16 @@ export class SeederService implements OnModuleInit {
     } catch (error: any) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       this.logger.error(`Failed to create super admin user: ${error.message}`);
+    }
+  }
+
+  private async seedSettings() {
+    try {
+      const settings = await this.settingsService.createSettings();
+      this.logger.log('Settings Created Successfully', settings);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      // console.error('Error creating settings:', error);
     }
   }
 }

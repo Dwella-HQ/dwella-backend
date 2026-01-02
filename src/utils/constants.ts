@@ -56,6 +56,12 @@ export enum PERMISSIONS {
   UPDATE_USER = 'update_user',
   DELETE_USER = 'delete_user',
   ASSIGN_ROLE = 'assign_role',
+
+  // Wallet Management
+  MANAGE_WALLET = 'manage_wallet',
+
+  // Settings Management
+  MANAGE_SETTINGS = 'manage_settings',
 }
 
 export enum RegistrationTypeEnum {
@@ -65,3 +71,30 @@ export enum RegistrationTypeEnum {
   TWITTER = 'TWITTER',
   GITHUB = 'GITHUB',
 }
+
+export enum CurrenciesEnum {
+  NGN = 'NGN',
+}
+
+export enum TransactionTypeEnum {
+  CREDIT = 'credit',
+  DEBIT = 'debit',
+}
+
+export enum TransactionActionEnum {
+  RENT_PAYMENT = 'rent_payment',
+  SECURITY_DEPOSIT = 'security_deposit',
+  MAINTENANCE_FEE = 'maintenance_fee',
+  UTILITY_BILL = 'utility_bill',
+  OTHER = 'other',
+}
+
+export enum PaymentProviderEnum {
+  PAYSTACK = 'paystack',
+  MONNIFY = 'monnify',
+  FLUTTERWAVE = 'flutterwave',
+}
+
+export const JOB_NAMES = {
+  VBA_CREATION_JOB: 'VBA_CREATION_JOB',
+};
