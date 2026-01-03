@@ -4,6 +4,9 @@ import { Repository } from 'typeorm';
 import { Wallet } from './entities/wallet.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LandlordService } from 'src/landlord/landlord.service';
+import { InjectQueue } from '@nestjs/bullmq';
+import { JOB_NAMES } from 'src/utils/constants';
+import { Queue } from 'bullmq';
 
 @Injectable()
 export class WalletService {
@@ -11,6 +14,7 @@ export class WalletService {
     @InjectRepository(Wallet)
     private readonly walletRepository: Repository<Wallet>,
     private readonly landlordService: LandlordService,
+    @InjectQueue(JOB_NAMES.VBA_CREATION_JOB) private readonly vbaQueue: Queue,
   ) {}
 
   async createLandlordWallet(createWalletDto: CreateLandlordWalletDto) {
@@ -21,7 +25,9 @@ export class WalletService {
       landlord: landlord,
       currency: createWalletDto.currency,
     });
-    return this.walletRepository.save(wallet);
+    const savedWallet = await this.walletRepository.save(wallet);
+    await this.vbaQueue.add('create-virtual-account:paystack', {});
+    return savedWallet;
   }
 
   async findAll() {

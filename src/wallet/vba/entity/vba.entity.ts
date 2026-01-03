@@ -42,12 +42,9 @@ export class VBA extends BaseEntity {
   })
   currency: CurrenciesEnum;
 
-  @Column()
-  customerEmail: string;
-
   @Exclude()
   @Column('simple-json')
-  metadata: any;
+  metadata: Record<string, any>;
 
   @Column({ default: false })
   isActive: boolean;

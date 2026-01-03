@@ -27,6 +27,7 @@ import { FileModule } from './file/file.module';
 import { PropertyModule } from './property/property.module';
 import { WalletModule } from './wallet/wallet.module';
 import { SettingsModule } from './settings/settings.module';
+import { WebhooksModule } from './webhooks/webhooks.module';
 
 @Module({
   imports: [
@@ -112,6 +113,7 @@ import { SettingsModule } from './settings/settings.module';
     PropertyModule,
     WalletModule,
     SettingsModule,
+    WebhooksModule,
   ],
   controllers: [AppController],
   providers: [AppService],
