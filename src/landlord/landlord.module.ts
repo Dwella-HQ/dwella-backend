@@ -9,5 +9,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
   imports: [TypeOrmModule.forFeature([Landlord]), UserModule],
   controllers: [LandlordController],
   providers: [LandlordService],
+  exports: [LandlordService],
 })
 export class LandlordModule {}

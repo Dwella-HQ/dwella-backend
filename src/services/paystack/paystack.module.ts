@@ -2,6 +2,7 @@ import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PaystackService } from './paystack.service';
+import { WalletModule } from 'src/wallet/wallet.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { PaystackService } from './paystack.service';
         },
       }),
     }),
+    WalletModule,
   ],
   providers: [PaystackService],
   exports: [PaystackService],

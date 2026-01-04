@@ -144,6 +144,46 @@ export class EnvironmentVariables {
 
   @IsNumber()
   AWS_S3_SIGNED_URL_EXPIRATION_SECONDS: number;
+
+  @IsString()
+  @IsNotEmpty()
+  PAYSTACK_SECRET_KEY: string;
+
+  @IsString()
+  @IsNotEmpty()
+  PAYSTACK_BASE_URL: string;
+
+  @IsString()
+  @IsNotEmpty()
+  MONNIFY_API_KEY: string;
+
+  @IsString()
+  @IsNotEmpty()
+  MONNIFY_SECRET_KEY: string;
+
+  @IsString()
+  @IsNotEmpty()
+  MONNIFY_CONTRACT_CODE: string;
+
+  @IsString()
+  @IsNotEmpty()
+  MONNIFY_BASE_URL: string;
+
+  @IsString()
+  @IsNotEmpty()
+  FLUTTERWAVE_CLIENT_ID: string;
+
+  @IsString()
+  @IsNotEmpty()
+  FLUTTERWAVE_CLIENT_SECRET: string;
+
+  @IsString()
+  @IsNotEmpty()
+  FLUTTERWAVE_ENCRYPTION_KEY: string;
+
+  @IsString()
+  @IsNotEmpty()
+  FLUTTERWAVE_BASE_URL: string;
 }
 
 export function validateEnv(config: Record<string, unknown>) {

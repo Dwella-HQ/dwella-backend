@@ -31,7 +31,9 @@ export class WalletTransactions extends BaseEntity {
   })
   type: TransactionTypeEnum;
 
-  @Column('string')
+  @Column({
+    type: 'text',
+  })
   action: TransactionActionEnum;
 
   @Column({ default: '' })

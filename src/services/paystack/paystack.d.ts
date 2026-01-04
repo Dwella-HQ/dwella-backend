@@ -27,7 +27,9 @@ export interface PaystackAssignVirtualAccountPayload {
   middle_name?: string;
   last_name?: string;
   phone?: string;
-  country?: string;
+  country?: 'NG' | 'GH';
+  bvn?: string;
+  metadata?: Record<string, any>;
 }
 
 export interface PaystackAssignVirtualAccountResponse {
@@ -45,7 +47,7 @@ export interface PaystackDedicatedAccountAssignSuccessWebhookPayload {
       email: string;
       customer_code: string;
       phone: string;
-      metadata: Record<string, unknown>;
+      metadata: Record<string, any>;
       risk_action: string;
       international_format_phone: string;
     };

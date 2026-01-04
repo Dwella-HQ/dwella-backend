@@ -2,25 +2,23 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { VBA } from './entity/vba.entity';
 import { Repository } from 'typeorm';
-import { CreateVBADto } from './dto/create-vba.dto';
-import { WalletService } from '../wallet.service';
+import { CreateVBADto } from '../dto/create-vba.dto';
 import { SettingsService } from 'src/settings/settings.service';
+import { Wallet } from '../entities/wallet.entity';
 
 @Injectable()
 export class VbaService {
   constructor(
     @InjectRepository(VBA) private readonly vbaRepository: Repository<VBA>,
-    private readonly walletService: WalletService,
     private readonly settingsService: SettingsService,
   ) {}
 
-  async createVBA(createVbaDto: CreateVBADto) {
-    const wallet = await this.walletService.findOne(createVbaDto.walletId);
+  async createVBA(wallet: Wallet, createVbaDto: CreateVBADto) {
     const vba = this.vbaRepository.create({
       bankCode: createVbaDto.bankCode,
       accountName: createVbaDto.accountName,
       accountNumber: createVbaDto.accountNumber,
-      currency: createVbaDto.currency,
+      currency: wallet.currency,
       metadata: createVbaDto.metadata,
       wallet: wallet,
     });

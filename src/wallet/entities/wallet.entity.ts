@@ -13,6 +13,7 @@ import {
 import { WalletTransactions } from './wallet-transactions.entity';
 import { CurrenciesEnum } from 'src/utils/constants';
 import { VBA } from '../vba/entity/vba.entity';
+import { Exclude, instanceToPlain } from 'class-transformer';
 
 @Entity()
 export class Wallet extends BaseEntity {
@@ -20,7 +21,7 @@ export class Wallet extends BaseEntity {
   id: string;
 
   @Column({
-    type: 'string',
+    type: 'text',
     default: CurrenciesEnum.NGN,
   })
   currency: CurrenciesEnum;
@@ -40,6 +41,13 @@ export class Wallet extends BaseEntity {
   @OneToMany(() => VBA, (vba) => vba.wallet)
   vbas: Relation<VBA[]>;
 
+  @Column()
+  bvn: string;
+
+  @Exclude()
+  @Column('simple-json')
+  metadata: Record<string, any>;
+
   @Column({ default: true })
   isActive: boolean;
 
@@ -48,4 +56,8 @@ export class Wallet extends BaseEntity {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  toJson() {
+    return instanceToPlain(this);
+  }
 }

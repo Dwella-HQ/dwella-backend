@@ -8,6 +8,7 @@ import {
   Entity,
   ManyToOne,
   PrimaryGeneratedColumn,
+  Relation,
   UpdateDateColumn,
 } from 'typeorm';
 
@@ -17,10 +18,10 @@ export class VBA extends BaseEntity {
   id: string;
 
   @ManyToOne(() => Wallet, (wallet) => wallet.vbas, { nullable: false })
-  wallet: Wallet;
+  wallet: Relation<Wallet>;
 
   @Column({
-    type: 'string',
+    type: 'text',
   })
   provider: PaymentProviderEnum;
 
@@ -37,7 +38,7 @@ export class VBA extends BaseEntity {
   bankCode: string;
 
   @Column({
-    type: 'string',
+    type: 'text',
     default: CurrenciesEnum.NGN,
   })
   currency: CurrenciesEnum;

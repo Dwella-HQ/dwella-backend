@@ -1,11 +1,5 @@
-import {
-  IsEnum,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  IsUUID,
-} from 'class-validator';
-import { CurrenciesEnum, PaymentProviderEnum } from 'src/utils/constants';
+import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { PaymentProviderEnum } from 'src/utils/constants';
 
 export class CreateVBADto {
   @IsString()
@@ -24,14 +18,8 @@ export class CreateVBADto {
   @IsNotEmpty()
   accountNumber: string;
 
-  @IsEnum(CurrenciesEnum)
-  currency: CurrenciesEnum;
-
   @IsOptional()
   metadata: Record<string, any>;
-
-  @IsUUID('all')
-  walletId: string;
 
   @IsEnum(PaymentProviderEnum)
   provider: PaymentProviderEnum;
