@@ -1,11 +1,17 @@
-import { IsEnum, IsOptional, IsString, IsUUID, Length } from 'class-validator';
+import {
+  IsEnum,
+  IsNumberString,
+  IsOptional,
+  IsUUID,
+  Length,
+} from 'class-validator';
 import { CurrenciesEnum } from 'src/utils/constants';
 
 export class CreateLandlordWalletDto {
   @IsUUID()
   landlordId: string;
 
-  @IsString()
+  @IsNumberString()
   @Length(11, 11)
   bvn: string;
 
@@ -18,7 +24,7 @@ export class CreateAgentWalletDto {
   @IsUUID()
   agentId: string;
 
-  @IsString()
+  @IsNumberString()
   @Length(11, 11)
   bvn: string;
 
@@ -31,7 +37,7 @@ export class CreateTenantWalletDto {
   @IsUUID()
   tenantId: string;
 
-  @IsString()
+  @IsNumberString()
   @Length(11, 11)
   bvn: string;
 

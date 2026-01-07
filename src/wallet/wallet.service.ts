@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateLandlordWalletDto } from './dto/create-wallet.dto';
 import { Repository } from 'typeorm';
 import { Wallet } from './entities/wallet.entity';
@@ -24,9 +28,19 @@ export class WalletService {
     const landlord = await this.landlordService.findOne(
       createWalletDto.landlordId,
     );
+    const activeWallet = await this.walletRepository.findOne({
+      where: {
+        landlord: { id: createWalletDto.landlordId },
+        isActive: true,
+      },
+    });
+    if (activeWallet) {
+      throw new BadRequestException('Landlord already has a wallet');
+    }
     const wallet = this.walletRepository.create({
       landlord: landlord,
       currency: createWalletDto.currency,
+      bvn: createWalletDto.bvn,
     });
     const savedWallet = await this.walletRepository.save(wallet);
     await this.vbaQueue.add('create-virtual-account:paystack', savedWallet);

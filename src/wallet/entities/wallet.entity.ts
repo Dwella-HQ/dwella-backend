@@ -44,8 +44,10 @@ export class Wallet extends BaseEntity {
   @Column()
   bvn: string;
 
-  @Exclude()
-  @Column('simple-json')
+  @Column({
+    type: 'simple-json',
+    nullable: true,
+  })
   metadata: Record<string, any>;
 
   @Column({ default: true })
@@ -57,7 +59,7 @@ export class Wallet extends BaseEntity {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  toJson() {
+  toJSON() {
     return instanceToPlain(this);
   }
 }

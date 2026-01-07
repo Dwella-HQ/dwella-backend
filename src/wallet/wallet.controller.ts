@@ -3,12 +3,16 @@ import { WalletService } from './wallet.service';
 import { CreateLandlordWalletDto } from './dto/create-wallet.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { PermissionsGuard } from 'src/rbac/guards/permission.guard';
+import { LandLordApprovedGuard } from 'src/landlord/guards/landlord.guard';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @UseGuards(AuthGuard('jwt'), PermissionsGuard)
+@ApiBearerAuth()
 @Controller('wallet')
 export class WalletController {
   constructor(private readonly walletService: WalletService) {}
 
+  @UseGuards(LandLordApprovedGuard)
   @Post('landlord')
   async createLandlord(@Body() createWalletDto: CreateLandlordWalletDto) {
     const landlord =

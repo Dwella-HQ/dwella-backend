@@ -30,7 +30,7 @@ export class FlutterwaveService {
     }
     const response = await lastValueFrom(
       this.httpService.post<FlutterwaveGenerateAccessTokenResponse>(
-        '/api/v1/auth/login',
+        'https://idp.flutterwave.com/realms/flutterwave/protocol/openid-connect/token',
         new URLSearchParams({
           client_id: this.configService.get<string>(
             'FLUTTERWAVE_CLIENT_ID',

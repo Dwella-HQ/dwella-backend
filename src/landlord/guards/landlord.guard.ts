@@ -7,7 +7,7 @@ import { LandlordService } from '../landlord.service';
 import { AdminRoles, USER_ROLES } from 'src/utils/constants';
 
 @Injectable()
-export class LandLordActiveGuard implements CanActivate {
+export class LandLordApprovedGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
     private readonly landlordService: LandlordService,
@@ -27,7 +27,7 @@ export class LandLordActiveGuard implements CanActivate {
 
     if (user?.role?.name === USER_ROLES.LANDLORD) {
       const landlord = await this.landlordService.findByUserId(user.id);
-      if (landlord && landlord.isActive) {
+      if (landlord && landlord.isApproved) {
         return true;
       }
     }

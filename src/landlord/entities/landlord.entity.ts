@@ -5,6 +5,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
@@ -17,6 +18,7 @@ export class Landlord extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @JoinColumn()
   @OneToOne(() => User, (user) => user.landlord, { eager: true })
   user: Relation<User>;
 
@@ -24,19 +26,23 @@ export class Landlord extends BaseEntity {
   landLordName: string;
 
   // documents ----
+  @JoinColumn()
   @OneToOne(() => File, { nullable: true, eager: true })
   govermentIdDocument: Relation<File>;
 
+  @JoinColumn()
   @OneToOne(() => File, { nullable: true, eager: true })
   landSurveyDocument: Relation<File>;
 
+  @JoinColumn()
   @OneToOne(() => File, { nullable: true, eager: true })
   proofOfOwnershipDocument: Relation<File>;
 
+  @JoinColumn()
   @OneToOne(() => File, { nullable: true, eager: true })
   taxIdentificationNumberDocument: Relation<File>;
 
-  @ManyToOne(() => User, { nullable: true, eager: true })
+  @ManyToOne(() => User, { nullable: true })
   approvedBy: Relation<User>;
 
   @Column({ nullable: true })
