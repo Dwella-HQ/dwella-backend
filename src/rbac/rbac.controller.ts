@@ -16,8 +16,10 @@ import { AuthGuard } from '@nestjs/passport';
 import { PermissionsGuard } from './guards/permission.guard';
 import { RequirePermissions } from './decorators/permission.decorator';
 import { PERMISSIONS } from 'src/utils/constants';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @UseGuards(AuthGuard('jwt'), PermissionsGuard)
+@ApiBearerAuth()
 @Controller('rbac')
 export class RbacController {
   constructor(private readonly rbacService: RbacService) {}

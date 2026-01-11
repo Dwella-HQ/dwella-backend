@@ -14,6 +14,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Unit } from './units.entity';
+import { User } from 'src/user/entities/user.entity';
 
 @Entity()
 export class Property extends BaseEntity {
@@ -34,18 +35,21 @@ export class Property extends BaseEntity {
   })
   isApproved: boolean;
 
+  @ManyToOne(() => User, { nullable: true })
+  approvedBy: Relation<User>;
+
   @Column({
     default: true,
   })
   isActive: boolean;
 
-  // @Column()
-  // propertyType: string;
+  @Column({ nullable: true })
+  propertyType: string;
 
   @Column()
   yearBuilt: number;
 
-  @Column()
+  @Column({ default: 0 })
   numberOfUnits: number;
 
   @Column({

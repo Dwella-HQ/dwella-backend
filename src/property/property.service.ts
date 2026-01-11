@@ -10,6 +10,7 @@ import { LandlordService } from 'src/landlord/landlord.service';
 import { QueryPropertyDto } from './dto/query-property.dto';
 import { CreateUnitDto } from './dto/create-unit.dto';
 import { Unit } from './entities/units.entity';
+import { User } from 'src/user/entities/user.entity';
 
 @Injectable()
 export class PropertyService {
@@ -87,6 +88,13 @@ export class PropertyService {
     return properties;
   }
 
+  async approveProperty(id: string, user: User) {
+    const property = await this.findOne(id);
+    property.isApproved = true;
+    property.approvedBy = user;
+    return await this.propertyRepository.save(property);
+  }
+
   async update(id: string, updatePropertyDto: UpdatePropertyDto) {
     const property = await this.findOne(id);
     for (const key in updatePropertyDto) {
@@ -103,6 +111,8 @@ export class PropertyService {
       ...createUnitDto,
       property,
     });
+    property.numberOfUnits += 1;
+    await this.propertyRepository.save(property);
     return await this.unitRepository.save(unit);
   }
 
