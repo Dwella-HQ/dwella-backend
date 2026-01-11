@@ -1,34 +1,81 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { PropertyService } from './property.service';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
+import { CreateUnitDto } from './dto/create-unit.dto';
 
 @Controller('property')
 export class PropertyController {
   constructor(private readonly propertyService: PropertyService) {}
 
   @Post()
-  create(@Body() createPropertyDto: CreatePropertyDto) {
-    return this.propertyService.create(createPropertyDto);
+  async create(@Body() createPropertyDto: CreatePropertyDto) {
+    const data = await this.propertyService.create(createPropertyDto);
+    return {
+      success: true,
+      message: 'Property created successfully',
+      data: data,
+    };
   }
 
   @Get()
-  findAll() {
-    return this.propertyService.findAll();
+  async findAll() {
+    const data = await this.propertyService.findAll();
+    return {
+      success: true,
+      message: 'Properties retrieved successfully',
+      data: data,
+    };
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.propertyService.findOne(+id);
+  async findOne(@Param('id') id: string) {
+    const data = await this.propertyService.findOne(id);
+    return {
+      success: true,
+      message: 'Property retrieved successfully',
+      data: data,
+    };
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePropertyDto: UpdatePropertyDto) {
-    return this.propertyService.update(+id, updatePropertyDto);
+  async update(
+    @Param('id') id: string,
+    @Body() updatePropertyDto: UpdatePropertyDto,
+  ) {
+    const data = await this.propertyService.update(id, updatePropertyDto);
+    return {
+      success: true,
+      message: 'Property updated successfully',
+      data: data,
+    };
+  }
+
+  @Post(':id/unit')
+  async addUnit(@Param('id') id: string, @Body() createUnitDto: CreateUnitDto) {
+    const data = await this.propertyService.createUnit(id, createUnitDto);
+    return {
+      success: true,
+      message: 'Unit added successfully',
+      data: data,
+    };
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.propertyService.remove(+id);
+  async remove(@Param('id') id: string) {
+    const data = await this.propertyService.remove(id);
+    return {
+      success: true,
+      message: 'Property removed successfully',
+      data: data,
+    };
   }
 }

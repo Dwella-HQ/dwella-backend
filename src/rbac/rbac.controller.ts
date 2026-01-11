@@ -1,10 +1,28 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { RbacService } from './rbac.service';
+import {
+  CreateRoleDto,
+  CreateRoleWithPermissionsDto,
+} from './dto/create-role.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { PermissionsGuard } from './guards/permission.guard';
+import { RequirePermissions } from './decorators/permission.decorator';
+import { PERMISSIONS } from 'src/utils/constants';
 
+@UseGuards(AuthGuard('jwt'), PermissionsGuard)
 @Controller('rbac')
 export class RbacController {
   constructor(private readonly rbacService: RbacService) {}
 
+  @RequirePermissions(PERMISSIONS.CREATE_PERMISSION)
   @Post('permission')
   async createPermission(@Body() body: { name: string; description?: string }) {
     const permission = await this.rbacService.createPermission(
@@ -18,14 +36,11 @@ export class RbacController {
     };
   }
 
+  @RequirePermissions(PERMISSIONS.CREATE_ROLE)
   @Post('roles')
   async createRole(
     @Body()
-    body: {
-      name: string;
-      description?: string;
-      permissionIds?: string[];
-    },
+    body: CreateRoleDto,
   ) {
     const role = await this.rbacService.createRole(
       body.name,
@@ -39,14 +54,11 @@ export class RbacController {
     };
   }
 
+  @RequirePermissions(PERMISSIONS.CREATE_ROLE)
   @Post('roles/with-permissions')
   async createRoleWithPermissions(
     @Body()
-    body: {
-      name: string;
-      description: string;
-      permissions: { name: string; description?: string }[];
-    },
+    body: CreateRoleWithPermissionsDto,
   ) {
     const role = await this.rbacService.createRoleWithPermissions(
       body.name,
@@ -60,6 +72,7 @@ export class RbacController {
     };
   }
 
+  @RequirePermissions(PERMISSIONS.READ_ROLE)
   @Get('roles')
   async getAllRoles() {
     const roles = await this.rbacService.getAllRoles();
@@ -70,6 +83,7 @@ export class RbacController {
     };
   }
 
+  @RequirePermissions(PERMISSIONS.READ_PERMISSION)
   @Get('permissions')
   async getAllPermissions() {
     const permissions = await this.rbacService.getAllPermissions();
@@ -80,6 +94,7 @@ export class RbacController {
     };
   }
 
+  @RequirePermissions(PERMISSIONS.READ_ROLE)
   @Get('roles/:id')
   async getRoleById(@Param('id') id: string) {
     const role = await this.rbacService.getRoleById(id);
@@ -90,6 +105,7 @@ export class RbacController {
     };
   }
 
+  @RequirePermissions(PERMISSIONS.READ_PERMISSION)
   @Get('permissions/:id')
   async getPermissionById(@Param('id') id: string) {
     const permission = await this.rbacService.getPermissionById(id);
@@ -100,6 +116,7 @@ export class RbacController {
     };
   }
 
+  @RequirePermissions(PERMISSIONS.UPDATE_ROLE)
   @Post('roles/:roleId/permissions')
   async assignPermissionsToRole(
     @Param('roleId') roleId: string,
@@ -116,6 +133,7 @@ export class RbacController {
     };
   }
 
+  @RequirePermissions(PERMISSIONS.UPDATE_ROLE)
   @Delete('roles/:roleId/permissions')
   async removePermissionsFromRole(
     @Param('roleId') roleId: string,
@@ -132,6 +150,7 @@ export class RbacController {
     };
   }
 
+  @RequirePermissions(PERMISSIONS.DELETE_ROLE)
   @Delete('roles/:id')
   async deleteRole(@Param('id') id: string) {
     await this.rbacService.deleteRole(id);
@@ -141,6 +160,7 @@ export class RbacController {
     };
   }
 
+  @RequirePermissions(PERMISSIONS.DELETE_PERMISSION)
   @Delete('permissions/:id')
   async deletePermission(@Param('id') id: string) {
     await this.rbacService.deletePermission(id);

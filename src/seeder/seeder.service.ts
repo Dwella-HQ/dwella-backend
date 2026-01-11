@@ -64,6 +64,7 @@ export class SeederService implements OnModuleInit {
         PERMISSIONS.UPDATE_ROLE,
         PERMISSIONS.MANAGE_WALLET,
         PERMISSIONS.MANAGE_SETTINGS,
+        PERMISSIONS.MANAGE_ADDRESS,
       ],
       [USER_ROLES.SUB_ADMIN]: [],
       [USER_ROLES.LANDLORD]: [

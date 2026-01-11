@@ -62,6 +62,9 @@ export enum PERMISSIONS {
 
   // Settings Management
   MANAGE_SETTINGS = 'manage_settings',
+
+  //Address Management
+  MANAGE_ADDRESS = 'manage_address',
 }
 
 export enum RegistrationTypeEnum {

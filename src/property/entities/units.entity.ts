@@ -3,14 +3,23 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  ManyToOne,
   PrimaryGeneratedColumn,
+  Relation,
   UpdateDateColumn,
 } from 'typeorm';
+import { Property } from './property.entity';
 
 @Entity()
-export class Units extends BaseEntity {
+export class Unit extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @ManyToOne(() => Property, (property) => property.units, {
+    nullable: false,
+    onDelete: 'CASCADE',
+  })
+  property: Relation<Property>;
 
   @Column()
   name: string;

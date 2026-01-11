@@ -1,4 +1,5 @@
 import { Exclude, instanceToPlain } from 'class-transformer';
+import { Property } from 'src/property/entities/property.entity';
 import { User } from 'src/user/entities/user.entity';
 import {
   BaseEntity,
@@ -63,6 +64,18 @@ export class File extends BaseEntity {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @ManyToOne(() => Property, (property) => property.photos, {
+    nullable: true,
+    onDelete: 'CASCADE',
+  })
+  propertyPhoto: Relation<Property>;
+
+  @ManyToOne(() => Property, (property) => property.documents, {
+    nullable: true,
+    onDelete: 'CASCADE',
+  })
+  propertyDocument: Relation<Property>;
 
   toJSON() {
     return instanceToPlain(this);

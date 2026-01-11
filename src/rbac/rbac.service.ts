@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Role } from './entities/role.entity';
 import { In, Repository } from 'typeorm';
 import { Permission } from './entities/permission.entity';
+import { USER_ROLES } from 'src/utils/constants';
 
 @Injectable()
 export class RbacService {
@@ -21,7 +22,7 @@ export class RbacService {
   }
 
   async createRole(
-    name: string,
+    name: USER_ROLES,
     description?: string,
     permissionIds?: string[],
   ): Promise<Role> {
@@ -38,7 +39,7 @@ export class RbacService {
   }
 
   async createRoleWithPermissions(
-    name: string,
+    name: USER_ROLES,
     description: string,
     permissionsData: { name: string; description?: string }[],
   ): Promise<Role> {
@@ -105,7 +106,7 @@ export class RbacService {
     return permission;
   }
 
-  async getRoleByName(name: string) {
+  async getRoleByName(name: USER_ROLES) {
     const role = await this.roleRepository.findOne({
       where: { name },
       relations: ['permissions'],
