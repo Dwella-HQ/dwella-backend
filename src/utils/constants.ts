@@ -1,3 +1,5 @@
+import { CreateAmenityDto } from 'src/amenities/dto/create-amenity.dto';
+
 export enum USER_ROLES {
   SUPER_ADMIN = 'super_admin',
   ADMIN = 'admin',
@@ -65,6 +67,9 @@ export enum PERMISSIONS {
 
   //Address Management
   MANAGE_ADDRESS = 'manage_address',
+
+  //Amenities
+  MANAGE_AMENITIES = 'manage_amenities',
 }
 
 export enum RegistrationTypeEnum {
@@ -113,3 +118,5 @@ export enum VerificationStatusEnum {
 export const JOB_NAMES = {
   VBA_CREATION_JOB: 'VBA_CREATION_JOB',
 };
+
+export const DefaultAmenities: CreateAmenityDto[] = [];

@@ -43,4 +43,8 @@ export class CreatePropertyDto {
   @Type(() => CreateAddressDto)
   @IsNotEmpty()
   address: CreateAddressDto;
+
+  @IsString({ each: true })
+  @IsOptional()
+  amenities?: string[];
 }

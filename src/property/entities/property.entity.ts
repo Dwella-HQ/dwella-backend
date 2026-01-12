@@ -78,6 +78,9 @@ export class Property extends BaseEntity {
   })
   units: Relation<Unit[]>;
 
+  @Column('simple-array', { nullable: true })
+  amenities: string[];
+
   @CreateDateColumn()
   createdAt: Date;
 

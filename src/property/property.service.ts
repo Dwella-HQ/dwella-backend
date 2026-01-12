@@ -34,6 +34,7 @@ export class PropertyService {
       ...createPropertyDto,
       landlord,
       address,
+      amenities: createPropertyDto.amenities || [],
     });
     return await this.propertyRepository.save(property);
   }

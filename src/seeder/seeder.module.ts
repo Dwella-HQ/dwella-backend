@@ -3,9 +3,10 @@ import { SeederService } from './seeder.service';
 import { SeederController } from './seeder.controller';
 import { RbacModule } from 'src/rbac/rbac.module';
 import { UserModule } from 'src/user/user.module';
+import { AmenitiesModule } from 'src/amenities/amenities.module';
 
 @Module({
-  imports: [RbacModule, UserModule],
+  imports: [RbacModule, UserModule, AmenitiesModule],
   controllers: [SeederController],
   providers: [SeederService],
 })

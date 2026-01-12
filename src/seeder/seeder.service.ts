@@ -1,10 +1,11 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { AmenitiesService } from 'src/amenities/amenities.service';
 import { EnvironmentVariables } from 'src/config/env.config';
 import { RbacService } from 'src/rbac/rbac.service';
 import { SettingsService } from 'src/settings/settings.service';
 import { UserService } from 'src/user/user.service';
-import { PERMISSIONS, USER_ROLES } from 'src/utils/constants';
+import { DefaultAmenities, PERMISSIONS, USER_ROLES } from 'src/utils/constants';
 
 @Injectable()
 export class SeederService implements OnModuleInit {
@@ -13,6 +14,7 @@ export class SeederService implements OnModuleInit {
     private readonly rbacService: RbacService,
     private readonly userService: UserService,
     private readonly settingsService: SettingsService,
+    private readonly amenitiesService: AmenitiesService,
     private readonly configService: ConfigService<EnvironmentVariables>,
   ) {}
 
@@ -21,6 +23,7 @@ export class SeederService implements OnModuleInit {
     await this.seedRoles();
     await this.seedAdminUser();
     await this.seedSettings();
+    await this.seedAmenities();
   }
 
   private async seedPermissions() {
@@ -41,7 +44,7 @@ export class SeederService implements OnModuleInit {
   }
 
   private async seedRoles() {
-    const rolesData: Record<string, PERMISSIONS[]> = {
+    const rolesData: Record<USER_ROLES, PERMISSIONS[]> = {
       [USER_ROLES.SUPER_ADMIN]: Object.values(PERMISSIONS),
       [USER_ROLES.ADMIN]: [
         PERMISSIONS.APPROVE_LANDLORD,
@@ -74,6 +77,10 @@ export class SeederService implements OnModuleInit {
         PERMISSIONS.UPDATE_PROPERTY,
         PERMISSIONS.DELETE_PROPERTY,
       ],
+      [USER_ROLES.PROPERTY_MANAGER]: [],
+      [USER_ROLES.AGENT]: [],
+      [USER_ROLES.MAINTENANCE_STAFF]: [],
+      [USER_ROLES.TENANT]: [],
     };
     for (const [roleName, perms] of Object.entries(rolesData)) {
       const permissionsData = perms.map((perm) => ({
@@ -81,7 +88,7 @@ export class SeederService implements OnModuleInit {
         description: `Permission to ${perm.replace(/_/g, ' ')}`,
       }));
       const role = await this.rbacService.createRoleWithPermissions(
-        roleName,
+        roleName as USER_ROLES,
         `Role of ${roleName.replace(/_/g, ' ')}`,
         permissionsData,
       );
@@ -126,6 +133,26 @@ export class SeederService implements OnModuleInit {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       // console.error('Error creating settings:', error);
+    }
+  }
+
+  private async seedAmenities() {
+    for (const amenityData of DefaultAmenities) {
+      try {
+        // Check if the amenity already exists
+        const existingAmenity = await this.amenitiesService.findByName(
+          amenityData.name,
+        );
+        if (existingAmenity) {
+          continue; // Skip if it exists
+        }
+        const amenity = await this.amenitiesService.create(amenityData);
+        this.logger.log(`Added amenity: ${amenity.name}`);
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (error) {
+        // Handle errors
+        // console.error(`Error adding amenity ${amenityData.name}:`, error);
+      }
     }
   }
 }

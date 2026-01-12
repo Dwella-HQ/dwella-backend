@@ -38,6 +38,9 @@ export class Unit extends BaseEntity {
   })
   isAvailable: boolean;
 
+  @Column({ type: 'simple-array', nullable: true })
+  amenities: string[];
+
   @CreateDateColumn()
   createdAt: Date;
 
