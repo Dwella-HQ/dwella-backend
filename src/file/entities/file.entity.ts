@@ -1,6 +1,7 @@
 import { Exclude, instanceToPlain } from 'class-transformer';
 import { Property } from 'src/property/entities/property.entity';
 import { User } from 'src/user/entities/user.entity';
+import { Verification } from 'src/verification/entities/verification.entity';
 import {
   BaseEntity,
   Column,
@@ -76,6 +77,16 @@ export class File extends BaseEntity {
     onDelete: 'CASCADE',
   })
   propertyDocument: Relation<Property>;
+
+  @ManyToOne(
+    () => Verification,
+    (verification) => verification.supportingDocuments,
+    {
+      nullable: true,
+      onDelete: 'CASCADE',
+    },
+  )
+  verification: Relation<Verification>;
 
   toJSON() {
     return instanceToPlain(this);

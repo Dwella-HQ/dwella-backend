@@ -98,6 +98,18 @@ export enum PaymentProviderEnum {
   FLUTTERWAVE = 'flutterwave',
 }
 
+export enum VerificationTypeEnum {
+  LANDLORD_VERIFICATION = 'LANDLORD_VERIFICATION',
+  TENANT_VERIFICATION = 'TENANT_VERIFICATION',
+  PROPERTY_VERIFICATION = 'PROPERTY_VERIFICATION',
+}
+
+export enum VerificationStatusEnum {
+  PENDING = 'PENDING',
+  VERIFIED = 'VERIFIED',
+  REJECTED = 'REJECTED',
+}
+
 export const JOB_NAMES = {
   VBA_CREATION_JOB: 'VBA_CREATION_JOB',
 };
