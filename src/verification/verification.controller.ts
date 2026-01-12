@@ -19,8 +19,9 @@ import { AuthGuard } from '@nestjs/passport';
 import { PermissionsGuard } from 'src/rbac/guards/permission.guard';
 import { RolesGuard } from 'src/rbac/guards/role.guard';
 import { RequireRoles } from 'src/rbac/decorators/role.decorator';
-import { AdminRoles } from 'src/utils/constants';
+import { AdminRoles, PERMISSIONS } from 'src/utils/constants';
 import { QueryVerificationDto } from './dto/query-verification.dto';
+import { RequirePermissions } from 'src/rbac/decorators/permission.decorator';
 
 @UseGuards(AuthGuard('jwt'), PermissionsGuard, RolesGuard)
 @RequireRoles(...AdminRoles)
@@ -29,6 +30,7 @@ import { QueryVerificationDto } from './dto/query-verification.dto';
 export class VerificationController {
   constructor(private readonly verificationService: VerificationService) {}
 
+  @RequirePermissions(PERMISSIONS.APPROVE_LANDLORD)
   @Post('lanlord/:landlordId')
   async create(@Param('landlordId') landlordId: string) {
     const data =
@@ -70,14 +72,15 @@ export class VerificationController {
     };
   }
 
-  @Patch(':id/status')
-  async update(
+  @RequirePermissions(PERMISSIONS.APPROVE_LANDLORD)
+  @Patch(':id/landlord/status')
+  async updateLandlord(
     @Param('id') id: string,
     @Body() updateVerificationStatusDto: UpdateVerificationStatusDto,
     @Req() req: Request,
   ) {
     const user = req.user as User;
-    const data = await this.verificationService.updateStatus(
+    const data = await this.verificationService.updateLandlordStatus(
       id,
       updateVerificationStatusDto,
       user,

@@ -42,15 +42,15 @@ export class Verification extends BaseEntity {
   @Column({ nullable: true })
   reason: string;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { nullable: true, eager: true })
   verifiedBy: Relation<User>;
 
   @JoinColumn()
-  @OneToOne(() => Landlord, { nullable: true })
+  @OneToOne(() => Landlord, { nullable: true, eager: true })
   landlord: Relation<Landlord>;
 
   @JoinColumn()
-  @OneToOne(() => Property, { nullable: true })
+  @OneToOne(() => Property, { nullable: true, eager: true })
   property: Relation<Property>;
 
   @OneToMany(() => File, (file) => file.verification, {

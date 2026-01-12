@@ -1,14 +1,22 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { UpdateVerificationStatusDto } from './dto/update-verification-status.dto';
 import { LandlordService } from 'src/landlord/landlord.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Verification } from './entities/verification.entity';
 import { Repository } from 'typeorm';
-import { VerificationTypeEnum } from 'src/utils/constants';
+import {
+  VerificationStatusEnum,
+  VerificationTypeEnum,
+} from 'src/utils/constants';
 import { User } from 'src/user/entities/user.entity';
 import { FileService } from 'src/file/file.service';
 import { File } from 'src/file/entities/file.entity';
 import { QueryVerificationDto } from './dto/query-verification.dto';
+import { OnEvent } from '@nestjs/event-emitter';
 
 @Injectable()
 export class VerificationService {
@@ -18,6 +26,8 @@ export class VerificationService {
     private readonly landlordService: LandlordService,
     private readonly fileService: FileService,
   ) {}
+
+  @OnEvent('landlord.created')
   async startLandlordVerification(landlordId: string) {
     const landlord = await this.landlordService.findOne(landlordId);
     const verification = this.verificationRepository.create({
@@ -93,19 +103,30 @@ export class VerificationService {
   }
 
   async findOne(id: string) {
-    const verification = await this.verificationRepository.findOneBy({ id });
+    const verification = await this.verificationRepository.findOne({
+      where: { id },
+      relations: {
+        landlord: true,
+        property: true,
+        verifiedBy: true,
+        supportingDocuments: true,
+      },
+    });
     if (!verification) {
       throw new NotFoundException('Verification not found');
     }
     return verification;
   }
 
-  async updateStatus(
+  async updateLandlordStatus(
     id: string,
     updateVerificationStatusDto: UpdateVerificationStatusDto,
     user: User,
   ) {
     const verification = await this.findOne(id);
+    if (verification.type !== VerificationTypeEnum.LANDLORD_VERIFICATION) {
+      throw new BadRequestException('Landlord verification not found');
+    }
     verification.status = updateVerificationStatusDto.status;
     verification.reason = updateVerificationStatusDto.reason;
     verification.verifiedAt = new Date();
@@ -116,7 +137,14 @@ export class VerificationService {
       supportingDocuments.push(file);
     }
     verification.supportingDocuments = supportingDocuments;
-    return await this.verificationRepository.save(verification);
+    const updatedVerification =
+      await this.verificationRepository.save(verification);
+    if (updatedVerification.status === VerificationStatusEnum.VERIFIED) {
+      await this.landlordService.approveLandlord(
+        updatedVerification.landlord.id,
+      );
+    }
+    return updatedVerification;
   }
 
   async remove(id: string) {

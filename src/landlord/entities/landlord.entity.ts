@@ -6,7 +6,6 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
-  ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
   Relation,
@@ -41,12 +40,6 @@ export class Landlord extends BaseEntity {
   @JoinColumn()
   @OneToOne(() => File, { nullable: true, eager: true })
   taxIdentificationNumberDocument: Relation<File>;
-
-  @ManyToOne(() => User, { nullable: true })
-  approvedBy: Relation<User>;
-
-  @Column({ nullable: true })
-  approvedDate: Date;
 
   @Column({ default: true })
   isActive: boolean;

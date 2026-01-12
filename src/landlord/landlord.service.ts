@@ -6,7 +6,6 @@ import { Landlord } from './entities/landlord.entity';
 import { Repository } from 'typeorm';
 import { UserService } from 'src/user/user.service';
 import { FileService } from 'src/file/file.service';
-import { User } from 'src/user/entities/user.entity';
 import { EmailService } from 'src/notification/email/email.service';
 import { QueryLandlordDto } from './dto/query-landlord.dto';
 
@@ -55,11 +54,9 @@ export class LandlordService {
     return await this.landlordRepository.save(landlord);
   }
 
-  async approveLandlord(id: string, approvedBy: User) {
+  async approveLandlord(id: string) {
     const landlord = await this.findOne(id);
     landlord.isApproved = true;
-    landlord.approvedBy = approvedBy;
-    landlord.approvedDate = new Date();
     const updatedLandlord = await this.landlordRepository.save(landlord);
     await this.emailService.sendMailToUser({
       context: {

@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {
   Controller,
   Get,
@@ -9,7 +7,6 @@ import {
   Param,
   Delete,
   UseGuards,
-  Req,
   Query,
 } from '@nestjs/common';
 import { LandlordService } from './landlord.service';
@@ -96,18 +93,18 @@ export class LandlordController {
     };
   }
 
-  @RequirePermissions(PERMISSIONS.APPROVE_LANDLORD)
-  @Post(':id/approve')
-  async approve(@Param('id') id: string, @Req() req: Request) {
-    const user = (req as any).user;
+  // @RequirePermissions(PERMISSIONS.APPROVE_LANDLORD)
+  // @Post(':id/approve')
+  // async approve(@Param('id') id: string, @Req() req: Request) {
+  //   const user = (req as any).user;
 
-    const data = await this.landlordService.approveLandlord(id, user);
-    return {
-      message: 'Landlord approved successfully',
-      data,
-      success: true,
-    };
-  }
+  //   const data = await this.landlordService.approveLandlord(id, user);
+  //   return {
+  //     message: 'Landlord approved successfully',
+  //     data,
+  //     success: true,
+  //   };
+  // }
 
   @Delete(':id')
   async remove(@Param('id') id: string) {
