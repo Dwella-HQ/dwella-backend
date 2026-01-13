@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Injectable } from '@nestjs/common';
 import { CreatePropertyManagerDto } from './dto/create-property-manager.dto';
 import { UpdatePropertyManagerDto } from './dto/update-property-manager.dto';
