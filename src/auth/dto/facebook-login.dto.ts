@@ -1,11 +1,11 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
+import { USER_ROLES } from 'src/utils/constants';
 
 export class FacebookLoginDto {
   @IsNotEmpty()
   @IsString()
   token: string;
 
-  @IsString()
-  @IsNotEmpty()
-  roleName: string;
+  @IsEnum(USER_ROLES)
+  roleName: USER_ROLES;
 }
