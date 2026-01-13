@@ -11,7 +11,9 @@ describe('PropertyManagerController', () => {
       providers: [PropertyManagerService],
     }).compile();
 
-    controller = module.get<PropertyManagerController>(PropertyManagerController);
+    controller = module.get<PropertyManagerController>(
+      PropertyManagerController,
+    );
   });
 
   it('should be defined', () => {

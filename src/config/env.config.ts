@@ -145,6 +145,9 @@ export class EnvironmentVariables {
   @IsNumber()
   AWS_S3_SIGNED_URL_EXPIRATION_SECONDS: number;
 
+  @IsUrl()
+  AWS_CLOUDFRONT_URL: string;
+
   @IsString()
   @IsNotEmpty()
   PAYSTACK_SECRET_KEY: string;

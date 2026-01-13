@@ -47,7 +47,6 @@ export class AuthController {
   @HttpCode(200)
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async loginUser(
     @Req() request: Request,
     @Res({ passthrough: true }) res: Response,
@@ -124,7 +123,6 @@ export class AuthController {
       res.redirect(
         `${this.configService.get('FRONTEND_URL')}/auth/verify-email?verified=true&email=${verifyEmailDto.email}`,
       );
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       res.redirect(
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access

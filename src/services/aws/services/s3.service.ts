@@ -41,28 +41,13 @@ export class S3Service {
         }),
       );
 
-      const presignedUrl = await getSignedUrl(
-        this.s3Client,
-        new GetObjectCommand({
-          Bucket: bucketName,
-          Key: key,
-        }),
-        {
-          expiresIn: this.configService.get(
-            'AWS_S3_SIGNED_URL_EXPIRATION_SECONDS',
-          ),
-        },
-      );
-
-      const expirationDate = addSeconds(
-        new Date(),
-        this.configService.get('AWS_S3_SIGNED_URL_EXPIRATION_SECONDS')!,
+      const url = encodeURI(
+        `${this.configService.get('AWS_CLOUDFRONT_URL')}/${key}`,
       );
 
       return {
         key,
-        url: presignedUrl,
-        expirationDate: expirationDate,
+        url,
         etag: res.ETag,
       };
     } catch (error: any) {

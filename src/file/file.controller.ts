@@ -1,31 +1,71 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {
   Controller,
-  Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   Req,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  HttpStatus,
 } from '@nestjs/common';
 import { FileService } from './file.service';
-import { CreateFileDto } from './dto/create-file.dto';
-import { UpdateFileDto } from './dto/update-file.dto';
 import { Request } from 'express';
 import { AuthGuard } from '@nestjs/passport';
+import { ApiBearerAuth, ApiBody, ApiConsumes } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { User } from 'src/user/entities/user.entity';
 
 @Controller('file')
+@ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
 export class FileController {
   constructor(private readonly fileService: FileService) {}
 
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+        folder: {
+          type: 'string',
+        },
+        label: {
+          type: 'string',
+        },
+      },
+    },
+  })
+  @UseInterceptors(FileInterceptor('file'))
   @Post()
-  async create(@Body() createFileDto: CreateFileDto, @Req() req: Request) {
+  async create(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          // new MaxFileSizeValidator({ maxSize: 1e7 }),
+          // new FileTypeValidator({ fileType: 'image/*' }),
+        ],
+        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+      }),
+    )
+    file: Express.Multer.File,
+    @Req() request: Request & { user: User },
+    @Body('folder') folder: string,
+    @Body('label') label: string,
+  ) {
     const data = await this.fileService.createFile(
-      createFileDto,
-      (req as any).user,
+      {
+        file,
+        folder,
+        label,
+      },
+      request.user,
     );
     return {
       message: 'File uploaded successfully',

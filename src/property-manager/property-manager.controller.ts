@@ -1,11 +1,21 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { PropertyManagerService } from './property-manager.service';
 import { CreatePropertyManagerDto } from './dto/create-property-manager.dto';
 import { UpdatePropertyManagerDto } from './dto/update-property-manager.dto';
 
 @Controller('property-manager')
 export class PropertyManagerController {
-  constructor(private readonly propertyManagerService: PropertyManagerService) {}
+  constructor(
+    private readonly propertyManagerService: PropertyManagerService,
+  ) {}
 
   @Post()
   create(@Body() createPropertyManagerDto: CreatePropertyManagerDto) {
@@ -23,7 +33,10 @@ export class PropertyManagerController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePropertyManagerDto: UpdatePropertyManagerDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updatePropertyManagerDto: UpdatePropertyManagerDto,
+  ) {
     return this.propertyManagerService.update(+id, updatePropertyManagerDto);
   }
 
