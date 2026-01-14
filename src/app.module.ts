@@ -82,7 +82,7 @@ import { AmenitiesModule } from './amenities/amenities.module';
           password: configService.get<string>('REDIS_PASSWORD') ?? undefined,
           username: configService.get<string>('REDIS_USERNAME') ?? undefined,
           tls:
-            configService.get<string>('NODE_ENV') === 'production'
+            configService.get<string>('NODE_ENV') !== 'development'
               ? {}
               : undefined,
           maxRetriesPerRequest: null, // 🛠️ Prevents creating new clients when a request fails
