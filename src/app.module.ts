@@ -55,8 +55,11 @@ import { AmenitiesModule } from './amenities/amenities.module';
         const redisPort = configService.get<number>('REDIS_PORT');
         const redisUsername = configService.get<string>('REDIS_USERNAME');
         const redisPassword = configService.get<string>('REDIS_PASSWORD');
+        const nodeEnv = configService.get<string>('NODE_ENV');
+        const enableTls = nodeEnv !== 'development';
 
-        let redisUrl = `redis://`;
+        // Use 'rediss://' (double s) when TLS is enabled
+        let redisUrl = enableTls ? `rediss://` : `redis://`;
 
         if (redisUsername && redisPassword) {
           redisUrl += `${redisUsername}:${redisPassword}@`;
@@ -65,6 +68,14 @@ import { AmenitiesModule } from './amenities/amenities.module';
         }
 
         redisUrl += `${redisHost}:${redisPort}`;
+
+        // const tlsOptions = enableTls
+        //   ? {
+        //       rejectUnauthorized: false, // For self-signed ElastiCache certs
+        //       // Optional: provide custom CA certificate if needed
+        //       // ca: [fs.readFileSync('/path/to/ca-cert.pem')],
+        //     }
+        //   : undefined;
 
         return {
           stores: [new KeyvRedis(redisUrl)],
