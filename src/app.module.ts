@@ -76,6 +76,7 @@ import { AmenitiesModule } from './amenities/amenities.module';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService<EnvironmentVariables>) => ({
+        prefix: '{bull}',
         connection: {
           host: configService.get<string>('REDIS_HOST'),
           port: configService.get<number>('REDIS_PORT'),
