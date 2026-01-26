@@ -44,7 +44,10 @@ export class FlutterwaveService {
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         },
       ),
-    );
+    ).catch((err) => {
+      console.error('Error generating Flutterwave access token:', err);
+      throw err;
+    });
     const { access_token, expires_in } = response.data;
     await this.cacheManager.set(
       'flutterwave_access_token',
@@ -79,12 +82,13 @@ export class FlutterwaveService {
     const customerId = createCustomerResponse.data.data.id;
     const response = await lastValueFrom(
       this.httpService.post<FlutterwaveCreateStaticVirtualAccountResponse>(
-        `https://developersandbox-api.flutterwave.com/virtual-account-numbers`,
+        `https://developersandbox-api.flutterwave.com/virtual-accounts`,
         {
           customer_id: customerId,
           currency: payload.currency,
           bvn: payload.bvn,
           reference: payload.reference,
+          account_type: 'static',
           amount: 0,
           narration: `${payload.firstName} ${payload.lastName} Virtual Account`,
         },
@@ -95,7 +99,12 @@ export class FlutterwaveService {
           },
         },
       ),
-    );
+    ).catch((err) => {
+      console.error('Error creating Flutterwave virtual account:', err);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      console.log(err.response?.data);
+      throw err;
+    });
     return response.data;
   }
 }

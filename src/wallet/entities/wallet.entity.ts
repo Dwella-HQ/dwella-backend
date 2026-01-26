@@ -39,7 +39,7 @@ export class Wallet extends BaseEntity {
   transactions: Relation<WalletTransactions[]>;
 
   @OneToMany(() => VBA, (vba) => vba.wallet)
-  vbas: Relation<VBA[]>;
+  vbas?: Relation<VBA[]>;
 
   @Column()
   bvn: string;
@@ -49,6 +49,8 @@ export class Wallet extends BaseEntity {
     nullable: true,
   })
   metadata: Record<string, any>;
+
+  vba?: VBA;
 
   @Column({ default: true })
   isActive: boolean;

@@ -18,9 +18,11 @@ export class VbaService {
       bankCode: createVbaDto.bankCode,
       accountName: createVbaDto.accountName,
       accountNumber: createVbaDto.accountNumber,
+      bankName: createVbaDto.bankName,
       currency: wallet.currency,
       metadata: createVbaDto.metadata,
       wallet: wallet,
+      provider: createVbaDto.provider,
     });
     return this.vbaRepository.save(vba);
   }

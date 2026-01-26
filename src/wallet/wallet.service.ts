@@ -13,6 +13,9 @@ import { JOB_NAMES } from 'src/utils/constants';
 import { Queue } from 'bullmq';
 import { VbaService } from './vba/vba.service';
 import { CreateVBADto } from './dto/create-vba.dto';
+import { SettingsService } from 'src/settings/settings.service';
+import { ConfigService } from '@nestjs/config';
+import { EnvironmentVariables } from 'src/config/env.config';
 
 @Injectable()
 export class WalletService {
@@ -21,6 +24,8 @@ export class WalletService {
     private readonly walletRepository: Repository<Wallet>,
     private readonly landlordService: LandlordService,
     private readonly vbaService: VbaService,
+    private readonly configService: ConfigService<EnvironmentVariables>,
+    private readonly settingsService: SettingsService,
     @InjectQueue(JOB_NAMES.VBA_CREATION_JOB) private readonly vbaQueue: Queue,
   ) {}
 
@@ -55,10 +60,22 @@ export class WalletService {
   }
 
   async findOne(id: string) {
-    const wallet = await this.walletRepository.findOne({ where: { id } });
+    const defaultProvider = await this.settingsService.getSetting(
+      'preferredPaymentProvider',
+    );
+    const wallet = await this.walletRepository.findOne({
+      where: { id },
+      relations: {
+        vbas: true,
+      },
+    });
     if (!wallet) {
       throw new NotFoundException('Wallet not found');
     }
+    wallet.vba = wallet.vbas?.find(
+      (vba) => vba.provider === defaultProvider && vba.isActive,
+    );
+    wallet.vbas = undefined;
     return wallet;
   }
 

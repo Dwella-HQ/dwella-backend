@@ -28,8 +28,13 @@ export class MonnifyService {
       return cachedToken;
     }
     const key = base64Encode(
-      `${process.env.MONNIFY_API_KEY}:${process.env.MONNIFY_API_SECRET}`,
+      `${this.configService.get<string>('MONNIFY_API_KEY')}:${this.configService.get<string>('MONNIFY_SECRET_KEY')}`,
     );
+    console.log({
+      key,
+      apiKey: this.configService.get<string>('MONNIFY_API_KEY'),
+      secretKey: this.configService.get<string>('MONNIFY_SECRET_KEY'),
+    });
     const response = await lastValueFrom(
       this.httpService.post<MonnifyLoginResponse>(
         '/api/v1/auth/login',
@@ -38,7 +43,10 @@ export class MonnifyService {
           headers: { Authorization: `Basic ${key}` },
         },
       ),
-    );
+    ).catch((error) => {
+      console.error('Error fetching Monnify access token:', error);
+      throw error;
+    });
     const { accessToken, expiresIn } = response.data.responseBody;
     await this.cacheManager.set(
       'monnify_access_token',
@@ -63,7 +71,10 @@ export class MonnifyService {
           headers: { Authorization: `Bearer ${accessToken}` },
         },
       ),
-    );
+    ).catch((error) => {
+      console.error('Error creating Monnify virtual account:', error);
+      throw error;
+    });
     return response.data;
   }
 }

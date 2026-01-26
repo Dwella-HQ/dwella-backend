@@ -47,7 +47,7 @@ export class VBA extends BaseEntity {
   @Column('simple-json')
   metadata: Record<string, any>;
 
-  @Column({ default: false })
+  @Column({ default: true })
   isActive: boolean;
 
   @CreateDateColumn()
