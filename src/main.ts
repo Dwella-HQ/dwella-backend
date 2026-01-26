@@ -11,7 +11,7 @@ async function bootstrap() {
     logger: new Logger(),
   });
   app.enableCors({
-    origin: true,
+    origin: '*',
   });
   await configureSwagger(app, 'documentation');
   app.useGlobalPipes(new ValidationPipe());
