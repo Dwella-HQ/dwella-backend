@@ -78,8 +78,6 @@ export class UserService {
         expiresIn: this.configService.get('JWT_EXPIRES_IN'),
       });
       verificationLink = `${this.configService.get('BACKEND_URL')}/auth/verify-email?email=${encodeURIComponent(user.email)}&token=${encodeURIComponent(newToken)}`;
-      console.log({ verificationLink });
-      console.log({ email: encodeURIComponent(user.email) });
       await this.cacheManager.set(
         `email-verification-token-${user.id}`,
         newToken,
