@@ -22,9 +22,7 @@ import { join } from 'path';
           },
         },
         defaults: {
-          // from: `"${configService.get<string>('APP_NAME')}" <no-reply@dwella-ng.com>`,
-          // from: `email@example.com`,
-          from: `Acme <onboarding@resend.dev>`,
+          from: `"${configService.get<string>('APP_NAME')}" <no-reply@dwella-ng.com>`,
         },
         template: {
           dir: join(__dirname, '../../templates/email'),
