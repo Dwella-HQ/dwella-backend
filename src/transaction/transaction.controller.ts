@@ -76,6 +76,16 @@ export class TransactionController {
     };
   }
 
+  @Get('wallet/:walletId')
+  async findWalletTransactions(@Param('walletId') walletId: string) {
+    const data = await this.transactionService.findWalletTransactions(walletId);
+    return {
+      success: true,
+      message: 'Wallet transactions retrieved successfully',
+      data,
+    };
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const data = await this.transactionService.findOne(id);

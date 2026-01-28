@@ -50,11 +50,24 @@ export class TransactionService {
   async findOne(id: string) {
     const transaction = await this.transactionRepository.findOne({
       where: { id },
+      relations: {
+        wallet: true,
+      },
     });
     if (!transaction) {
       throw new NotFoundException('Transaction not found');
     }
     return transaction;
+  }
+
+  async findWalletTransactions(walletId: string) {
+    const transactions = await this.transactionRepository.find({
+      where: { wallet: { id: walletId } },
+      relations: {
+        wallet: true,
+      },
+    });
+    return transactions;
   }
 
   async updateTransactionStatus(

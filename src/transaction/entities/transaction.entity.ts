@@ -1,4 +1,5 @@
 import {
+  PaymentMethodEnum,
   PaymentProviderEnum,
   TransactionStatusEnum,
   TransactionTypeEnum,
@@ -26,6 +27,12 @@ export class Transaction extends BaseEntity {
     type: 'text',
   })
   provider: PaymentProviderEnum;
+
+  @Column({
+    type: 'text',
+    nullable: true,
+  })
+  paymentMethod: PaymentMethodEnum;
 
   @ManyToOne(() => Wallet, { nullable: false })
   wallet: Wallet;

@@ -121,6 +121,11 @@ export enum PaymentProviderEnum {
   FLUTTERWAVE = 'flutterwave',
 }
 
+export enum PaymentMethodEnum {
+  CARD = 'card',
+  BANK_TRANSFER = 'bank_transfer',
+}
+
 export enum VerificationTypeEnum {
   LANDLORD_VERIFICATION = 'LANDLORD_VERIFICATION',
   TENANT_VERIFICATION = 'TENANT_VERIFICATION',
