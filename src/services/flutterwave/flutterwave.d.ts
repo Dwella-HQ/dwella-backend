@@ -1,3 +1,6 @@
+import { CurrenciesEnum } from 'src/utils/constants';
+import { Wallet } from 'src/wallet/entities/wallet.entity';
+
 export interface FlutterwaveGenerateAccessTokenResponse {
   access_token: string;
   expires_in: number;
@@ -48,4 +51,29 @@ export interface FlutterwaveCreateStaticVirtualAccountResponse {
     created_datetime: string;
     meta: Record<string, unknown>;
   };
+}
+
+export interface FlutterwaveConfirmBankAccountNumberRequest {
+  account_number: string;
+  bank_code: string;
+  currency?: CurrenciesEnum;
+}
+
+export interface FlutterwaveConfirmBankAccountNumberResponse {
+  status: string;
+  message: string;
+  data: {
+    bank_code: string;
+    account_number: string;
+    account_name: string;
+  };
+}
+
+export interface FlutterwaveWithdrawToBankAccountPayload {
+  bank_code: string;
+  account_number: string;
+  amount: number;
+  narration?: string;
+  reference: string;
+  wallet: Wallet;
 }

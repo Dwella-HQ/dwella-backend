@@ -10,10 +10,10 @@ import {
   Relation,
   UpdateDateColumn,
 } from 'typeorm';
-import { WalletTransactions } from './wallet-transactions.entity';
 import { CurrenciesEnum } from 'src/utils/constants';
 import { VBA } from '../vba/entity/vba.entity';
 import { Exclude, instanceToPlain } from 'class-transformer';
+import { WalletTransaction } from './wallet-transaction.entity';
 
 @Entity()
 export class Wallet extends BaseEntity {
@@ -35,8 +35,8 @@ export class Wallet extends BaseEntity {
   @Column('decimal', { precision: 15, scale: 2, default: 0 })
   escrowBalance: number;
 
-  @OneToMany(() => WalletTransactions, (transaction) => transaction.wallet)
-  transactions: Relation<WalletTransactions[]>;
+  @OneToMany(() => WalletTransaction, (transaction) => transaction.wallet)
+  transactions: Relation<WalletTransaction[]>;
 
   @OneToMany(() => VBA, (vba) => vba.wallet)
   vbas?: Relation<VBA[]>;

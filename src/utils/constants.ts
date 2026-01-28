@@ -1,3 +1,11 @@
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsNumberString,
+  IsOptional,
+  IsString,
+  Length,
+} from 'class-validator';
 import { CreateAmenityDto } from 'src/amenities/dto/create-amenity.dto';
 
 export enum USER_ROLES {
@@ -70,6 +78,9 @@ export enum PERMISSIONS {
 
   //Amenities
   MANAGE_AMENITIES = 'manage_amenities',
+
+  // Transactions
+  MANAGE_TRANSACTIONS = 'manage_transactions',
 }
 
 export enum RegistrationTypeEnum {
@@ -87,6 +98,13 @@ export enum CurrenciesEnum {
 export enum TransactionTypeEnum {
   CREDIT = 'credit',
   DEBIT = 'debit',
+}
+
+export enum TransactionStatusEnum {
+  PENDING = 'pending',
+  COMPLETED = 'completed',
+  FAILED = 'failed',
+  REVERSED = 'reversed',
 }
 
 export enum TransactionActionEnum {
@@ -118,5 +136,24 @@ export enum VerificationStatusEnum {
 export const JOB_NAMES = {
   VBA_CREATION_JOB: 'VBA_CREATION_JOB',
 };
+
+export class TransferUserDetails {
+  @IsString()
+  @IsNotEmpty()
+  fullName: string;
+
+  @IsEmail()
+  @IsOptional()
+  email?: string;
+
+  @IsNumberString()
+  @IsOptional()
+  bankCode?: string;
+
+  @IsNumberString()
+  @Length(10, 10)
+  @IsOptional()
+  accountNumber?: string;
+}
 
 export const DefaultAmenities: CreateAmenityDto[] = [];

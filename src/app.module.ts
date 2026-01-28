@@ -30,6 +30,7 @@ import { SettingsModule } from './settings/settings.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
 import { VerificationModule } from './verification/verification.module';
 import { AmenitiesModule } from './amenities/amenities.module';
+import { TransactionModule } from './transaction/transaction.module';
 
 @Module({
   imports: [
@@ -130,6 +131,7 @@ import { AmenitiesModule } from './amenities/amenities.module';
     WebhooksModule,
     VerificationModule,
     AmenitiesModule,
+    TransactionModule,
   ],
   controllers: [AppController],
   providers: [AppService],

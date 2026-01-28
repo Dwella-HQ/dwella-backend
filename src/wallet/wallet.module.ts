@@ -5,7 +5,7 @@ import { VbaModule } from './vba/vba.module';
 import { WalletWorker } from './wallet.worker';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Wallet } from './entities/wallet.entity';
-import { WalletTransactions } from './entities/wallet-transactions.entity';
+import { WalletTransaction } from './entities/wallet-transaction.entity';
 import { LandlordModule } from 'src/landlord/landlord.module';
 import { UserModule } from 'src/user/user.module';
 import { BullModule } from '@nestjs/bullmq';
@@ -15,7 +15,7 @@ import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Wallet, WalletTransactions]),
+    TypeOrmModule.forFeature([Wallet, WalletTransaction]),
     VbaModule,
     LandlordModule,
     UserModule,
