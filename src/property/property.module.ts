@@ -10,5 +10,6 @@ import { Unit } from './entities/units.entity';
   imports: [TypeOrmModule.forFeature([Property, Unit]), LandlordModule],
   controllers: [PropertyController],
   providers: [PropertyService],
+  exports: [PropertyService],
 })
 export class PropertyModule {}

@@ -15,6 +15,7 @@ import {
   ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
+  Relation,
   UpdateDateColumn,
 } from 'typeorm';
 
@@ -35,10 +36,10 @@ export class Transaction extends BaseEntity {
   paymentMethod: PaymentMethodEnum;
 
   @ManyToOne(() => Wallet, { nullable: false })
-  wallet: Wallet;
+  wallet: Relation<Wallet>;
 
   @OneToOne(() => WalletTransaction, (transaction) => transaction.wallet)
-  walletTransaction: WalletTransaction;
+  walletTransaction: Relation<WalletTransaction>;
 
   @Column('decimal', { precision: 15, scale: 2 })
   amount: number;
