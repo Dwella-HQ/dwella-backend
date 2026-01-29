@@ -17,6 +17,7 @@ import { FileService } from 'src/file/file.service';
 import { File } from 'src/file/entities/file.entity';
 import { QueryVerificationDto } from './dto/query-verification.dto';
 import { OnEvent } from '@nestjs/event-emitter';
+import { PropertyService } from 'src/property/property.service';
 
 @Injectable()
 export class VerificationService {
@@ -24,6 +25,7 @@ export class VerificationService {
     @InjectRepository(Verification)
     private verificationRepository: Repository<Verification>,
     private readonly landlordService: LandlordService,
+    private readonly propertyService: PropertyService,
     private readonly fileService: FileService,
   ) {}
 
@@ -33,6 +35,17 @@ export class VerificationService {
     const verification = this.verificationRepository.create({
       type: VerificationTypeEnum.LANDLORD_VERIFICATION,
       landlord: landlord,
+    });
+    return await this.verificationRepository.save(verification);
+  }
+
+  @OnEvent('property.created')
+  async startPropertyVerification(propertyId: string) {
+    const property = await this.propertyService.findOne(propertyId);
+    const verification = this.verificationRepository.create({
+      type: VerificationTypeEnum.PROPERTY_VERIFICATION,
+      property: property,
+      landlord: property.landlord,
     });
     return await this.verificationRepository.save(verification);
   }
@@ -142,6 +155,35 @@ export class VerificationService {
     if (updatedVerification.status === VerificationStatusEnum.VERIFIED) {
       await this.landlordService.approveLandlord(
         updatedVerification.landlord.id,
+      );
+    }
+    return updatedVerification;
+  }
+
+  async updatePropertyStatus(
+    id: string,
+    updateVerificationStatusDto: UpdateVerificationStatusDto,
+    user: User,
+  ) {
+    const verification = await this.findOne(id);
+    if (verification.type !== VerificationTypeEnum.PROPERTY_VERIFICATION) {
+      throw new BadRequestException('Property verification not found');
+    }
+    verification.status = updateVerificationStatusDto.status;
+    verification.reason = updateVerificationStatusDto.reason;
+    verification.verifiedAt = new Date();
+    verification.verifiedBy = user;
+    const supportingDocuments: File[] = [];
+    for (const fileId of updateVerificationStatusDto.supportingDocumentIds) {
+      const file = await this.fileService.findFileById(fileId);
+      supportingDocuments.push(file);
+    }
+    verification.supportingDocuments = supportingDocuments;
+    const updatedVerification =
+      await this.verificationRepository.save(verification);
+    if (updatedVerification.status === VerificationStatusEnum.VERIFIED) {
+      await this.propertyService.approveProperty(
+        updatedVerification.property.id,
       );
     }
     return updatedVerification;

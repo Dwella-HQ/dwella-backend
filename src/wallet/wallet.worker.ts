@@ -86,6 +86,9 @@ export class WalletWorker extends WorkerHost {
         });
         return vba;
       }
+      case 'initiate-wallet-credit': {
+        return;
+      }
       default: {
         throw new Error('Unknown job name');
       }

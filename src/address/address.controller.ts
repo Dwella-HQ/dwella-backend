@@ -21,9 +21,12 @@ import { PERMISSIONS } from 'src/utils/constants';
 export class AddressController {
   constructor(private readonly addressService: AddressService) {}
 
-  @Post()
-  async create(@Body() createAddressDto: CreateAddressDto) {
-    const data = await this.addressService.create(createAddressDto);
+  @Post('user/:userId')
+  async create(
+    @Param('userId') userId: string,
+    @Body() createAddressDto: CreateAddressDto,
+  ) {
+    const data = await this.addressService.create(userId, createAddressDto);
     return {
       success: true,
       message: 'Address created successfully',

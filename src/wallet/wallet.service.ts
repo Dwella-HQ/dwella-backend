@@ -9,7 +9,7 @@ import { Wallet } from './entities/wallet.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LandlordService } from 'src/landlord/landlord.service';
 import { InjectQueue } from '@nestjs/bullmq';
-import { JOB_NAMES } from 'src/utils/constants';
+import { JOB_NAMES, PaymentProviderEnum } from 'src/utils/constants';
 import { Queue } from 'bullmq';
 import { VbaService } from './vba/vba.service';
 import { CreateVBADto } from './dto/create-vba.dto';
@@ -79,21 +79,17 @@ export class WalletService {
     return wallet;
   }
 
-  async creditWallet(walletId: string, amount: number) {
+  async initiateCreditWallet(walletId: string, amount: number) {
     const wallet = await this.findOne(walletId);
-    wallet.balance += amount;
-    wallet.escrowBalance = wallet.balance;
-    return this.walletRepository.save(wallet);
+    // Handle Logic
   }
 
-  async debitWallet(walletId: string, amount: number) {
+  async initiateDebitWallet(walletId: string, amount: number) {
     const wallet = await this.findOne(walletId);
     if (wallet.balance < amount) {
       throw new NotFoundException('Insufficient balance');
     }
-    wallet.balance -= amount;
-    wallet.escrowBalance = wallet.balance;
-    return this.walletRepository.save(wallet);
+    // handle Logic
   }
 
   async createVba(walletId: string, payload: CreateVBADto) {

@@ -8,6 +8,8 @@ import { UserService } from 'src/user/user.service';
 import { FileService } from 'src/file/file.service';
 import { EmailService } from 'src/notification/email/email.service';
 import { QueryLandlordDto } from './dto/query-landlord.dto';
+import { AddressService } from 'src/address/address.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class LandlordService {
@@ -17,6 +19,8 @@ export class LandlordService {
     private readonly userService: UserService,
     private readonly fileService: FileService,
     private readonly emailService: EmailService,
+    private readonly addressService: AddressService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
   async create(createLandlordDto: CreateLandlordDto) {
     const user = await this.userService.findOne(createLandlordDto.userId);
@@ -51,7 +55,20 @@ export class LandlordService {
       landlord.taxIdentificationNumberDocument =
         taxIdentificationNumberDocument;
     }
-    return await this.landlordRepository.save(landlord);
+    if (createLandlordDto.profilePictureId) {
+      const profilePicture = await this.fileService.findFileById(
+        createLandlordDto.profilePictureId,
+      );
+      landlord.profilePicture = profilePicture;
+    }
+    const address = await this.addressService.create(
+      user.id,
+      createLandlordDto.address,
+    );
+    landlord.address = address;
+    const savedLandlord = await this.landlordRepository.save(landlord);
+    this.eventEmitter.emit('landlord.created', savedLandlord.id);
+    return savedLandlord;
   }
 
   async approveLandlord(id: string) {
@@ -64,7 +81,7 @@ export class LandlordService {
         dashboardLink: `${process.env.FRONTEND_URL}/landlord/dashboard`,
       },
       subject: 'Your Landlord Application is Approved',
-      template: 'landlord-approval',
+      template: 'landlord-approved',
       user: landlord.user,
     });
     return updatedLandlord;

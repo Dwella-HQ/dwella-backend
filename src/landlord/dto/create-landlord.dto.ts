@@ -1,4 +1,13 @@
-import { IsOptional, IsString, IsUUID } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  IsNumberString,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Length,
+  ValidateNested,
+} from 'class-validator';
+import { CreateAddressDto } from 'src/address/dto/create-address.dto';
 
 export class CreateLandlordDto {
   @IsUUID('all')
@@ -7,6 +16,14 @@ export class CreateLandlordDto {
   @IsString()
   @IsOptional()
   landLordName?: string;
+
+  @IsNumberString()
+  @Length(11, 11)
+  bvn: string;
+
+  @IsUUID('all')
+  @IsOptional()
+  profilePictureId: string;
 
   //TODO remove optional fields from documents
   @IsUUID('all')
@@ -24,4 +41,9 @@ export class CreateLandlordDto {
   @IsUUID('all')
   @IsOptional()
   taxIdentificationNumberDocumentId: string;
+
+  @ValidateNested()
+  @IsOptional()
+  @Type(() => CreateAddressDto)
+  address: CreateAddressDto;
 }

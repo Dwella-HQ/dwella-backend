@@ -14,8 +14,8 @@ export class AddressService {
     private addressRepository: Repository<Address>,
     private readonly userService: UserService,
   ) {}
-  async create(createAddressDto: CreateAddressDto) {
-    const user = await this.userService.findOne(createAddressDto.userId);
+  async create(userId: string, createAddressDto: CreateAddressDto) {
+    const user = await this.userService.findOne(userId);
     const address = this.addressRepository.create(createAddressDto);
     address.user = user;
     return await this.addressRepository.save(address);

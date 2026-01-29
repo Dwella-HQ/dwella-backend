@@ -1,3 +1,4 @@
+import { Address } from 'src/address/entities/address.entity';
 import { File } from 'src/file/entities/file.entity';
 import { User } from 'src/user/entities/user.entity';
 import {
@@ -21,8 +22,16 @@ export class Landlord extends BaseEntity {
   @OneToOne(() => User, (user) => user.landlord, { eager: true })
   user: Relation<User>;
 
+  @OneToOne(() => Address, { eager: true })
+  @JoinColumn()
+  address: Relation<Address>;
+
   @Column()
   landLordName: string;
+
+  @JoinColumn()
+  @OneToOne(() => File, { nullable: true, eager: true })
+  profilePicture: Relation<File>;
 
   // documents ----
   @JoinColumn()

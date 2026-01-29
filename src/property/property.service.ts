@@ -10,8 +10,8 @@ import { LandlordService } from 'src/landlord/landlord.service';
 import { QueryPropertyDto } from './dto/query-property.dto';
 import { CreateUnitDto } from './dto/create-unit.dto';
 import { Unit } from './entities/units.entity';
-import { User } from 'src/user/entities/user.entity';
-
+import { EmailService } from 'src/notification/email/email.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 @Injectable()
 export class PropertyService {
   constructor(
@@ -21,22 +21,26 @@ export class PropertyService {
     private unitRepository: Repository<Unit>,
     private addressService: AddressService,
     private landlordService: LandlordService,
+    private emailService: EmailService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
   async create(createPropertyDto: CreatePropertyDto) {
     const landlord = await this.landlordService.findOne(
       createPropertyDto.landlordId,
     );
-    const address = await this.addressService.create({
-      ...createPropertyDto.address,
-      userId: landlord.user.id,
-    });
+    const address = await this.addressService.create(
+      landlord.user.id,
+      createPropertyDto.address,
+    );
     const property = this.propertyRepository.create({
       ...createPropertyDto,
       landlord,
       address,
       amenities: createPropertyDto.amenities || [],
     });
-    return await this.propertyRepository.save(property);
+    const savedProperty = await this.propertyRepository.save(property);
+    this.eventEmitter.emit('property.created', savedProperty.id);
+    return savedProperty;
   }
 
   async findAll() {
@@ -89,10 +93,18 @@ export class PropertyService {
     return properties;
   }
 
-  async approveProperty(id: string, user: User) {
+  async approveProperty(id: string) {
     const property = await this.findOne(id);
     property.isApproved = true;
-    property.approvedBy = user;
+    await this.emailService.sendMailToUser({
+      context: {
+        name: property.landlord.landLordName,
+        propertyLink: `${process.env.FRONTEND_URL}/landlord/dashboard/property/${property.id}`,
+      },
+      subject: 'Your Property Application is Approved',
+      template: 'property-approved',
+      user: property.landlord.user,
+    });
     return await this.propertyRepository.save(property);
   }
 

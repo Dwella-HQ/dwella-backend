@@ -41,6 +41,27 @@ export class WalletController {
     };
   }
 
+  @Post(':id/initiate-credit')
+  async initiateCredit(
+    @Param('id') id: string,
+    @Body('amount') amount: number,
+  ) {
+    const wallet = await this.walletService.initiateCreditWallet(id, amount);
+    return {
+      message: 'Wallet credit initiated successfully',
+      data: wallet,
+    };
+  }
+
+  @Post(':id/initiate-debit')
+  async initiateDebit(@Param('id') id: string, @Body('amount') amount: number) {
+    const wallet = await this.walletService.initiateDebitWallet(id, amount);
+    return {
+      message: 'Wallet debit initiated successfully',
+      data: wallet,
+    };
+  }
+
   @Post(':id/disable')
   async disableWallet(@Param('id') id: string) {
     const wallet = await this.walletService.disableWallet(id);
