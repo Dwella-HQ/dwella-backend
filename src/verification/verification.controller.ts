@@ -42,6 +42,18 @@ export class VerificationController {
     };
   }
 
+  @RequirePermissions(PERMISSIONS.APPROVE_PROPERTY)
+  @Post('property/:propertyId')
+  async createPropertyVerification(@Param('propertyId') propertyId: string) {
+    const data =
+      await this.verificationService.startPropertyVerification(propertyId);
+    return {
+      success: true,
+      message: 'Property verification started successfully',
+      data: data,
+    };
+  }
+
   @Get()
   async findAll() {
     const data = await this.verificationService.findAll();
@@ -81,6 +93,26 @@ export class VerificationController {
   ) {
     const user = req.user as User;
     const data = await this.verificationService.updateLandlordStatus(
+      id,
+      updateVerificationStatusDto,
+      user,
+    );
+    return {
+      success: true,
+      message: 'Verification status updated successfully',
+      data: data,
+    };
+  }
+
+  @RequirePermissions(PERMISSIONS.APPROVE_PROPERTY)
+  @Patch(':id/property/status')
+  async updateProperty(
+    @Param('id') id: string,
+    @Body() updateVerificationStatusDto: UpdateVerificationStatusDto,
+    @Req() req: Request,
+  ) {
+    const user = req.user as User;
+    const data = await this.verificationService.updatePropertyStatus(
       id,
       updateVerificationStatusDto,
       user,
