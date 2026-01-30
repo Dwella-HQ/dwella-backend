@@ -76,6 +76,9 @@ export class Transaction extends BaseEntity {
   })
   transactionStatus: TransactionStatusEnum;
 
+  @Column({ nullable: true })
+  paymentUrl?: string;
+
   @Column({ nullable: true, type: 'simple-json' })
   metaData?: Record<string, any>;
 

@@ -1,6 +1,11 @@
 import { HttpService } from '@nestjs/axios';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { Cache } from 'cache-manager';
 import { lastValueFrom } from 'rxjs';
 import { base64Encode, formatAmount } from 'src/utils/misc';
@@ -88,9 +93,28 @@ export class MonnifyService {
       'paymentMethods',
     )) as PaymentMethodEnum[];
     const accessToken = await this.getAccessToken();
+
+    console.log({
+      amount: transaction.amount,
+      customerEmail: transaction.senderDetails.email,
+      paymentReference: transaction.id,
+      paymentDescription: transaction.narration,
+      currencyCode: transaction.currency,
+      contractCode: this.configService.get<string>('MONNIFY_CONTRACT_CODE'),
+      redirectUrl: encodeURIComponent(
+        `${this.configService.get<string>('BACKEND_URL')}/transaction/success?amount=${transaction.currency} ${formatAmount(transaction.amount)}`,
+      ),
+      paymentMethods: paymentMethods.flatMap((method) =>
+        method === PaymentMethodEnum.BANK_TRANSFER
+          ? ['ACCOUNT_TRANSFER']
+          : method === PaymentMethodEnum.CARD
+            ? ['CARD']
+            : [],
+      ),
+    });
     const response = await lastValueFrom(
       this.httpService.post<MonnifyInitiateWalletCreditResponse>(
-        '/api/v1/transactions/initiate-payment',
+        '/api/v1/merchant/transactions/init-transaction',
         {
           amount: transaction.amount,
           customerEmail: transaction.senderDetails.email,
@@ -98,9 +122,7 @@ export class MonnifyService {
           paymentDescription: transaction.narration,
           currencyCode: transaction.currency,
           contractCode: this.configService.get<string>('MONNIFY_CONTRACT_CODE'),
-          redirectUrl: encodeURIComponent(
-            `${this.configService.get<string>('BACKEND_URL')}/transaction/success?amount=${transaction.currency} ${formatAmount(transaction.amount)}`,
-          ),
+          redirectUrl: `${this.configService.get<string>('BACKEND_URL')}/transaction/success`,
           paymentMethods: paymentMethods.flatMap((method) =>
             method === PaymentMethodEnum.BANK_TRANSFER
               ? ['ACCOUNT_TRANSFER']
@@ -114,8 +136,14 @@ export class MonnifyService {
         },
       ),
     ).catch((error) => {
-      console.error('Error initiating Monnify wallet credit:', error);
-      throw error;
+      console.error(
+        'Error initiating Monnify wallet credit:',
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        error.response?.data,
+      );
+      throw new InternalServerErrorException(
+        'Failed to initiate wallet credit',
+      );
     });
     return response.data;
   }

@@ -22,6 +22,7 @@ export class LandlordService {
     private readonly addressService: AddressService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
+
   async create(createLandlordDto: CreateLandlordDto) {
     const user = await this.userService.findOne(createLandlordDto.userId);
 
@@ -67,6 +68,7 @@ export class LandlordService {
     );
     landlord.address = address;
     const savedLandlord = await this.landlordRepository.save(landlord);
+
     this.eventEmitter.emit('landlord.created', savedLandlord.id);
     return savedLandlord;
   }

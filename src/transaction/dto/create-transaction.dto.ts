@@ -1,18 +1,14 @@
 import { Type } from 'class-transformer';
 import {
-  IsEnum,
   IsNumber,
   IsOptional,
   IsString,
   Min,
   ValidateNested,
 } from 'class-validator';
-import { PaymentProviderEnum, TransferUserDetails } from 'src/utils/constants';
+import { TransferUserDetails } from 'src/utils/constants';
 
 export class CreateDebitTransactionDto {
-  @IsEnum(PaymentProviderEnum)
-  provider: PaymentProviderEnum;
-
   @IsNumber()
   @Min(100)
   amount: number;
@@ -28,9 +24,6 @@ export class CreateDebitTransactionDto {
 }
 
 export class CreateCreditTransactionDto {
-  @IsEnum(PaymentProviderEnum)
-  provider: PaymentProviderEnum;
-
   @IsNumber()
   @Min(100)
   amount: number;

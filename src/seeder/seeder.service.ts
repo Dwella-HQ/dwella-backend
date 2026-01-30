@@ -133,7 +133,7 @@ export class SeederService implements OnModuleInit {
       this.logger.log('Settings Created Successfully', settings);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      // console.error('Error creating settings:', error);
+      console.error('Error creating settings:', error);
     }
   }
 

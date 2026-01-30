@@ -18,7 +18,7 @@ export class Address extends BaseEntity {
   @ManyToOne(() => User, { nullable: false })
   user: Relation<User>;
 
-  @Column()
+  @Column({ nullable: true })
   street: string;
 
   @Column()
