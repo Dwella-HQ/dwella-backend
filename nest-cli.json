@@ -14,7 +14,7 @@
         }
       }
     ],
-    "assets": ["/templates/**/*"],
+    "assets": ["/templates/**/*", "/public/**/*"],
     "watchAssets": true
   }
 }

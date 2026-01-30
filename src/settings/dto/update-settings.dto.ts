@@ -1,10 +1,21 @@
-import { IsEnum } from 'class-validator';
-import { CurrenciesEnum, PaymentProviderEnum } from 'src/utils/constants';
+import { IsArray, IsEnum, IsOptional } from 'class-validator';
+import {
+  CurrenciesEnum,
+  PaymentMethodEnum,
+  PaymentProviderEnum,
+} from 'src/utils/constants';
 
 export class UpdateSettingsDto {
   @IsEnum(CurrenciesEnum)
+  @IsOptional()
   defaultCurrency?: CurrenciesEnum;
 
   @IsEnum(PaymentProviderEnum)
-  prefferedPaymentMethod?: PaymentProviderEnum;
+  @IsOptional()
+  preferredPaymentProvider?: PaymentProviderEnum;
+
+  @IsEnum(PaymentMethodEnum, { each: true })
+  @IsArray()
+  @IsOptional()
+  paymentMethods?: PaymentMethodEnum[];
 }

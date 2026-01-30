@@ -37,7 +37,7 @@ export class CreateCreditTransactionDto {
 
   @IsString()
   @IsOptional()
-  narration: string;
+  narration?: string;
 
   @IsOptional()
   @ValidateNested()

@@ -140,6 +140,7 @@ export enum VerificationStatusEnum {
 
 export const JOB_NAMES = {
   VBA_CREATION_JOB: 'VBA_CREATION_JOB',
+  HANDLE_TRANSACTION_JOB: 'HANDLE_TRANSACTION_JOB',
 };
 
 export class TransferUserDetails {

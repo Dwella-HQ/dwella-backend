@@ -29,3 +29,7 @@ export function base64Encode(str: string): string {
 export function base64Decode(base64Str: string): string {
   return Buffer.from(base64Str, 'base64').toString('utf-8');
 }
+
+export function formatAmount(amount: number): string {
+  return new Intl.NumberFormat('en-US').format(amount);
+}

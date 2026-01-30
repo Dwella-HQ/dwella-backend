@@ -5,9 +5,11 @@ import { configureSwagger } from './config/swagger.config';
 import { ConfigService } from '@nestjs/config';
 import { EnvironmentVariables } from './config/env.config';
 import { Logger, ValidationPipe } from '@nestjs/common';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: new Logger(),
   });
   app.enableCors({
@@ -15,6 +17,9 @@ async function bootstrap() {
   });
   await configureSwagger(app, 'documentation');
   app.useGlobalPipes(new ValidationPipe());
+  app.useStaticAssets(join(__dirname, 'public'));
+  app.setBaseViewsDir(join(__dirname, 'templates', 'html'));
+  app.setViewEngine('hbs');
   await app.listen(
     app.get(ConfigService<EnvironmentVariables>).get('PORT')!,
     '0.0.0.0',

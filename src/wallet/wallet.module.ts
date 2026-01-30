@@ -12,6 +12,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { JOB_NAMES } from 'src/utils/constants';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
+import { TransactionModule } from 'src/transaction/transaction.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
     VbaModule,
     LandlordModule,
     UserModule,
+    TransactionModule,
     BullModule.registerQueue({
       name: JOB_NAMES.VBA_CREATION_JOB,
     }),

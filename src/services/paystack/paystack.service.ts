@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import type {
@@ -12,6 +13,8 @@ import { EnvironmentVariables } from 'src/config/env.config';
 import { ConfigService } from '@nestjs/config';
 import { PaymentProviderEnum } from 'src/utils/constants';
 import { WalletService } from 'src/wallet/wallet.service';
+import { Wallet } from 'src/wallet/entities/wallet.entity';
+import { Transaction } from 'src/transaction/entities/transaction.entity';
 
 @Injectable()
 export class PaystackService {
@@ -60,5 +63,9 @@ export class PaystackService {
       },
     );
     return wallet;
+  }
+
+  async initiateWalletCredit(transaction: Transaction) {
+    // const response = await lastValueFrom( )
   }
 }

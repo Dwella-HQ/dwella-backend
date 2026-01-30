@@ -11,6 +11,8 @@ import { breakDownFullName } from 'src/utils/misc';
 import { Wallet } from './entities/wallet.entity';
 import { FlutterwaveService } from 'src/services/flutterwave/flutterwave.service';
 import { MonnifyService } from 'src/services/monnify/monnify.service';
+import { SettingsService } from 'src/settings/settings.service';
+import { TransactionService } from 'src/transaction/transaction.service';
 
 @Processor(JOB_NAMES.VBA_CREATION_JOB)
 export class WalletWorker extends WorkerHost {
@@ -19,6 +21,8 @@ export class WalletWorker extends WorkerHost {
     private readonly flutterwaveService: FlutterwaveService,
     private readonly monnifyService: MonnifyService,
     private readonly walletService: WalletService,
+    private readonly settingsService: SettingsService,
+    private readonly transactionService: TransactionService,
   ) {
     super();
   }
@@ -85,9 +89,6 @@ export class WalletWorker extends WorkerHost {
           provider: PaymentProviderEnum.FLUTTERWAVE,
         });
         return vba;
-      }
-      case 'initiate-wallet-credit': {
-        return;
       }
       default: {
         throw new Error('Unknown job name');

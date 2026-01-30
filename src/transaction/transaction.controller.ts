@@ -7,6 +7,8 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
+  Render,
 } from '@nestjs/common';
 import { TransactionService } from './transaction.service';
 import { WalletService } from 'src/wallet/wallet.service';
@@ -16,14 +18,15 @@ import {
 } from './dto/create-transaction.dto';
 import { UpdateTransactionStatusDto } from './dto/update-transaction-status.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
 import { PermissionsGuard } from 'src/rbac/guards/permission.guard';
 import { RolesGuard } from 'src/rbac/guards/role.guard';
-import { RequirePermissions } from 'src/rbac/decorators/permission.decorator';
-import { PERMISSIONS } from 'src/utils/constants';
+import { Public } from 'src/auth/decorators/public.decorator';
+import { JwtAuthGuard } from 'src/guards/jwt.guard';
+// import { RequirePermissions } from 'src/rbac/decorators/permission.decorator';
+// import { PERMISSIONS } from 'src/utils/constants';
 
-@UseGuards(AuthGuard('jwt'), PermissionsGuard, RolesGuard)
-@RequirePermissions(PERMISSIONS.MANAGE_TRANSACTIONS)
+@UseGuards(JwtAuthGuard, PermissionsGuard, RolesGuard)
+// @RequirePermissions(PERMISSIONS.MANAGE_TRANSACTIONS)
 @ApiBearerAuth()
 @Controller('transaction')
 export class TransactionController {
@@ -84,6 +87,13 @@ export class TransactionController {
       message: 'Wallet transactions retrieved successfully',
       data,
     };
+  }
+
+  @Public()
+  @Render('transaction-success')
+  @Get('success')
+  transactionSuccess(@Query('amount') amount: string) {
+    return { amount };
   }
 
   @Get(':id')

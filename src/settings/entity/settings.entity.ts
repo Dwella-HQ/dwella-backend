@@ -1,4 +1,8 @@
-import { CurrenciesEnum, PaymentProviderEnum } from 'src/utils/constants';
+import {
+  CurrenciesEnum,
+  PaymentMethodEnum,
+  PaymentProviderEnum,
+} from 'src/utils/constants';
 import {
   BaseEntity,
   Column,
@@ -24,6 +28,12 @@ export class Settings extends BaseEntity {
     default: PaymentProviderEnum.FLUTTERWAVE,
   })
   preferredPaymentProvider: PaymentProviderEnum;
+
+  @Column({
+    type: 'simple-json',
+    default: [PaymentMethodEnum.CARD, PaymentMethodEnum.BANK_TRANSFER],
+  })
+  paymentMethods: PaymentMethodEnum[];
 
   @CreateDateColumn()
   createdAt: Date;

@@ -15,6 +15,7 @@ import type {
 import { lastValueFrom } from 'rxjs';
 import { Cache } from 'cache-manager';
 import { CurrenciesEnum } from 'src/utils/constants';
+import { Transaction } from 'src/transaction/entities/transaction.entity';
 
 @Injectable()
 export class FlutterwaveService {
@@ -209,5 +210,57 @@ export class FlutterwaveService {
     });
     return response.data;
     // Implement withdrawal logic here
+  }
+
+  async initiateWalletCredit(transaction: Transaction) {
+    const response = await lastValueFrom(
+      this.httpService.post(`direct-transfers`, {
+        action: 'instant',
+        payment_instruction: {
+          source_currency: transaction.wallet.currency,
+          amount: {
+            applies_to: 'destination_currency',
+            value: transaction.amount,
+          },
+          recipient: {
+            bank: {
+              account_type: 'checking',
+              account_number: '014555',
+              code: '055',
+            },
+            wallet: {
+              provider: 'flutterwave',
+            },
+          },
+          sender: {
+            name: {
+              first: 'Test',
+              last: 'Payment',
+            },
+            phone: {
+              country_code: '234',
+              number: '7053332295',
+            },
+            address: {
+              city: 'Ibadan',
+              country: 'Nigeria',
+              line1: 'Road 214, Off Tunji Bello Street',
+              postal_code: '200285',
+              state: 'Oyo',
+            },
+            email: 'johnsonolaolu@gmail.com',
+          },
+          destination_currency: 'NGN',
+        },
+        type: 'bank',
+        reference: 'test',
+        narration: 'test transfer',
+        callback_url: 'test',
+      }),
+    ).catch((err) => {
+      console.error('Error initiating wallet credit via Flutterwave:', err);
+      throw err;
+    });
+    return response.data;
   }
 }

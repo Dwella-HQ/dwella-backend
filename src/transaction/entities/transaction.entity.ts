@@ -1,4 +1,5 @@
 import {
+  CurrenciesEnum,
   PaymentMethodEnum,
   PaymentProviderEnum,
   TransactionStatusEnum,
@@ -28,6 +29,11 @@ export class Transaction extends BaseEntity {
     type: 'text',
   })
   provider: PaymentProviderEnum;
+
+  @Column({
+    type: 'text',
+  })
+  currency: CurrenciesEnum;
 
   @Column({
     type: 'text',
