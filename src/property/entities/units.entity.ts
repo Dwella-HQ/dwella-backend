@@ -9,6 +9,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Property } from './property.entity';
+import { ColumnNumericTransformer } from 'src/utils/misc';
 
 @Entity()
 export class Unit extends BaseEntity {
@@ -24,7 +25,11 @@ export class Unit extends BaseEntity {
   @Column()
   name: string;
 
-  @Column('decimal', { precision: 10, scale: 2 })
+  @Column('decimal', {
+    precision: 10,
+    scale: 2,
+    transformer: new ColumnNumericTransformer(),
+  })
   rentAmount: number;
 
   @Column()

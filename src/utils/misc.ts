@@ -33,3 +33,12 @@ export function base64Decode(base64Str: string): string {
 export function formatAmount(amount: number): string {
   return new Intl.NumberFormat('en-US').format(amount);
 }
+
+export class ColumnNumericTransformer {
+  to(data: number): number {
+    return data;
+  }
+  from(data: string): number {
+    return parseFloat(data);
+  }
+}

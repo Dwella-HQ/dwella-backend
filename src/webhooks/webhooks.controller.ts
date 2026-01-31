@@ -6,6 +6,7 @@ import {
   Controller,
   Get,
   InternalServerErrorException,
+  Post,
 } from '@nestjs/common';
 import { FlutterwaveChargeCompletedPayload } from 'src/services/flutterwave/flutterwave';
 import { FlutterwaveService } from 'src/services/flutterwave/flutterwave.service';
@@ -21,7 +22,7 @@ export class WebhooksController {
     private readonly monnifyService: MonnifyService,
     private readonly transactionService: TransactionService,
   ) {}
-  @Get('paystack')
+  @Post('paystack')
   handlePaystackWebhook(@Body() payload: any) {
     const eventType = payload.event;
     switch (eventType) {
@@ -37,10 +38,11 @@ export class WebhooksController {
     // Implementation for handling Paystack webhooks will go here
   }
 
-  @Get('flutterwave')
+  @Post('flutterwave')
   async handleFlutterwaveWebhook(
     @Body() payload: { event: string; data: FlutterwaveChargeCompletedPayload },
   ) {
+    console.log({ payload });
     const eventType = payload.event;
     switch (eventType) {
       case 'charge.completed':
@@ -58,7 +60,7 @@ export class WebhooksController {
     // Implementation for handling Flutterwave webhooks will go here
   }
 
-  @Get('monnify')
+  @Post('monnify')
   handleMonnifyWebhook(@Body() payload: any) {
     // Implementation for handling Monnify webhooks will go here
   }

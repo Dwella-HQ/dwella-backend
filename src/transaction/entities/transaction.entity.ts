@@ -6,6 +6,7 @@ import {
   TransactionTypeEnum,
   TransferUserDetails,
 } from 'src/utils/constants';
+import { ColumnNumericTransformer } from 'src/utils/misc';
 import { WalletTransaction } from 'src/wallet/entities/wallet-transaction.entity';
 import { Wallet } from 'src/wallet/entities/wallet.entity';
 import {
@@ -47,7 +48,11 @@ export class Transaction extends BaseEntity {
   @OneToOne(() => WalletTransaction, (transaction) => transaction.wallet)
   walletTransaction: Relation<WalletTransaction>;
 
-  @Column('decimal', { precision: 15, scale: 2 })
+  @Column('decimal', {
+    precision: 15,
+    scale: 2,
+    transformer: new ColumnNumericTransformer(),
+  })
   amount: number;
 
   @Column({ default: '' })
@@ -67,6 +72,7 @@ export class Transaction extends BaseEntity {
 
   @Column({
     type: 'text',
+    default: '',
   })
   type: TransactionTypeEnum;
 

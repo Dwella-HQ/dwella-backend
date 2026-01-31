@@ -15,10 +15,10 @@ import { TransactionWorker } from './transaction.worker';
     TypeOrmModule.forFeature([Transaction]),
     forwardRef(() => WalletModule),
     BullModule.registerQueue({
-      name: JOB_NAMES.VBA_CREATION_JOB,
+      name: JOB_NAMES.HANDLE_TRANSACTION_JOB,
     }),
     BullBoardModule.forFeature({
-      name: JOB_NAMES.VBA_CREATION_JOB,
+      name: JOB_NAMES.HANDLE_TRANSACTION_JOB,
       adapter: BullMQAdapter,
     }),
   ],

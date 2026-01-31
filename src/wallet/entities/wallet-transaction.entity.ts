@@ -17,23 +17,36 @@ import {
   TransactionTypeEnum,
 } from 'src/utils/constants';
 import { Transaction } from 'src/transaction/entities/transaction.entity';
+import { ColumnNumericTransformer } from 'src/utils/misc';
 
 @Entity()
 export class WalletTransaction extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column('decimal', { precision: 15, scale: 2 })
+  @Column('decimal', {
+    precision: 15,
+    scale: 2,
+    transformer: new ColumnNumericTransformer(),
+  })
   amount: number;
 
-  @Column('decimal', { precision: 15, scale: 2 })
+  @Column('decimal', {
+    precision: 15,
+    scale: 2,
+    transformer: new ColumnNumericTransformer(),
+  })
   postBalance: number;
 
-  @Column('decimal', { precision: 15, scale: 2 })
+  @Column('decimal', {
+    precision: 15,
+    scale: 2,
+    transformer: new ColumnNumericTransformer(),
+  })
   preBalance: number;
 
   @Index()
-  @Column()
+  @Column({ unique: true })
   reference: string;
 
   @Column({

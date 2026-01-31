@@ -15,6 +15,7 @@ import { CurrenciesEnum } from 'src/utils/constants';
 import { VBA } from '../vba/entity/vba.entity';
 import { Exclude, instanceToPlain } from 'class-transformer';
 import { WalletTransaction } from './wallet-transaction.entity';
+import { ColumnNumericTransformer } from 'src/utils/misc';
 
 @Entity()
 @Index(['landlord', 'currency'], { unique: true })
@@ -31,10 +32,20 @@ export class Wallet extends BaseEntity {
   @ManyToOne(() => Landlord)
   landlord: Relation<Landlord>;
 
-  @Column('decimal', { precision: 15, scale: 2, default: 0 })
+  @Column('decimal', {
+    precision: 15,
+    scale: 2,
+    default: 0,
+    transformer: new ColumnNumericTransformer(),
+  })
   balance: number;
 
-  @Column('decimal', { precision: 15, scale: 2, default: 0 })
+  @Column('decimal', {
+    precision: 15,
+    scale: 2,
+    default: 0,
+    transformer: new ColumnNumericTransformer(),
+  })
   escrowBalance: number;
 
   @OneToMany(() => WalletTransaction, (transaction) => transaction.wallet)
