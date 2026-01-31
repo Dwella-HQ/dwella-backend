@@ -31,6 +31,6 @@ import { TransactionModule } from 'src/transaction/transaction.module';
   ],
   controllers: [WalletController],
   providers: [WalletService, WalletWorker],
-  exports: [WalletService],
+  exports: [WalletService, VbaModule],
 })
 export class WalletModule {}

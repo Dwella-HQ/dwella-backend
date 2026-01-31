@@ -12,6 +12,7 @@ import type {
   FlutterwaveCreatePaymentLinkPayload,
   FlutterwaveCreateStaticVirtualAccountPayload,
   FlutterwaveCreateVirtualAccountResponse,
+  FlutterwaveTransferCompletedPayload,
 } from './flutterwave';
 import { lastValueFrom } from 'rxjs';
 import { Cache } from 'cache-manager';
@@ -195,13 +196,17 @@ export class FlutterwaveService {
 
   async validateTransaction(
     reference: string,
-    payload: FlutterwaveChargeCompletedPayload,
+    payload:
+      | FlutterwaveChargeCompletedPayload
+      | FlutterwaveTransferCompletedPayload,
   ) {
     const response = await lastValueFrom(
       this.httpService.get<{
         status: string;
         message: string;
-        data: FlutterwaveChargeCompletedPayload;
+        data:
+          | FlutterwaveChargeCompletedPayload
+          | FlutterwaveTransferCompletedPayload;
       }>(
         `/transactions/verify_by_reference?tx_ref=${encodeURIComponent(reference)}`,
       ),

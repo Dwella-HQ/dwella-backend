@@ -20,6 +20,7 @@ import { PaystackService } from 'src/services/paystack/paystack.service';
 import { SettingsService } from 'src/settings/settings.service';
 import { Queue } from 'bullmq';
 import { InjectQueue } from '@nestjs/bullmq';
+import { VbaService } from 'src/wallet/vba/vba.service';
 
 @Injectable()
 export class TransactionService {
@@ -30,6 +31,7 @@ export class TransactionService {
     private paystackService: PaystackService,
     private flutterwaveService: FlutterwaveService,
     private monnifyService: MonnifyService,
+    private readonly vbaService: VbaService,
     @InjectQueue(JOB_NAMES.HANDLE_TRANSACTION_JOB)
     private readonly transactionQueue: Queue,
   ) {}
@@ -120,6 +122,20 @@ export class TransactionService {
       });
     }
     return true;
+  }
+
+  async handleTransferSuccess(
+    createCreditTransactionDto: CreateCreditTransactionDto,
+    payload: any,
+  ) {
+    // const transaction = await this.transactionRepository.save({
+    //   amount: createCreditTransactionDto.amount,
+    //   currency: createCreditTransactionDto.currency,
+    //   type: TransactionTypeEnum.CREDIT
+    // })
+    // if ( createTransferTransactionDto.provider === PaymentProviderEnum.FLUTTERWAVE) {
+    //   await this.flutterwaveService.validateTransaction(payload.reference, payload)
+    // }
   }
 
   async updateTransactionStatus(

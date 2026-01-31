@@ -6,14 +6,21 @@ import { PaystackService } from 'src/services/paystack/paystack.service';
 import { SettingsService } from 'src/settings/settings.service';
 import {
   JOB_NAMES,
+  PaymentMethodEnum,
+  PaymentProviderEnum,
   TransactionActionEnum,
   TransactionStatusEnum,
+  TransactionTypeEnum,
 } from 'src/utils/constants';
 import { WalletService } from 'src/wallet/wallet.service';
 import { Transaction } from './entities/transaction.entity';
-import { FlutterwaveChargeCompletedPayload } from 'src/services/flutterwave/flutterwave';
+import {
+  FlutterwaveChargeCompletedPayload,
+  FlutterwaveTransferCompletedPayload,
+} from 'src/services/flutterwave/flutterwave';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { VbaService } from 'src/wallet/vba/vba.service';
 
 @Processor(JOB_NAMES.HANDLE_TRANSACTION_JOB)
 export class TransactionWorker extends WorkerHost {
@@ -22,6 +29,7 @@ export class TransactionWorker extends WorkerHost {
     private readonly flutterwaveService: FlutterwaveService,
     private readonly monnifyService: MonnifyService,
     private readonly walletService: WalletService,
+    private readonly vbaService: VbaService,
     private readonly settingsService: SettingsService,
     @InjectRepository(Transaction)
     private readonly transactionRepository: Repository<Transaction>,
@@ -58,6 +66,39 @@ export class TransactionWorker extends WorkerHost {
         //Send Notification to user about successful transaction
         return walletTransaction.save();
       }
+      // case 'handle_transfer_success:flutterwave': {
+      //   const { payload } = job.data as {
+      //     payload: FlutterwaveTransferCompletedPayload;
+      //   };
+      //   const vba = await this.vbaService.findByAccountNumber(payload.account_number);
+      //   await this.flutterwaveService.validateTransaction(
+      //     payload.reference,
+      //     payload,
+      //   );
+      //   const transaction = await this.transactionRepository.save({
+      //     amount : payload.amount,
+      //     currency : vba.wallet.currency,
+      //     narration : payload.narration,
+      //     paymentMethod : PaymentMethodEnum.BANK_TRANSFER,
+      //     provider: PaymentProviderEnum.FLUTTERWAVE,
+      //     senderDetails : {
+      //       accountNumber : payload.account_number,
+      //       fullName : payload.fullname,
+      //       bankName : payload.bank_name,
+      //       bankCode : payload.bank_code
+      //     },
+      //     status : TransactionStatusEnum.COMPLETED,
+      //     wallet : vba.wallet,
+      //     type: TransactionTypeEnum.CREDIT,
+      //   })
+      //   transaction.status = TransactionStatusEnum.COMPLETED;
+      //   transaction.metaData = payload;
+      //   const updatedTransaction =
+      //     await this.transactionRepository.save(transaction);
+      //   //Send Notification to user about successful transaction
+      //   const walletTransaction = await this.walletService.creditWallet()
+      //   // return updatedTransaction;
+      // }
       default: {
         throw new Error('Unknown job name');
       }

@@ -158,6 +158,10 @@ export class TransferUserDetails {
   @IsOptional()
   bankCode?: string;
 
+  @IsString()
+  @IsOptional()
+  bankName?: string;
+
   @IsNumberString()
   @Length(10, 10)
   @IsOptional()

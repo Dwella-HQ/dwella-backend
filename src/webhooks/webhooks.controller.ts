@@ -51,6 +51,8 @@ export class WebhooksController {
           payload.data,
         );
         break;
+      // case 'transfer.completed':
+      //   await this.transactionService.
       default:
         throw new InternalServerErrorException(
           'Unhandled Flutterwave webhook event',

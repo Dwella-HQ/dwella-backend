@@ -28,7 +28,23 @@ export class VbaService {
   }
 
   async findOne(id: string) {
-    const vba = await this.vbaRepository.findOne({ where: { id } });
+    const vba = await this.vbaRepository.findOne({
+      where: { id },
+      relations: {
+        wallet: true,
+      },
+    });
+    if (!vba) {
+      throw new NotFoundException('VBA not found');
+    }
+    return vba;
+  }
+
+  async findByAccountNumber(accountNumber: string) {
+    const vba = await this.vbaRepository.findOne({
+      where: { accountNumber },
+      relations: { wallet: true },
+    });
     if (!vba) {
       throw new NotFoundException('VBA not found');
     }
