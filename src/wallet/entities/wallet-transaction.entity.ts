@@ -55,7 +55,7 @@ export class WalletTransaction extends BaseEntity {
 
   @JoinColumn()
   @OneToOne(() => Transaction, (transaction) => transaction.walletTransaction)
-  transactions: Relation<Transaction[]>;
+  transaction: Relation<Transaction>;
 
   @Column({ nullable: true, type: 'simple-json' })
   metaData: string;

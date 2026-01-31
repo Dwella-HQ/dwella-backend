@@ -9,19 +9,23 @@ import { Wallet } from './entities/wallet.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LandlordService } from 'src/landlord/landlord.service';
 import { InjectQueue } from '@nestjs/bullmq';
-import { JOB_NAMES } from 'src/utils/constants';
+import { JOB_NAMES, TransactionTypeEnum } from 'src/utils/constants';
 import { Queue } from 'bullmq';
 import { VbaService } from './vba/vba.service';
 import { CreateVBADto } from './dto/create-vba.dto';
 import { SettingsService } from 'src/settings/settings.service';
 import { ConfigService } from '@nestjs/config';
 import { EnvironmentVariables } from 'src/config/env.config';
+import { CreditWalletDto, DebitWalletDto } from './dto/update-wallet.dto';
+import { WalletTransaction } from './entities/wallet-transaction.entity';
 
 @Injectable()
 export class WalletService {
   constructor(
     @InjectRepository(Wallet)
     private readonly walletRepository: Repository<Wallet>,
+    @InjectRepository(WalletTransaction)
+    private readonly walletTransactionRepository: Repository<WalletTransaction>,
     private readonly landlordService: LandlordService,
     private readonly vbaService: VbaService,
     private readonly configService: ConfigService<EnvironmentVariables>,
@@ -85,20 +89,37 @@ export class WalletService {
     return vba;
   }
 
-  // async creditEscrow(walletId: string, amount: number) {
-  //   const wallet = await this.findOne(walletId);
-  //   wallet.escrowBalance += amount;
-  //   return this.walletRepository.save(wallet);
-  // }
+  async creditWallet(id: string, creditWalletDto: CreditWalletDto) {
+    const wallet = await this.findOne(id);
+    const walletTransaction = await this.walletTransactionRepository.save({
+      amount: creditWalletDto.amount,
+      preBalance: wallet.balance,
+      postBalance: wallet.balance + creditWalletDto.amount,
+      reference: creditWalletDto.reference,
+      type: TransactionTypeEnum.CREDIT,
+      action: creditWalletDto.action,
+      wallet: wallet,
+    });
+    wallet.balance = walletTransaction.postBalance;
+    await this.walletRepository.save(wallet);
+    return walletTransaction;
+  }
 
-  // async debitEscrow(walletId: string, amount: number) {
-  //   const wallet = await this.findOne(walletId);
-  //   if (wallet.escrowBalance < amount) {
-  //     throw new NotFoundException('Insufficient escrow balance');
-  //   }
-  //   wallet.escrowBalance -= amount;
-  //   return this.walletRepository.save(wallet);
-  // }
+  async debitWallet(id: string, debitWalletDto: DebitWalletDto) {
+    const wallet = await this.findOne(id);
+    const walletTransaction = await this.walletTransactionRepository.save({
+      amount: debitWalletDto.amount,
+      preBalance: wallet.balance,
+      postBalance: wallet.balance - debitWalletDto.amount,
+      reference: debitWalletDto.reference,
+      type: TransactionTypeEnum.DEBIT,
+      action: debitWalletDto.action,
+      wallet: wallet,
+    });
+    wallet.balance = walletTransaction.postBalance;
+    await this.walletRepository.save(wallet);
+    return walletTransaction;
+  }
 
   // update(id: number, updateWalletDto: UpdateWalletDto) {
   //   return `This action updates a #${id} wallet`;

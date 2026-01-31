@@ -108,6 +108,8 @@ export enum TransactionStatusEnum {
 }
 
 export enum TransactionActionEnum {
+  INWARD_TRANSFER = 'inward_transfer',
+  OUTWARD_TRANSFER = 'outward_transfer',
   RENT_PAYMENT = 'rent_payment',
   SECURITY_DEPOSIT = 'security_deposit',
   MAINTENANCE_FEE = 'maintenance_fee',

@@ -68,13 +68,13 @@ export class Transaction extends BaseEntity {
   @Column({
     type: 'text',
   })
-  transactionType: TransactionTypeEnum;
+  type: TransactionTypeEnum;
 
   @Column({
     type: 'text',
     default: TransactionStatusEnum.PENDING,
   })
-  transactionStatus: TransactionStatusEnum;
+  status: TransactionStatusEnum;
 
   @Column({ nullable: true })
   paymentUrl?: string;

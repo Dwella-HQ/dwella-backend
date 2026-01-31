@@ -1,9 +1,14 @@
 import { HttpService } from '@nestjs/axios';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Inject, Injectable } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EnvironmentVariables } from 'src/config/env.config';
 import type {
+  FlutterwaveChargeCompletedPayload,
   FlutterwaveCreatePaymentLinkPayload,
   FlutterwaveCreateStaticVirtualAccountPayload,
   FlutterwaveCreateVirtualAccountResponse,
@@ -185,6 +190,32 @@ export class FlutterwaveService {
       console.error('Error initiating wallet credit via Flutterwave:', err);
       throw err;
     });
+    return response.data;
+  }
+
+  async validateTransaction(
+    reference: string,
+    payload: FlutterwaveChargeCompletedPayload,
+  ) {
+    const response = await lastValueFrom(
+      this.httpService.get<{
+        status: string;
+        message: string;
+        data: FlutterwaveChargeCompletedPayload;
+      }>(
+        `/transactions/verify_by_reference?tx_ref=${encodeURIComponent(reference)}`,
+      ),
+    ).catch((err) => {
+      console.error('Error validating transaction via Flutterwave:', err);
+      throw new InternalServerErrorException('Failed to validate transaction');
+    });
+    if (
+      response.data.status !== 'success' ||
+      response.data.data.amount !== payload.amount ||
+      response.data.data.currency !== payload.currency
+    ) {
+      throw new InternalServerErrorException('Transaction validation failed');
+    }
     return response.data;
   }
 }

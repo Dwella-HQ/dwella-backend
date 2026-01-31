@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import {
   CreateCreditTransactionDto,
@@ -8,6 +9,7 @@ import { Repository } from 'typeorm';
 import { Transaction } from './entities/transaction.entity';
 import { Wallet } from 'src/wallet/entities/wallet.entity';
 import {
+  JOB_NAMES,
   PaymentProviderEnum,
   TransactionStatusEnum,
   TransactionTypeEnum,
@@ -16,6 +18,8 @@ import { MonnifyService } from 'src/services/monnify/monnify.service';
 import { FlutterwaveService } from 'src/services/flutterwave/flutterwave.service';
 import { PaystackService } from 'src/services/paystack/paystack.service';
 import { SettingsService } from 'src/settings/settings.service';
+import { Queue } from 'bullmq';
+import { InjectQueue } from '@nestjs/bullmq';
 
 @Injectable()
 export class TransactionService {
@@ -26,6 +30,8 @@ export class TransactionService {
     private paystackService: PaystackService,
     private flutterwaveService: FlutterwaveService,
     private monnifyService: MonnifyService,
+    @InjectQueue(JOB_NAMES.HANDLE_TRANSACTION_JOB)
+    private readonly transactionQueue: Queue,
   ) {}
 
   async createDebit(
@@ -34,7 +40,7 @@ export class TransactionService {
   ) {
     const transaction = this.transactionRepository.create({
       ...createDebitTransactionDto,
-      transactionType: TransactionTypeEnum.DEBIT,
+      type: TransactionTypeEnum.DEBIT,
       wallet: wallet,
     });
     return await this.transactionRepository.save(transaction);
@@ -56,7 +62,7 @@ export class TransactionService {
         fullName: 'Olalekan Johnson',
       },
       narration: `Credit to wallet ${wallet.id}`,
-      transactionType: TransactionTypeEnum.CREDIT,
+      type: TransactionTypeEnum.CREDIT,
       wallet: wallet,
     });
 
@@ -105,13 +111,24 @@ export class TransactionService {
     return transactions;
   }
 
+  async handleTransactionSuccess(reference: string, payload: any) {
+    const transaction = await this.findOne(reference);
+    if (transaction.provider === PaymentProviderEnum.FLUTTERWAVE) {
+      await this.transactionQueue.add('handle_transaction:flutterwave', {
+        transaction,
+        payload,
+      });
+    }
+    return true;
+  }
+
   async updateTransactionStatus(
     transactionId: string,
     status: TransactionStatusEnum,
     metaData?: Record<string, any>,
   ) {
     const transaction = await this.findOne(transactionId);
-    transaction.transactionStatus = status;
+    transaction.status = status;
     transaction.metaData = metaData;
     return await this.transactionRepository.save(transaction);
   }
