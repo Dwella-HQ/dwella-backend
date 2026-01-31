@@ -185,7 +185,6 @@ export class FlutterwaveService {
       console.error('Error initiating wallet credit via Flutterwave:', err);
       throw err;
     });
-    console.log(response.data);
     return response.data;
   }
 }
