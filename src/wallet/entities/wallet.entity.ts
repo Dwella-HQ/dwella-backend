@@ -4,6 +4,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -16,6 +17,7 @@ import { Exclude, instanceToPlain } from 'class-transformer';
 import { WalletTransaction } from './wallet-transaction.entity';
 
 @Entity()
+@Index(['landlord', 'currency'], { unique: true })
 export class Wallet extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;

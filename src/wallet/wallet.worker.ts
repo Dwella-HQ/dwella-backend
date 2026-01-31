@@ -70,6 +70,7 @@ export class WalletWorker extends WorkerHost {
         const { firstName, lastName } = breakDownFullName(
           wallet.landlord.landLordName,
         );
+        console.log({ firstName, lastName });
         const response = await this.flutterwaveService.createVirtualBankAccount(
           {
             currency: wallet.currency,
@@ -81,10 +82,10 @@ export class WalletWorker extends WorkerHost {
           },
         );
         const vba = await this.walletService.createVba(wallet.id, {
-          accountName: response.data.account_bank_name,
+          accountName: `${firstName} ${lastName}`,
           accountNumber: response.data.account_number,
           bankCode: '',
-          bankName: response.data.account_bank_name,
+          bankName: response.data.bank_name,
           metadata: response.data,
           provider: PaymentProviderEnum.FLUTTERWAVE,
         });

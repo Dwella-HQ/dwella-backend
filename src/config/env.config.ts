@@ -174,11 +174,11 @@ export class EnvironmentVariables {
 
   @IsString()
   @IsNotEmpty()
-  FLUTTERWAVE_CLIENT_ID: string;
+  FLUTTERWAVE_PUBLIC_KEY: string;
 
   @IsString()
   @IsNotEmpty()
-  FLUTTERWAVE_CLIENT_SECRET: string;
+  FLUTTERWAVE_SECRET_KEY: string;
 
   @IsString()
   @IsNotEmpty()

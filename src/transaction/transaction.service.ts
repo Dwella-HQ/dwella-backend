@@ -64,10 +64,11 @@ export class TransactionService {
     //   const response =
     //     await this.paystackService.initiateWalletCredit(transaction);
     // }
-    // if (provider === PaymentProviderEnum.FLUTTERWAVE) {
-    //   const response =
-    //     await this.flutterwaveService.initiateWalletCredit(transaction);
-    // }
+    if (provider === PaymentProviderEnum.FLUTTERWAVE) {
+      const response =
+        await this.flutterwaveService.initiateWalletCredit(transaction);
+      transaction.paymentUrl = response.data.link;
+    }
     if (provider === PaymentProviderEnum.MONNIFY) {
       const response =
         await this.monnifyService.initiateWalletCredit(transaction);
