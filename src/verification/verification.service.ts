@@ -118,6 +118,14 @@ export class VerificationService {
       const skip = (queryVerificationDto.page - 1) * queryVerificationDto.limit;
       queryBuilder.skip(skip).take(queryVerificationDto.limit);
     }
+    queryBuilder
+      .leftJoinAndSelect('verification.landlord', 'landlord')
+      .leftJoinAndSelect('verification.property', 'property')
+      .leftJoinAndSelect('verification.verifiedBy', 'verifiedBy')
+      .leftJoinAndSelect(
+        'verification.supportingDocuments',
+        'supportingDocuments',
+      );
     const verifications = await queryBuilder.getMany();
     return verifications;
   }
