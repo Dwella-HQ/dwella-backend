@@ -40,7 +40,7 @@ export class Verification extends BaseEntity {
   status: VerificationStatusEnum;
 
   @Column({ nullable: true })
-  reason: string;
+  reason?: string;
 
   @ManyToOne(() => User, { nullable: true, eager: true })
   verifiedBy: Relation<User>;

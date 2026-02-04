@@ -1,4 +1,10 @@
-import { IsEnum, IsNotEmpty, IsString, IsUUID } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 import { VerificationStatusEnum } from 'src/utils/constants';
 
 export class UpdateVerificationStatusDto {
@@ -7,8 +13,10 @@ export class UpdateVerificationStatusDto {
 
   @IsString()
   @IsNotEmpty()
-  reason: string;
+  @IsOptional()
+  reason?: string;
 
   @IsUUID('all', { each: true })
-  supportingDocumentIds: string[];
+  @IsOptional()
+  supportingDocumentIds?: string[];
 }

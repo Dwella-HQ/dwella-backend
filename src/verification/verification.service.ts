@@ -118,12 +118,6 @@ export class VerificationService {
   async findOne(id: string) {
     const verification = await this.verificationRepository.findOne({
       where: { id },
-      relations: {
-        landlord: true,
-        property: true,
-        verifiedBy: true,
-        supportingDocuments: true,
-      },
     });
     if (!verification) {
       throw new NotFoundException('Verification not found');
@@ -145,7 +139,8 @@ export class VerificationService {
     verification.verifiedAt = new Date();
     verification.verifiedBy = user;
     const supportingDocuments: File[] = [];
-    for (const fileId of updateVerificationStatusDto.supportingDocumentIds) {
+    for (const fileId of updateVerificationStatusDto?.supportingDocumentIds ||
+      []) {
       const file = await this.fileService.findFileById(fileId);
       supportingDocuments.push(file);
     }
@@ -174,7 +169,8 @@ export class VerificationService {
     verification.verifiedAt = new Date();
     verification.verifiedBy = user;
     const supportingDocuments: File[] = [];
-    for (const fileId of updateVerificationStatusDto.supportingDocumentIds) {
+    for (const fileId of updateVerificationStatusDto?.supportingDocumentIds ||
+      []) {
       const file = await this.fileService.findFileById(fileId);
       supportingDocuments.push(file);
     }
