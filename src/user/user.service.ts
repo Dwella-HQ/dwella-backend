@@ -83,20 +83,19 @@ export class UserService {
         newToken,
         ms(this.configService.get('JWT_EXPIRES_IN') as ms.StringValue),
       ); // 30 minutes
-
-      await this.emailService.sendMailToUser({
-        user,
-        subject: 'Verify your email address',
-        template: 'verify-email',
-        context: {
-          name: user.fullName,
-          verificationLink,
-          expirationTime: this.configService.get<string>('JWT_EXPIRES_IN'),
-        },
-      });
-
-      return user;
     }
+    await this.emailService.sendMailToUser({
+      user,
+      subject: 'Verify your email address',
+      template: 'verify-email',
+      context: {
+        name: user.fullName,
+        verificationLink,
+        expirationTime: this.configService.get<string>('JWT_EXPIRES_IN'),
+      },
+    });
+
+    return user;
   }
 
   async verifyEmail(token: string) {

@@ -113,13 +113,26 @@ export class TransactionService {
     return transactions;
   }
 
-  async handleTransactionSuccess(reference: string, payload: any) {
-    const transaction = await this.findOne(reference);
-    if (transaction.provider === PaymentProviderEnum.FLUTTERWAVE) {
-      await this.transactionQueue.add('handle_transaction:flutterwave', {
-        transaction,
-        payload,
-      });
+  async handleTransactionSuccess(
+    reference: string,
+    payload: any,
+    provider?: PaymentProviderEnum,
+  ) {
+    const transaction = await this.transactionRepository.findOne({
+      where: { id: reference },
+      relations: {
+        wallet: true,
+      },
+    });
+    if (transaction) {
+      if (transaction.provider === PaymentProviderEnum.FLUTTERWAVE) {
+        await this.transactionQueue.add('handle_transaction:flutterwave', {
+          transaction,
+          payload,
+        });
+      }
+    }
+    if (provider === PaymentProviderEnum.FLUTTERWAVE) {
     }
     return true;
   }

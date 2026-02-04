@@ -66,39 +66,60 @@ export class TransactionWorker extends WorkerHost {
         //Send Notification to user about successful transaction
         return walletTransaction.save();
       }
-      // case 'handle_transfer_success:flutterwave': {
-      //   const { payload } = job.data as {
-      //     payload: FlutterwaveTransferCompletedPayload;
-      //   };
-      //   const vba = await this.vbaService.findByAccountNumber(payload.account_number);
-      //   await this.flutterwaveService.validateTransaction(
-      //     payload.reference,
-      //     payload,
-      //   );
-      //   const transaction = await this.transactionRepository.save({
-      //     amount : payload.amount,
-      //     currency : vba.wallet.currency,
-      //     narration : payload.narration,
-      //     paymentMethod : PaymentMethodEnum.BANK_TRANSFER,
-      //     provider: PaymentProviderEnum.FLUTTERWAVE,
-      //     senderDetails : {
-      //       accountNumber : payload.account_number,
-      //       fullName : payload.fullname,
-      //       bankName : payload.bank_name,
-      //       bankCode : payload.bank_code
-      //     },
-      //     status : TransactionStatusEnum.COMPLETED,
-      //     wallet : vba.wallet,
-      //     type: TransactionTypeEnum.CREDIT,
-      //   })
-      //   transaction.status = TransactionStatusEnum.COMPLETED;
-      //   transaction.metaData = payload;
-      //   const updatedTransaction =
-      //     await this.transactionRepository.save(transaction);
-      //   //Send Notification to user about successful transaction
-      //   const walletTransaction = await this.walletService.creditWallet()
-      //   // return updatedTransaction;
-      // }
+      case 'handle_inward_transfer:flutterwave': {
+        // const { payload } = job.data as {
+        //   payload: FlutterwaveChargeCompletedPayload;
+        // };
+        // if (
+        //   payload.status !== 'successful' ||
+        //   payload.payment_type !== 'bank_transfer'
+        // ) {
+        //   throw new Error('Transfer not successful');
+        // }
+        // const vba = await this.vbaService.findByAccountNumber(
+        //   payload.,
+        // );
+        // await this.flutterwaveService.validateTransaction(
+        //   payload.reference,
+        //   payload,
+        // );
+        // const transaction = await this.transactionRepository.save({
+        //   amount: payload.amount,
+        //   currency: vba.wallet.currency,
+        //   narration: payload.narration,
+        //   paymentMethod: PaymentMethodEnum.BANK_TRANSFER,
+        //   provider: PaymentProviderEnum.FLUTTERWAVE,
+        //   senderDetails: {
+        //     accountNumber: payload.account_number,
+        //     fullName: payload.fullname,
+        //     bankName: payload.bank_name,
+        //     bankCode: payload.bank_code,
+        //   },
+        //   status: TransactionStatusEnum.COMPLETED,
+        //   wallet: vba.wallet,
+        //   type: TransactionTypeEnum.CREDIT,
+        // });
+        // transaction.status = TransactionStatusEnum.COMPLETED;
+        // transaction.metaData = payload;
+        // const updatedTransaction =
+        //   await this.transactionRepository.save(transaction);
+        // //Send Notification to user about successful transaction
+        // const walletTransaction = await this.walletService.creditWallet(
+        //   vba.wallet.id,
+        //   {
+        //     amount: updatedTransaction.amount,
+        //     action: TransactionActionEnum.INWARD_TRANSFER,
+        //     reference: updatedTransaction.id,
+        //     narration:
+        //       payload.narration ||
+        //       `Credit to wallet ${updatedTransaction.wallet.id} via Flutterwave VBA`,
+        //   },
+        // );
+        // walletTransaction.transaction = updatedTransaction;
+        // await walletTransaction.save();
+        // return updatedTransaction;
+        return {};
+      }
       default: {
         throw new Error('Unknown job name');
       }
