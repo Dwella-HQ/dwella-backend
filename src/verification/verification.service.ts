@@ -51,7 +51,14 @@ export class VerificationService {
   }
 
   async findAll() {
-    const verifications = await this.verificationRepository.find();
+    const verifications = await this.verificationRepository.find({
+      relations: {
+        landlord: true,
+        property: true,
+        verifiedBy: true,
+        supportingDocuments: true,
+      },
+    });
     return verifications;
   }
 
