@@ -118,6 +118,12 @@ export class VerificationService {
   async findOne(id: string) {
     const verification = await this.verificationRepository.findOne({
       where: { id },
+      relations: {
+        landlord: true,
+        property: true,
+        verifiedBy: true,
+        supportingDocuments: true,
+      },
     });
     if (!verification) {
       throw new NotFoundException('Verification not found');
