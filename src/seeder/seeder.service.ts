@@ -131,7 +131,6 @@ export class SeederService implements OnModuleInit {
     try {
       const settings = await this.settingsService.createSettings();
       this.logger.log('Settings Created Successfully', settings);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       console.error('Error creating settings:', error);
     }

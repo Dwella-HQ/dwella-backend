@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import {
@@ -133,6 +134,7 @@ export class TransactionService {
       }
     }
     if (provider === PaymentProviderEnum.FLUTTERWAVE) {
+      /* empty */
     }
     return true;
   }
