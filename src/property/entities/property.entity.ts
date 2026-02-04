@@ -6,6 +6,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
   OneToMany,
   OneToOne,
@@ -26,6 +27,7 @@ export class Property extends BaseEntity {
   @Column()
   name: string;
 
+  @JoinColumn()
   @OneToOne(() => Address, { eager: true })
   address: Relation<Address>;
 
@@ -43,7 +45,7 @@ export class Property extends BaseEntity {
   propertyType: string;
 
   @Column()
-  yearBuilt: number;
+  yearBuilt: string;
 
   @Column({ default: 0 })
   numberOfUnits: number;

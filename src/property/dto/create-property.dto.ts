@@ -11,16 +11,16 @@ import {
 import { CreateAddressDto } from 'src/address/dto/create-address.dto';
 
 export class CreatePropertyDto {
-  @IsUUID()
+  @IsUUID('all')
   landlordId: string;
 
   @IsString()
   @IsNotEmpty()
   name: string;
 
-  @IsNumber()
+  @IsString()
   @Length(4, 4)
-  yearBuilt: number;
+  yearBuilt: string;
 
   @IsNumber()
   numberOfUnits: number;
