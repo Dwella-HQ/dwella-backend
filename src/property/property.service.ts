@@ -71,6 +71,12 @@ export class PropertyService {
       });
     }
 
+    if (queryPropertyDto.landlordId) {
+      queryBuilder.andWhere('property.landlordId = :landlordId', {
+        landlordId: queryPropertyDto.landlordId,
+      });
+    }
+
     if (queryPropertyDto.city) {
       queryBuilder.andWhere('property.address.city = :city', {
         city: queryPropertyDto.city,
@@ -95,7 +101,19 @@ export class PropertyService {
       });
     }
 
+    queryBuilder.leftJoinAndSelect('property.address', 'address');
+    queryBuilder.leftJoinAndSelect('property.landlord', 'landlord');
+    queryBuilder.leftJoinAndSelect('property.units', 'unit');
+
     const properties = await queryBuilder.getMany();
+    return properties;
+  }
+
+  async getLandlordProperties(landlordId: string) {
+    const properties = await this.propertyRepository.find({
+      where: { landlord: { id: landlordId } },
+      relations: { landlord: true, address: true },
+    });
     return properties;
   }
 
@@ -133,6 +151,13 @@ export class PropertyService {
     property.numberOfUnits += 1;
     await this.propertyRepository.save(property);
     return await this.unitRepository.save(unit);
+  }
+
+  async getUnits(propertyId: string) {
+    const units = await this.unitRepository.find({
+      where: { property: { id: propertyId } },
+    });
+    return units;
   }
 
   async remove(id: string) {

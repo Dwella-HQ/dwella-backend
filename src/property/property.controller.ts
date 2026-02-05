@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { PropertyService } from './property.service';
 import { CreatePropertyDto } from './dto/create-property.dto';
@@ -20,6 +21,7 @@ import { RequirePermissions } from 'src/rbac/decorators/permission.decorator';
 import { AdminRoles, PERMISSIONS } from 'src/utils/constants';
 import { RolesGuard } from 'src/rbac/guards/role.guard';
 import { RequireRoles } from 'src/rbac/decorators/role.decorator';
+import { QueryPropertyDto } from './dto/query-property.dto';
 
 @UseGuards(
   AuthGuard('jwt'),
@@ -66,6 +68,27 @@ export class PropertyController {
     };
   }
 
+  // @RequirePermissions(PERMISSIONS.READ_PROPERTY)
+  @Get('query')
+  async queryProperties(@Query() queryPropertyDto: QueryPropertyDto) {
+    const data = await this.propertyService.query(queryPropertyDto);
+    return {
+      success: true,
+      message: 'Properties retrieved successfully',
+      data: data,
+    };
+  }
+
+  @Get('landlord/:landlordId')
+  async getLandlordProperties(@Param('landlordId') landlordId: string) {
+    const data = await this.propertyService.getLandlordProperties(landlordId);
+    return {
+      success: true,
+      message: 'Landlord properties retrieved successfully',
+      data: data,
+    };
+  }
+
   @RequirePermissions(PERMISSIONS.UPDATE_PROPERTY)
   @Patch(':id')
   async update(
@@ -87,6 +110,17 @@ export class PropertyController {
     return {
       success: true,
       message: 'Unit added successfully',
+      data: data,
+    };
+  }
+
+  @RequirePermissions(PERMISSIONS.READ_PROPERTY)
+  @Get(':id/units')
+  async getUnits(@Param('id') id: string) {
+    const data = await this.propertyService.getUnits(id);
+    return {
+      success: true,
+      message: 'Units retrieved successfully',
       data: data,
     };
   }
