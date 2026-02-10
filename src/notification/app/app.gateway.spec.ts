@@ -1,13 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppGateway } from './app.gateway';
-import { AppService } from './app.service';
+import { AppNotificationService } from './app.service';
 
 describe('AppGateway', () => {
   let gateway: AppGateway;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [AppGateway, AppService],
+      providers: [AppGateway, AppNotificationService],
     }).compile();
 
     gateway = module.get<AppGateway>(AppGateway);

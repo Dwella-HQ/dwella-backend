@@ -1,5 +1,6 @@
 import { Address } from 'src/address/entities/address.entity';
 import { File } from 'src/file/entities/file.entity';
+import { PropertyManager } from 'src/property-manager/entities/property-manager.entity';
 import { User } from 'src/user/entities/user.entity';
 import {
   BaseEntity,
@@ -7,6 +8,7 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  ManyToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   Relation,
@@ -49,6 +51,12 @@ export class Landlord extends BaseEntity {
   @JoinColumn()
   @OneToOne(() => File, { nullable: true, eager: true })
   taxIdentificationNumberDocument: Relation<File>;
+
+  @ManyToMany(
+    () => PropertyManager,
+    (propertyManager) => propertyManager.landlords,
+  )
+  propertyManagers: Relation<PropertyManager[]>;
 
   @Column({ default: true })
   isActive: boolean;

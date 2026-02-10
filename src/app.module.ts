@@ -31,6 +31,7 @@ import { WebhooksModule } from './webhooks/webhooks.module';
 import { VerificationModule } from './verification/verification.module';
 import { AmenitiesModule } from './amenities/amenities.module';
 import { TransactionModule } from './transaction/transaction.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -132,6 +133,7 @@ import { TransactionModule } from './transaction/transaction.module';
     VerificationModule,
     AmenitiesModule,
     TransactionModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],

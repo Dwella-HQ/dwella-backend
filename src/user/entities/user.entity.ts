@@ -20,6 +20,7 @@ import { Exclude, instanceToPlain } from 'class-transformer';
 import { RegistrationTypeEnum } from 'src/utils/constants';
 import { Landlord } from 'src/landlord/entities/landlord.entity';
 import { Address } from 'src/address/entities/address.entity';
+import { PropertyManager } from 'src/property-manager/entities/property-manager.entity';
 
 @Entity()
 export class User extends BaseEntity {
@@ -54,6 +55,9 @@ export class User extends BaseEntity {
 
   @OneToOne(() => Landlord, (landlord) => landlord.user)
   landlord: Relation<Landlord>;
+
+  @OneToOne(() => PropertyManager, (propertyManager) => propertyManager.user)
+  propertyManager: Relation<PropertyManager>;
 
   @OneToMany(() => Address, (address) => address.user)
   addresses: Relation<Address>[];

@@ -81,6 +81,12 @@ export enum PERMISSIONS {
 
   // Transactions
   MANAGE_TRANSACTIONS = 'manage_transactions',
+
+  //Property Managers
+  CREATE_PROPERTY_MANAGER = 'create_property_manager',
+  READ_PROPERTY_MANAGER = 'read_property_manager',
+  UPDATE_PROPERTY_MANAGER = 'update_property_manager',
+  DELETE_PROPERTY_MANAGER = 'delete_property_manager',
 }
 
 export enum RegistrationTypeEnum {
@@ -141,6 +147,7 @@ export enum VerificationStatusEnum {
 }
 
 export const JOB_NAMES = {
+  APP_NOTIFICATION: 'APP_NOTIFICATION',
   VBA_CREATION_JOB: 'VBA_CREATION_JOB',
   HANDLE_TRANSACTION_JOB: 'HANDLE_TRANSACTION_JOB',
 };
@@ -166,6 +173,13 @@ export class TransferUserDetails {
   @Length(10, 10)
   @IsOptional()
   accountNumber?: string;
+}
+
+export enum NotificationTypeEnum {
+  INFO = 'info',
+  SUCCESS = 'success',
+  WARNING = 'warning',
+  ERROR = 'error',
 }
 
 export const DefaultAmenities: CreateAmenityDto[] = [];
