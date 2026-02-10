@@ -28,6 +28,7 @@ export class PropertyManagerController {
     private readonly propertyManagerService: PropertyManagerService,
   ) {}
 
+  @RequirePermissions(PERMISSIONS.CREATE_PROPERTY_MANAGER)
   @Post()
   async create(@Body() createPropertyManagerDto: CreatePropertyManagerDto) {
     const data = await this.propertyManagerService.create(
@@ -40,6 +41,7 @@ export class PropertyManagerController {
     };
   }
 
+  @RequirePermissions(PERMISSIONS.READ_PROPERTY_MANAGER)
   @Get()
   async findAll() {
     const data = await this.propertyManagerService.findAll();
@@ -60,6 +62,7 @@ export class PropertyManagerController {
     };
   }
 
+  @RequirePermissions(PERMISSIONS.UPDATE_PROPERTY_MANAGER)
   @Patch(':id')
   async update(
     @Param('id') id: string,
@@ -110,6 +113,7 @@ export class PropertyManagerController {
     };
   }
 
+  @RequirePermissions(PERMISSIONS.DELETE_PROPERTY_MANAGER)
   @Delete(':id')
   async remove(@Param('id') id: string) {
     const data = await this.propertyManagerService.remove(id);
