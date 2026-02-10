@@ -11,11 +11,14 @@ import { BullModule } from '@nestjs/bullmq';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { JOB_NAMES } from 'src/utils/constants';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { AppNotification } from './entities/app.entity';
 
 @Module({
   imports: [
     UserModule,
     AuthModule,
+    TypeOrmModule.forFeature([AppNotification]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

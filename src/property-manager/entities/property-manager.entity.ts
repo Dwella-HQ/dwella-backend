@@ -1,4 +1,5 @@
 import { Address } from 'src/address/entities/address.entity';
+import { File } from 'src/file/entities/file.entity';
 import { Landlord } from 'src/landlord/entities/landlord.entity';
 import { User } from 'src/user/entities/user.entity';
 import {
