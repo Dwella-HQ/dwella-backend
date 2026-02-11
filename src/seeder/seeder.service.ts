@@ -149,9 +149,9 @@ export class SeederService implements OnModuleInit {
     for (const amenityData of DefaultAmenities) {
       try {
         // Check if the amenity already exists
-        const existingAmenity = await this.amenitiesService.findByName(
-          amenityData.name,
-        );
+        const existingAmenity = await this.amenitiesService
+          .findByName(amenityData.name)
+          .catch(() => null);
         if (existingAmenity) {
           continue; // Skip if it exists
         }
@@ -160,7 +160,7 @@ export class SeederService implements OnModuleInit {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (error) {
         // Handle errors
-        // console.error(`Error adding amenity ${amenityData.name}:`, error);
+        console.error(`Error adding amenity ${amenityData.name}:`, error);
       }
     }
   }
