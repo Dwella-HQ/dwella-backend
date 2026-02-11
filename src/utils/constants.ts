@@ -189,4 +189,132 @@ export enum NotificationTypeEnum {
   ERROR = 'error',
 }
 
-export const DefaultAmenities: CreateAmenityDto[] = [];
+export const DefaultAmenities: CreateAmenityDto[] = [
+  // In-Unit Amenities - Appliances
+  { name: 'Refrigerator', description: 'Full-size refrigerator included' },
+  { name: 'Microwave', description: 'Built-in or countertop microwave' },
+  { name: 'Garbage Disposal', description: 'In-sink garbage disposal unit' },
+  {
+    name: 'Energy-Efficient Appliances',
+    description: 'ENERGY STAR certified appliances',
+  },
+
+  // In-Unit Amenities - Laundry
+  {
+    name: 'In-Unit Washer and Dryer',
+    description: 'Private washer and dryer in the unit',
+  },
+
+  // In-Unit Amenities - Comfort
+  {
+    name: 'Air Conditioning',
+    description: 'Central or window air conditioning',
+  },
+  {
+    name: 'Ceiling Fans',
+    description: 'Ceiling fans in living areas and bedrooms',
+  },
+
+  // In-Unit Amenities - Flooring & Finishes
+  {
+    name: 'Hardwood Floors',
+    description: 'Real or engineered hardwood flooring',
+  },
+  { name: 'Walk-In Closets', description: 'Spacious walk-in closet storage' },
+  {
+    name: 'High-End Fixtures',
+    description: 'Premium bathroom and kitchen fixtures',
+  },
+  {
+    name: 'Vaulted Ceilings',
+    description: 'High vaulted or cathedral ceilings',
+  },
+
+  // In-Unit Amenities - Outdoor Access
+  { name: 'Private Balcony', description: 'Private outdoor balcony space' },
+  { name: 'Patio', description: 'Ground-level patio area' },
+  { name: 'Deck', description: 'Private deck with outdoor access' },
+
+  // In-Unit Amenities - Technology
+  {
+    name: 'Smart Home Technology',
+    description: 'Smart home devices and controls',
+  },
+  {
+    name: 'High-Speed Internet',
+    description: 'High-speed internet connectivity available',
+  },
+  {
+    name: 'Keyless Entry/Smart Lock',
+    description: 'Electronic keyless entry system',
+  },
+
+  // Community Amenities - Fitness & Wellness
+  {
+    name: '24/7 Fitness Center',
+    description: 'Fully-equipped fitness center with 24/7 access',
+  },
+  { name: 'Swimming Pool', description: 'Community swimming pool' },
+  { name: 'Yoga Studio', description: 'Dedicated yoga and meditation studio' },
+  { name: 'Sauna', description: 'Sauna and steam room facilities' },
+
+  // Community Amenities - Social & Entertainment
+  {
+    name: 'Clubhouse',
+    description: 'Community clubhouse for events and gatherings',
+  },
+  {
+    name: 'Game Room',
+    description: 'Recreation room with games and entertainment',
+  },
+  {
+    name: 'Rooftop Lounge/Deck',
+    description: 'Rooftop terrace with lounge seating',
+  },
+  { name: 'BBQ Area', description: 'Outdoor grilling and BBQ stations' },
+
+  // Community Amenities - Work & Convenience
+  {
+    name: 'Co-Working Spaces',
+    description: 'Shared workspace with high-speed internet',
+  },
+  {
+    name: 'Business Center',
+    description: 'Professional business center with office equipment',
+  },
+  { name: 'Package Lockers', description: 'Secure package delivery lockers' },
+  {
+    name: 'On-Site Retail Shops',
+    description: 'Convenient on-site retail and services',
+  },
+
+  // Community Amenities - Parking & Security
+  { name: 'Covered Parking', description: 'Protected covered parking spaces' },
+  { name: 'Secure Entry', description: 'Controlled access entry system' },
+  {
+    name: 'On-Site Security/Concierge',
+    description: '24/7 security staff or concierge service',
+  },
+
+  // Community Amenities - Outdoor Spaces
+  {
+    name: 'Landscaped Gardens',
+    description: 'Professionally maintained garden areas',
+  },
+  { name: 'Playgrounds', description: "Children's playground and play area" },
+
+  // Basic/Standard Amenities
+  {
+    name: 'On-Site Maintenance and Management',
+    description: 'Professional property management and maintenance staff',
+  },
+  {
+    name: 'Trash Removal',
+    description: 'Regular trash collection and disposal service',
+  },
+  {
+    name: 'Controlled Secure Access',
+    description: 'Gated or controlled building access',
+  },
+  { name: 'Elevators', description: 'Elevator access to all floors' },
+];
