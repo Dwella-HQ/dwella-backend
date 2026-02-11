@@ -50,6 +50,9 @@ export class User extends BaseEntity {
   @Column({ default: true })
   isActive: boolean;
 
+  @Column({ default: false })
+  forceChangePassword: boolean;
+
   @ManyToOne(() => Role, (role) => role.users, { eager: true })
   role: Relation<Role>;
 

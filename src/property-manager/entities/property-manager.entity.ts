@@ -1,15 +1,14 @@
-import { Address } from 'src/address/entities/address.entity';
-import { File } from 'src/file/entities/file.entity';
 import { Landlord } from 'src/landlord/entities/landlord.entity';
+import { Property } from 'src/property/entities/property.entity';
 import { User } from 'src/user/entities/user.entity';
+import { PERMISSIONS } from 'src/utils/constants';
 import {
   BaseEntity,
+  Column,
   CreateDateColumn,
   Entity,
-  JoinColumn,
-  JoinTable,
   ManyToMany,
-  OneToOne,
+  ManyToOne,
   PrimaryGeneratedColumn,
   Relation,
   UpdateDateColumn,
@@ -20,21 +19,22 @@ export class PropertyManager extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @JoinColumn()
-  @OneToOne(() => User, (user) => user.propertyManager)
+  @ManyToOne(() => User, (user) => user.propertyManager)
   user: Relation<User>;
 
-  @OneToOne(() => Address, { eager: true })
-  @JoinColumn()
-  address: Relation<Address>;
+  @ManyToOne(() => Landlord, (landlord) => landlord.propertyManagers, {
+    nullable: false,
+  })
+  landlord: Relation<Landlord>;
 
-  @JoinColumn()
-  @OneToOne(() => File, { nullable: true, eager: true })
-  profilePicture: Relation<File>;
+  @ManyToMany(() => Property, (property) => property.propertyManagers)
+  properties: Relation<Property[]>;
 
-  @JoinTable()
-  @ManyToMany(() => Landlord, (landlord) => landlord.propertyManagers)
-  landlords: Relation<Landlord[]>;
+  @Column({ type: 'simple-array', default: [] })
+  permissions: PERMISSIONS[];
+
+  @Column({ default: false })
+  isActive: boolean;
 
   @CreateDateColumn()
   createdAt: Date;

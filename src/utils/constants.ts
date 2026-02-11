@@ -19,6 +19,13 @@ export enum USER_ROLES {
   TENANT = 'tenant',
 }
 
+export enum INVITE_STATUS {
+  PENDING = 'pending',
+  ACCEPTED = 'accepted',
+  REJECTED = 'rejected',
+  EXPIRED = 'expired',
+}
+
 export const NonAdminRoles = [
   USER_ROLES.LANDLORD,
   USER_ROLES.PROPERTY_MANAGER,

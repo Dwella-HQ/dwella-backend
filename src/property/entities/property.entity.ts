@@ -7,6 +7,7 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  ManyToMany,
   ManyToOne,
   OneToMany,
   OneToOne,
@@ -15,6 +16,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Unit } from './units.entity';
+import { PropertyManager } from 'src/property-manager/entities/property-manager.entity';
 
 @Entity()
 export class Property extends BaseEntity {
@@ -75,6 +77,12 @@ export class Property extends BaseEntity {
     cascade: true,
   })
   units: Relation<Unit[]>;
+
+  @ManyToMany(
+    () => PropertyManager,
+    (propertyManager) => propertyManager.properties,
+  )
+  propertyManagers: Relation<PropertyManager[]>;
 
   @Column('simple-array', { nullable: true })
   amenities: string[];

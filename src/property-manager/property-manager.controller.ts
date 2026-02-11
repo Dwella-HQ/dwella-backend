@@ -7,18 +7,20 @@ import {
   Param,
   Delete,
   UseGuards,
+  Res,
 } from '@nestjs/common';
 import { PropertyManagerService } from './property-manager.service';
 import { CreatePropertyManagerDto } from './dto/create-property-manager.dto';
 import { UpdatePropertyManagerDto } from './dto/update-property-manager.dto';
 import { JwtAuthGuard } from 'src/guards/jwt.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
-import { AddLandlordDto } from './dto/add-landlord.dto';
-import { RemoveLandlordDto } from './dto/remove-landlord.dto';
 import { PermissionsGuard } from 'src/rbac/guards/permission.guard';
 import { RolesGuard } from 'src/rbac/guards/role.guard';
 import { RequirePermissions } from 'src/rbac/decorators/permission.decorator';
 import { PERMISSIONS } from 'src/utils/constants';
+import { Response } from 'express';
+import { EnvironmentVariables } from 'src/config/env.config';
+import { ConfigService } from '@nestjs/config';
 
 @UseGuards(JwtAuthGuard, PermissionsGuard, RolesGuard)
 @ApiBearerAuth()
@@ -26,6 +28,7 @@ import { PERMISSIONS } from 'src/utils/constants';
 export class PropertyManagerController {
   constructor(
     private readonly propertyManagerService: PropertyManagerService,
+    private readonly configService: ConfigService<EnvironmentVariables>,
   ) {}
 
   @RequirePermissions(PERMISSIONS.CREATE_PROPERTY_MANAGER)
@@ -62,6 +65,28 @@ export class PropertyManagerController {
     };
   }
 
+  @Get('landlord/:landlordId')
+  async getLandlordPropertyManagers(@Param('landlordId') landlordId: string) {
+    const data =
+      await this.propertyManagerService.getLandlordPropertyManagers(landlordId);
+    return {
+      success: true,
+      message: `Property Managers retrieved successfully`,
+      data,
+    };
+  }
+
+  @Get('user/:userId')
+  async getUserPropertyManagers(@Param('userId') userId: string) {
+    const data =
+      await this.propertyManagerService.getUserPropertyManagers(userId);
+    return {
+      success: true,
+      message: `Property Managers retrieved successfully`,
+      data,
+    };
+  }
+
   @RequirePermissions(PERMISSIONS.UPDATE_PROPERTY_MANAGER)
   @Patch(':id')
   async update(
@@ -79,38 +104,19 @@ export class PropertyManagerController {
     };
   }
 
-  @RequirePermissions(PERMISSIONS.UPDATE_LANDLORD)
-  @Post(':id/add-landlord')
-  async addLandlord(
-    @Param('id') id: string,
-    @Body() addLandlordDto: AddLandlordDto,
-  ) {
-    const data = await this.propertyManagerService.addLandlord(
-      id,
-      addLandlordDto,
-    );
-    return {
-      success: true,
-      message: `Landlord added to Property Manager #${id} successfully`,
-      data,
-    };
+  @Get('accept-invite/:id')
+  async acceptInvite(@Param('id') inviteId: string, @Res() res: Response) {
+    const redirectUrl =
+      await this.propertyManagerService.acceptInvite(inviteId);
+    return res.redirect(redirectUrl);
   }
 
-  @RequirePermissions(PERMISSIONS.UPDATE_LANDLORD)
-  @Post(':id/remove-landlord')
-  async removeLandlord(
-    @Param('id') id: string,
-    @Body() removeLandlordDto: RemoveLandlordDto,
-  ) {
-    const data = await this.propertyManagerService.removeLandlord(
-      id,
-      removeLandlordDto,
+  @Get('reject-invite/:id')
+  async rejectInvite(@Param('id') inviteId: string, @Res() res: Response) {
+    await this.propertyManagerService.rejectInvite(inviteId);
+    return res.redirect(
+      `${this.configService.get('FRONTEND_URL')}/invite-rejected`,
     );
-    return {
-      success: true,
-      message: `Landlord removed from Property Manager #${id} successfully`,
-      data,
-    };
   }
 
   @RequirePermissions(PERMISSIONS.DELETE_PROPERTY_MANAGER)

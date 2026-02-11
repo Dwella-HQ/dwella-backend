@@ -12,6 +12,7 @@ import { CreateUnitDto } from './dto/create-unit.dto';
 import { Unit } from './entities/units.entity';
 import { EmailService } from 'src/notification/email/email.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { FileService } from 'src/file/file.service';
 @Injectable()
 export class PropertyService {
   constructor(
@@ -22,6 +23,7 @@ export class PropertyService {
     private addressService: AddressService,
     private landlordService: LandlordService,
     private emailService: EmailService,
+    private fileService: FileService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
   async create(createPropertyDto: CreatePropertyDto) {
@@ -38,6 +40,20 @@ export class PropertyService {
       address,
       amenities: createPropertyDto.amenities || [],
     });
+    for (const photoId of createPropertyDto.photoIds || []) {
+      const file = await this.fileService.findFileById(photoId);
+      if (!file) {
+        throw new NotFoundException(`File with id ${photoId} not found`);
+      }
+      property.photos.push(file);
+    }
+    for (const documentId of createPropertyDto.documentIds || []) {
+      const file = await this.fileService.findFileById(documentId);
+      if (!file) {
+        throw new NotFoundException(`File with id ${documentId} not found`);
+      }
+      property.documents.push(file);
+    }
     const savedProperty = await this.propertyRepository.save(property);
     this.eventEmitter.emit('property.created', savedProperty.id);
     return savedProperty;

@@ -19,8 +19,9 @@ import { JwtService } from '@nestjs/jwt';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import ms from 'ms';
-import { RegistrationTypeEnum } from 'src/utils/constants';
+import { RegistrationTypeEnum, USER_ROLES } from 'src/utils/constants';
 import { QueryUserDto } from './dto/query-user.dto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class UserService {
@@ -32,6 +33,7 @@ export class UserService {
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
     private readonly configService: ConfigService<EnvironmentVariables>,
     private readonly jwtService: JwtService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async create(createUserDto: CreateUserDto) {
@@ -50,6 +52,15 @@ export class UserService {
         await queryRunner.manager.save(savedUser);
       }
       await queryRunner.commitTransaction();
+      if (
+        createUserDto.roleName === USER_ROLES.PROPERTY_MANAGER &&
+        createUserDto.propertyManagerId
+      ) {
+        await this.userRepository.save({
+          id: savedUser.id,
+          propertyManager: { id: createUserDto.propertyManagerId },
+        });
+      }
       return user;
     } catch (error: any) {
       console.log(error);
@@ -59,7 +70,6 @@ export class UserService {
         throw new BadRequestException(error.detail);
       }
       throw new InternalServerErrorException(error.detail);
-      throw error;
     } finally {
       await queryRunner.release();
     }

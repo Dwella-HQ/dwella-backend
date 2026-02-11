@@ -8,7 +8,7 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
-  ManyToMany,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   Relation,
@@ -52,9 +52,9 @@ export class Landlord extends BaseEntity {
   @OneToOne(() => File, { nullable: true, eager: true })
   taxIdentificationNumberDocument: Relation<File>;
 
-  @ManyToMany(
+  @OneToMany(
     () => PropertyManager,
-    (propertyManager) => propertyManager.landlords,
+    (propertyManager) => propertyManager.landlord,
   )
   propertyManagers: Relation<PropertyManager[]>;
 
