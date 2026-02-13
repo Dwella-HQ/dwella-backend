@@ -32,6 +32,7 @@ import { VerificationModule } from './verification/verification.module';
 import { AmenitiesModule } from './amenities/amenities.module';
 import { TransactionModule } from './transaction/transaction.module';
 import { ChatModule } from './chat/chat.module';
+import { MaintenanceRequestModule } from './maintenance-request/maintenance-request.module';
 
 @Module({
   imports: [
@@ -134,6 +135,7 @@ import { ChatModule } from './chat/chat.module';
     AmenitiesModule,
     TransactionModule,
     ChatModule,
+    MaintenanceRequestModule,
   ],
   controllers: [AppController],
   providers: [AppService],
