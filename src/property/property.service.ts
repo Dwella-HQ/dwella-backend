@@ -176,6 +176,38 @@ export class PropertyService {
     return units;
   }
 
+  async getUnit(unitId: string) {
+    const unit = await this.unitRepository.findOne({
+      where: { id: unitId },
+      relations: { property: true },
+    });
+    if (!unit) {
+      throw new NotFoundException('Unit not found');
+    }
+    return unit;
+  }
+
+  async updateUnit(unitId: string, updateUnitDto: CreateUnitDto) {
+    const unit = await this.getUnit(unitId);
+    for (const key in updateUnitDto) {
+      if (updateUnitDto[key] !== undefined) {
+        unit[key] = updateUnitDto[key];
+      }
+    }
+    return await this.unitRepository.save(unit);
+  }
+
+  async deleteUnit(unitId: string) {
+    const unit = await this.getUnit(unitId);
+    const property = await this.findOne(unit.property.id);
+    property.numberOfUnits -= 1;
+    await Promise.all([
+      this.propertyRepository.save(property),
+      this.unitRepository.softDelete(unitId),
+    ]);
+    return true;
+  }
+
   async remove(id: string) {
     const result = await this.propertyRepository.softDelete(id);
     if (result.affected === 0) {

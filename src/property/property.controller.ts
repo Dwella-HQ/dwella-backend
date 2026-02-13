@@ -125,6 +125,42 @@ export class PropertyController {
     };
   }
 
+  @RequirePermissions(PERMISSIONS.READ_PROPERTY)
+  @Get('unit/:unitId')
+  async getUnit(@Param('unitId') unitId: string) {
+    const data = await this.propertyService.getUnit(unitId);
+    return {
+      success: true,
+      message: 'Unit retrieved successfully',
+      data: data,
+    };
+  }
+
+  @RequirePermissions(PERMISSIONS.UPDATE_PROPERTY)
+  @Patch('unit/:unitId')
+  async updateUnit(
+    @Param('unitId') unitId: string,
+    @Body() updateUnitDto: CreateUnitDto,
+  ) {
+    const data = await this.propertyService.updateUnit(unitId, updateUnitDto);
+    return {
+      success: true,
+      message: 'Unit updated successfully',
+      data: data,
+    };
+  }
+
+  @RequirePermissions(PERMISSIONS.DELETE_PROPERTY)
+  @Delete('unit/:unitId')
+  async deleteUnit(@Param('unitId') unitId: string) {
+    await this.propertyService.deleteUnit(unitId);
+    return {
+      success: true,
+      message: 'Unit deleted successfully',
+    };
+  }
+
+  @RequirePermissions(PERMISSIONS.DELETE_PROPERTY)
   @Delete(':id')
   async remove(@Param('id') id: string) {
     const data = await this.propertyService.remove(id);

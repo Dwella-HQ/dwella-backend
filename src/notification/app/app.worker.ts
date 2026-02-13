@@ -82,7 +82,6 @@ export class AppNotificationWorker extends WorkerHost {
         return;
       }
       default: {
-        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         throw new Error(`Unknown job name: ${job.name}`);
       }
     }

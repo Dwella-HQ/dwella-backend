@@ -157,7 +157,6 @@ export class SeederService implements OnModuleInit {
         }
         const amenity = await this.amenitiesService.create(amenityData);
         this.logger.log(`Added amenity: ${amenity.name}`);
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (error) {
         // Handle errors
         console.error(`Error adding amenity ${amenityData.name}:`, error);
