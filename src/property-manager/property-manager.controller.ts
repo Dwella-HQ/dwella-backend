@@ -21,6 +21,7 @@ import { PERMISSIONS } from 'src/utils/constants';
 import { Response } from 'express';
 import { EnvironmentVariables } from 'src/config/env.config';
 import { ConfigService } from '@nestjs/config';
+import { InvitePropertyManagerDto } from './dto/invite-property-manager.dto';
 
 @UseGuards(JwtAuthGuard, PermissionsGuard, RolesGuard)
 @ApiBearerAuth()
@@ -100,6 +101,23 @@ export class PropertyManagerController {
     return {
       success: true,
       message: `Property Manager #${id} updated successfully`,
+      data,
+    };
+  }
+
+  @RequirePermissions(PERMISSIONS.CREATE_PROPERTY_MANAGER)
+  @Post('invite/:landlordId')
+  async invite(
+    @Param('landlordId') landlordId: string,
+    @Body() invitePropertyManagerDto: InvitePropertyManagerDto,
+  ) {
+    const data = await this.propertyManagerService.invitePropertyManager(
+      landlordId,
+      invitePropertyManagerDto,
+    );
+    return {
+      success: true,
+      message: `Invitation sent successfully`,
       data,
     };
   }
