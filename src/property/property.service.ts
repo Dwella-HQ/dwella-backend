@@ -45,14 +45,14 @@ export class PropertyService {
       if (!file) {
         throw new NotFoundException(`File with id ${photoId} not found`);
       }
-      property.photos.push(file);
+      property.photos = [...(property.photos || []), file];
     }
     for (const documentId of createPropertyDto.documentIds || []) {
       const file = await this.fileService.findFileById(documentId);
       if (!file) {
         throw new NotFoundException(`File with id ${documentId} not found`);
       }
-      property.documents.push(file);
+      property.documents = [...(property.documents || []), file];
     }
     const savedProperty = await this.propertyRepository.save(property);
     this.eventEmitter.emit('property.created', savedProperty.id);

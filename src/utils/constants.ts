@@ -94,6 +94,22 @@ export enum PERMISSIONS {
   READ_PROPERTY_MANAGER = 'read_property_manager',
   UPDATE_PROPERTY_MANAGER = 'update_property_manager',
   DELETE_PROPERTY_MANAGER = 'delete_property_manager',
+
+  //MAINTENANCE REQUESTS
+  MANAGE_MAINTENANCE_REQUESTS = 'manage_maintenance_requests',
+
+  // CHAT
+  MANAGE_CHAT = 'manage_chat',
+  READ_CHAT = 'read_chat',
+  DELETE_CHAT = 'delete_chat',
+  UPDATE_CHAT = 'update_chat',
+  CREATE_CHAT = 'create_chat',
+
+  // Payments
+  CREATE_PAYMENT = 'create_payment',
+  READ_PAYMENT = 'read_payment',
+  UPDATE_PAYMENT = 'update_payment',
+  DELETE_PAYMENT = 'delete_payment',
 }
 
 export enum RegistrationTypeEnum {
