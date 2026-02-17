@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Injectable } from '@nestjs/common';
 import { CreateMaintenanceRequestDto } from './dto/create-maintenance-request.dto';
 import { UpdateMaintenanceRequestDto } from './dto/update-maintenance-request.dto';
