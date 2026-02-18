@@ -210,7 +210,7 @@ export class PropertyManagerService {
         permissions: invite.permissions,
       });
       await this.propertyManagerInviteRepository.save(invite);
-      const redirectUrl = `${this.configService.get('FRONTEND_URL')}/auth/register?property-manager-id=${propertyManager.id}`;
+      const redirectUrl = `${this.configService.get('FRONTEND_URL')}/auth/signup/manager?propertyManagerId=${propertyManager.id}`;
       return redirectUrl;
     }
     user.isEmailVerified = true;
