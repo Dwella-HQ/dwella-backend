@@ -61,6 +61,15 @@ export class UserService {
           propertyManager: { id: createUserDto.propertyManagerId },
         });
       }
+      if (
+        createUserDto.roleName === USER_ROLES.TENANT &&
+        createUserDto.tenantId
+      ) {
+        await this.userRepository.save({
+          id: savedUser.id,
+          tenant: { id: createUserDto.tenantId },
+        });
+      }
       return user;
     } catch (error: any) {
       console.log(error);
