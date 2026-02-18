@@ -48,12 +48,24 @@ export class PropertyManagerService {
     const user = await this.userService.findOne(
       createPropertyManagerDto.userId,
     );
-    const address = await this.addressService.create(
-      user.id,
-      createPropertyManagerDto.address,
+    const landlord = await this.landlordService.findOne(
+      createPropertyManagerDto.landlordId,
     );
+    const properties: Property[] = [];
+    for (const propertyId of createPropertyManagerDto.propertyIds) {
+      const property = await this.propertyService.findOne(propertyId);
+      if (property.landlord.id !== createPropertyManagerDto.landlordId) {
+        throw new NotFoundException(
+          `Property with id ${propertyId} not found for this landlord`,
+        );
+      }
+      properties.push(property);
+    }
     const propertyManager = this.propertyManagerRepository.create({
       user: user,
+      landlord: landlord,
+      permissions: createPropertyManagerDto.permissions,
+      properties: properties,
     });
     return this.propertyManagerRepository.save(propertyManager);
   }
@@ -200,15 +212,18 @@ export class PropertyManagerService {
       return redirectUrl;
     }
     invite.status = INVITE_STATUS.ACCEPTED;
-    await this.propertyManagerInviteRepository.save(invite);
     user.isEmailVerified = true;
-    const propertyManager = await this.propertyManagerRepository.save({
-      user,
-      landlord: invite.landlord,
-      properties: invite.properties,
-      permissions: invite.permissions,
-      isActive: true,
-    });
+    await Promise.all([
+      user.save(),
+      this.propertyManagerInviteRepository.save(invite),
+      this.propertyManagerRepository.save({
+        user,
+        landlord: invite.landlord,
+        properties: invite.properties,
+        permissions: invite.permissions,
+        isActive: true,
+      }),
+    ]);
     const redirectUrl = `${this.configService.get('FRONTEND_URL')}/property-managers/dashboard`;
     return redirectUrl;
   }

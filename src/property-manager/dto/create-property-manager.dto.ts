@@ -1,17 +1,23 @@
-import { Type } from 'class-transformer';
-import { IsOptional, IsUUID, ValidateNested } from 'class-validator';
-import { CreateAddressDto } from 'src/address/dto/create-address.dto';
+import { IsEnum, IsUUID } from 'class-validator';
+import { PERMISSIONS } from 'src/utils/constants';
 
 export class CreatePropertyManagerDto {
   @IsUUID('all')
   userId: string;
 
   @IsUUID('all')
-  @IsOptional()
-  profilePictureId: string;
+  landlordId: string;
 
-  @ValidateNested()
-  @IsOptional()
-  @Type(() => CreateAddressDto)
-  address: CreateAddressDto;
+  @IsUUID('all', { each: true })
+  propertyIds: string[];
+
+  @IsEnum(
+    [
+      PERMISSIONS.MANAGE_CHAT,
+      PERMISSIONS.MANAGE_MAINTENANCE_REQUESTS,
+      PERMISSIONS.READ_PAYMENT,
+    ],
+    { each: true },
+  )
+  permissions: PERMISSIONS[];
 }

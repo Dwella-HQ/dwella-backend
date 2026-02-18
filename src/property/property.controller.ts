@@ -117,7 +117,7 @@ export class PropertyController {
   @RequirePermissions(PERMISSIONS.READ_PROPERTY)
   @Get(':id/units')
   async getUnits(@Param('id') id: string) {
-    const data = await this.propertyService.getUnits(id);
+    const data = await this.propertyService.fetchPropertyUnits(id);
     return {
       success: true,
       message: 'Units retrieved successfully',

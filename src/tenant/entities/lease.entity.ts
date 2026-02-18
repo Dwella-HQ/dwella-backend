@@ -14,6 +14,7 @@ import {
   SecurityDepositFrequencyEnum,
 } from 'src/utils/constants';
 import { Unit } from 'src/property/entities/units.entity';
+import { File } from 'src/file/entities/file.entity';
 
 @Entity()
 export class Lease {

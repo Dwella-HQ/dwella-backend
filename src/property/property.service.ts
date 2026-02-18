@@ -169,7 +169,7 @@ export class PropertyService {
     return await this.unitRepository.save(unit);
   }
 
-  async getUnits(propertyId: string) {
+  async fetchPropertyUnits(propertyId: string) {
     const units = await this.unitRepository.find({
       where: { property: { id: propertyId } },
     });
