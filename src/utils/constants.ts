@@ -17,6 +17,7 @@ export enum USER_ROLES {
   AGENT = 'agent',
   MAINTENANCE_STAFF = 'maintenance_staff',
   TENANT = 'tenant',
+  USER = 'user',
 }
 
 export enum INVITE_STATUS {
@@ -32,6 +33,7 @@ export const NonAdminRoles = [
   USER_ROLES.AGENT,
   USER_ROLES.MAINTENANCE_STAFF,
   USER_ROLES.TENANT,
+  USER_ROLES.USER,
 ];
 
 export const AdminRoles = [
@@ -334,3 +336,20 @@ export const DefaultAmenities: CreateAmenityDto[] = [
   },
   { name: 'Elevators', description: 'Elevator access to all floors' },
 ];
+
+export enum RentFrequencyEnum {
+  WEEKLY = 'weekly',
+  BIWEEKLY = 'biweekly',
+  MONTHLY = 'monthly',
+  QUARTERLY = 'quarterly',
+  YEARLY = 'yearly',
+}
+
+export enum SecurityDepositFrequencyEnum {
+  WEEKLY = 'weekly',
+  BIWEEKLY = 'biweekly',
+  MONTHLY = 'monthly',
+  QUARTERLY = 'quarterly',
+  YEARLY = 'yearly',
+  ONE_TIME = 'one_time',
+}

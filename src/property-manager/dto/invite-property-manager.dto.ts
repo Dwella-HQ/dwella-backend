@@ -24,6 +24,13 @@ export class InvitePropertyManagerDto {
   @IsUUID('all', { each: true })
   propertyIds: string[];
 
-  @IsEnum(PERMISSIONS, { each: true })
+  @IsEnum(
+    [
+      PERMISSIONS.MANAGE_CHAT,
+      PERMISSIONS.MANAGE_MAINTENANCE_REQUESTS,
+      PERMISSIONS.READ_PAYMENT,
+    ],
+    { each: true },
+  )
   permissions: PERMISSIONS[];
 }

@@ -4,12 +4,14 @@ import {
   CreateDateColumn,
   Entity,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   Relation,
   UpdateDateColumn,
 } from 'typeorm';
 import { Property } from './property.entity';
 import { ColumnNumericTransformer } from 'src/utils/misc';
+import { Lease } from 'src/tenant/entities/lease.entity';
 
 @Entity()
 export class Unit extends BaseEntity {
@@ -45,6 +47,9 @@ export class Unit extends BaseEntity {
 
   @Column({ type: 'simple-array', nullable: true })
   amenities: string[];
+
+  @OneToMany(() => Lease, (lease) => lease.unit)
+  leases: Relation<Lease>[];
 
   @CreateDateColumn()
   createdAt: Date;

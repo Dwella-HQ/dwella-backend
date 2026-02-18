@@ -94,6 +94,7 @@ export class SeederService implements OnModuleInit {
       [USER_ROLES.AGENT]: [],
       [USER_ROLES.MAINTENANCE_STAFF]: [],
       [USER_ROLES.TENANT]: [],
+      [USER_ROLES.USER]: [],
     };
     for (const [roleName, perms] of Object.entries(rolesData)) {
       const permissionsData = perms.map((perm) => ({

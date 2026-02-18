@@ -21,6 +21,7 @@ import { RegistrationTypeEnum } from 'src/utils/constants';
 import { Landlord } from 'src/landlord/entities/landlord.entity';
 import { Address } from 'src/address/entities/address.entity';
 import { PropertyManager } from 'src/property-manager/entities/property-manager.entity';
+import { Tenant } from 'src/tenant/entities/tenant.entity';
 
 @Entity()
 export class User extends BaseEntity {
@@ -61,6 +62,9 @@ export class User extends BaseEntity {
 
   @OneToOne(() => PropertyManager, (propertyManager) => propertyManager.user)
   propertyManager: Relation<PropertyManager>;
+
+  @OneToOne(() => Tenant, (tenant) => tenant.user)
+  tenant: Relation<Tenant>;
 
   @OneToMany(() => Address, (address) => address.user)
   addresses: Relation<Address>[];
