@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   Res,
+  Query,
 } from '@nestjs/common';
 import { PropertyManagerService } from './property-manager.service';
 import { CreatePropertyManagerDto } from './dto/create-property-manager.dto';
@@ -17,11 +18,13 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 import { PermissionsGuard } from 'src/rbac/guards/permission.guard';
 import { RolesGuard } from 'src/rbac/guards/role.guard';
 import { RequirePermissions } from 'src/rbac/decorators/permission.decorator';
-import { PERMISSIONS } from 'src/utils/constants';
+import { AdminRoles, PERMISSIONS } from 'src/utils/constants';
 import { Response } from 'express';
 import { EnvironmentVariables } from 'src/config/env.config';
 import { ConfigService } from '@nestjs/config';
 import { InvitePropertyManagerDto } from './dto/invite-property-manager.dto';
+import { Public } from 'src/auth/decorators/public.decorator';
+import { RequireRoles } from 'src/rbac/decorators/role.decorator';
 
 @UseGuards(JwtAuthGuard, PermissionsGuard, RolesGuard)
 @ApiBearerAuth()
@@ -31,8 +34,9 @@ export class PropertyManagerController {
     private readonly propertyManagerService: PropertyManagerService,
     private readonly configService: ConfigService<EnvironmentVariables>,
   ) {}
-
-  @RequirePermissions(PERMISSIONS.CREATE_PROPERTY_MANAGER)
+  //temp
+  @RequireRoles(...AdminRoles)
+  // @RequirePermissions(PERMISSIONS.CREATE_PROPERTY_MANAGER)
   @Post()
   async create(@Body() createPropertyManagerDto: CreatePropertyManagerDto) {
     const data = await this.propertyManagerService.create(
@@ -122,16 +126,17 @@ export class PropertyManagerController {
     };
   }
 
-  @Get('accept-invite/:id')
-  async acceptInvite(@Param('id') inviteId: string, @Res() res: Response) {
-    const redirectUrl =
-      await this.propertyManagerService.acceptInvite(inviteId);
+  @Public()
+  @Get('accept-invite')
+  async acceptInvite(@Query('token') token: string, @Res() res: Response) {
+    const redirectUrl = await this.propertyManagerService.acceptInvite(token);
     return res.redirect(redirectUrl);
   }
 
-  @Get('reject-invite/:id')
-  async rejectInvite(@Param('id') inviteId: string, @Res() res: Response) {
-    await this.propertyManagerService.rejectInvite(inviteId);
+  @Public()
+  @Get('reject-invite')
+  async rejectInvite(@Query('token') token: string, @Res() res: Response) {
+    await this.propertyManagerService.rejectInvite(token);
     return res.redirect(
       `${this.configService.get('FRONTEND_URL')}/invite-rejected`,
     );

@@ -1,3 +1,5 @@
+import { File } from 'src/file/entities/file.entity';
+import { Unit } from 'src/property/entities/units.entity';
 import {
   INVITE_STATUS,
   RentFrequencyEnum,
@@ -7,7 +9,9 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  ManyToOne,
   PrimaryGeneratedColumn,
+  Relation,
   UpdateDateColumn,
 } from 'typeorm';
 
@@ -19,8 +23,8 @@ export class TenantInvite {
   @Column()
   email: string;
 
-  @Column()
-  unitId: string;
+  @ManyToOne(() => Unit, { nullable: false })
+  unit: Relation<Unit>;
 
   @Column()
   leaseStartDate: Date;
@@ -28,7 +32,7 @@ export class TenantInvite {
   @Column()
   leaseEndDate: Date;
 
-  @Column('text')
+  @Column({ type: 'text' })
   rentFrequency: RentFrequencyEnum;
 
   @Column('decimal', { precision: 10, scale: 2 })
@@ -40,11 +44,17 @@ export class TenantInvite {
   @Column({ type: 'text' })
   securityDepositFrequency: SecurityDepositFrequencyEnum;
 
-  @Column()
-  documentId: string;
+  @ManyToOne(() => File, { nullable: true })
+  document: Relation<File>;
 
-  @Column({ type: 'text' })
+  @Column({ type: 'text', default: INVITE_STATUS.PENDING })
   status: INVITE_STATUS;
+
+  @Column({ nullable: true, unique: true })
+  token: string;
+
+  @Column()
+  expiresAt: Date;
 
   @CreateDateColumn()
   createdAt: Date;

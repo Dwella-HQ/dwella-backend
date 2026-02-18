@@ -1,0 +1,56 @@
+{{> header}}
+
+<h1>Tenant Invitation</h1>
+
+<p>Hello {{name}},</p>
+
+<p>You have been invited by <strong>{{landlordName}}</strong> to become a tenant on Dwella.</p>
+
+{{#if propertyName}}
+<p><strong>Property:</strong> {{propertyName}}</p>
+{{/if}}
+
+{{#if unitName}}
+<p><strong>Unit:</strong> {{unitName}}</p>
+{{/if}}
+
+{{#if propertyAddress}}
+<p><strong>Address:</strong> {{propertyAddress}}</p>
+{{/if}}
+
+{{#if leaseStartDate}}
+<p><strong>Lease Start:</strong> {{leaseStartDate}}</p>
+{{/if}}
+
+{{#if leaseEndDate}}
+<p><strong>Lease End:</strong> {{leaseEndDate}}</p>
+{{/if}}
+
+{{#if rentAmount}}
+<p><strong>Rent:</strong> {{rentAmount}} {{rentFrequency}}</p>
+{{/if}}
+
+{{#if securityDeposit}}
+<p><strong>Security Deposit:</strong> {{securityDeposit}} {{securityDepositFrequency}}</p>
+{{/if}}
+
+{{#if leaseDocumentLink}}
+<p><strong>Lease Document:</strong> <a href='{{leaseDocumentLink}}'>View Lease Document</a></p>
+{{/if}}
+
+<p style="margin: 30px 0; text-align: center;">
+	<a href='{{acceptLink}}' style="display: inline-block; padding: 15px 40px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px; font-size: 16px; font-weight: bold;">Accept Invitation</a>
+</p>
+
+<p>Or copy and paste this link into your browser:</p>
+<p>{{acceptLink}}</p>
+
+<p style="margin-top: 30px; font-size: 12px; color: #666;">
+	If you wish to decline this invitation, <a href='{{rejectLink}}' style="color: #666;">click here</a>.
+</p>
+
+<p><strong>Note:</strong> This invitation will expire in {{expirationTime}}.</p>
+
+<p>If you have any questions, please don't hesitate to contact us.</p>
+
+{{> footer}}

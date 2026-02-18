@@ -7,6 +7,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinTable,
   ManyToMany,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -27,6 +28,7 @@ export class PropertyManager extends BaseEntity {
   })
   landlord: Relation<Landlord>;
 
+  @JoinTable()
   @ManyToMany(() => Property, (property) => property.propertyManagers)
   properties: Relation<Property[]>;
 

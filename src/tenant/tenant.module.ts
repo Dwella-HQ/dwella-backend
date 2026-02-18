@@ -6,10 +6,11 @@ import { Tenant } from './entities/tenant.entity';
 import { Lease } from './entities/lease.entity';
 import { PropertyModule } from 'src/property/property.module';
 import { UserModule } from 'src/user/user.module';
+import { TenantInvite } from './entities/tenant-invite.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Tenant, Lease]),
+    TypeOrmModule.forFeature([Tenant, Lease, TenantInvite]),
     PropertyModule,
     UserModule,
   ],

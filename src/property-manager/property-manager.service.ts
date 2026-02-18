@@ -177,8 +177,8 @@ export class PropertyManagerService {
       context: {
         name: invitePropertyManagerDto.fullName,
         landlordName: landlord.landLordName,
-        acceptLink: `${this.configService.get('BACKEND_URL')}/property-managers/accept-invite?token=${token}`,
-        rejectLink: `${this.configService.get('BACKEND_URL')}/property-managers/reject-invite?token=${token}`,
+        acceptLink: `${this.configService.get('BACKEND_URL')}/property-manager/accept-invite?token=${token}`,
+        rejectLink: `${this.configService.get('BACKEND_URL')}/property-manager/reject-invite?token=${token}`,
         expirationTime: `7 days`,
       },
     });
@@ -199,6 +199,7 @@ export class PropertyManagerService {
     if (invite.status !== INVITE_STATUS.PENDING) {
       throw new BadRequestException('Invite already responded to');
     }
+    invite.status = INVITE_STATUS.ACCEPTED;
     const user = await this.userService
       .findOneByEmail(invite.email)
       .catch(() => null);
@@ -208,10 +209,10 @@ export class PropertyManagerService {
         properties: invite.properties,
         permissions: invite.permissions,
       });
+      await this.propertyManagerInviteRepository.save(invite);
       const redirectUrl = `${this.configService.get('FRONTEND_URL')}/auth/register?property-manager-id=${propertyManager.id}`;
       return redirectUrl;
     }
-    invite.status = INVITE_STATUS.ACCEPTED;
     user.isEmailVerified = true;
     await Promise.all([
       user.save(),

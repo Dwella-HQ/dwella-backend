@@ -17,6 +17,8 @@ import { PermissionsGuard } from 'src/rbac/guards/permission.guard';
 import { RolesGuard } from 'src/rbac/guards/role.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { QueryPaginationDto } from 'src/utils/query-pagination.dto';
+import { InviteTenantDto } from './dto/invite-tenant.dto';
+import { Public } from 'src/auth/decorators/public.decorator';
 
 @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @ApiBearerAuth()
@@ -74,6 +76,37 @@ export class TenantController {
     return {
       success: true,
       message: 'Tenant removed successfully',
+    };
+  }
+
+  @Post('invite')
+  async inviteTenant(@Body() inviteTenantDto: InviteTenantDto) {
+    const data = await this.tenantService.inviteTenant(inviteTenantDto);
+    return {
+      success: true,
+      message: 'Tenant invited successfully',
+      data,
+    };
+  }
+
+  @Public()
+  @Get('accept-invite/:token')
+  async acceptInvite(@Param('token') token: string) {
+    const redirectUrl = await this.tenantService.acceptInvite(token);
+    return {
+      success: true,
+      message: 'Invite accepted successfully',
+      data: { redirectUrl },
+    };
+  }
+
+  @Public()
+  @Get('reject-invite/:token')
+  async rejectInvite(@Param('token') token: string) {
+    await this.tenantService.rejectInvite(token);
+    return {
+      success: true,
+      message: 'Invite rejected successfully',
     };
   }
 }
