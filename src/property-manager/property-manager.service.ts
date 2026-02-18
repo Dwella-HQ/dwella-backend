@@ -225,7 +225,7 @@ export class PropertyManagerService {
         isActive: true,
       }),
     ]);
-    const redirectUrl = `${this.configService.get('FRONTEND_URL')}/property-managers/dashboard`;
+    const redirectUrl = `${this.configService.get('FRONTEND_URL')}//dashboard/select-landlord`;
     return redirectUrl;
   }
 
