@@ -1,14 +1,15 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Lease } from './entities/lease.entity';
 import { Tenant } from './entities/tenant.entity';
-import { Repository } from 'typeorm';
+import { LessThan, Repository } from 'typeorm';
 import { UserService } from 'src/user/user.service';
 import { PropertyService } from 'src/property/property.service';
 import { FileService } from 'src/file/file.service';
+import { QueryPaginationDto } from 'src/utils/query-pagination.dto';
 
 @Injectable()
 export class TenantService {
@@ -44,24 +45,47 @@ export class TenantService {
     const tenant = this.tenantRepository.create({
       user,
       leases: [savedLease],
+      currentUnit: unit,
     });
-    await this.tenantRepository.save(tenant);
-    return 'This action adds a new tenant';
+    return await this.tenantRepository.save(tenant);
   }
 
-  findAll() {
-    return `This action returns all tenant`;
+  async findAll(queryPaginationDto: QueryPaginationDto) {
+    const { limit = 10, cursor } = queryPaginationDto;
+    const tenants = await this.tenantRepository.find({
+      relations: ['user', 'leases', 'currentUnit'],
+      order: { createdAt: 'DESC' },
+      take: limit + 1,
+      skip: cursor ? 1 : 0,
+      where: cursor ? { createdAt: LessThan(cursor) } : {},
+    });
+    return tenants;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} tenant`;
+  async findOne(id: string) {
+    const tenant = await this.tenantRepository.findOne({
+      where: { id },
+      relations: {
+        user: true,
+        leases: true,
+        currentUnit: true,
+      },
+    });
+    if (!tenant) {
+      throw new NotFoundException(`Tenant not found`);
+    }
+    return tenant;
   }
 
-  update(id: number, updateTenantDto: UpdateTenantDto) {
+  update(id: string, updateTenantDto: UpdateTenantDto) {
     return `This action updates a #${id} tenant`;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} tenant`;
+  async remove(id: string) {
+    const result = await this.tenantRepository.delete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException(`Tenant not found`);
+    }
+    return true;
   }
 }

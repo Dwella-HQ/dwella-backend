@@ -5,6 +5,7 @@ import {
   Entity,
   ManyToOne,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   Relation,
   UpdateDateColumn,
@@ -12,6 +13,7 @@ import {
 import { Property } from './property.entity';
 import { ColumnNumericTransformer } from 'src/utils/misc';
 import { Lease } from 'src/tenant/entities/lease.entity';
+import { Tenant } from 'src/tenant/entities/tenant.entity';
 
 @Entity()
 export class Unit extends BaseEntity {
@@ -50,6 +52,9 @@ export class Unit extends BaseEntity {
 
   @OneToMany(() => Lease, (lease) => lease.unit)
   leases: Relation<Lease>[];
+
+  @OneToOne(() => Tenant, (tenant) => tenant.currentUnit)
+  tenant: Relation<Tenant>;
 
   @CreateDateColumn()
   createdAt: Date;

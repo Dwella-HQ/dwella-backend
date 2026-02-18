@@ -1,13 +1,7 @@
-import {
-  IsBoolean,
-  IsNumber,
-  // IsNumberString,
-  IsOptional,
-  IsString,
-  IsUUID,
-} from 'class-validator';
+import { IsBoolean, IsOptional, IsString, IsUUID } from 'class-validator';
+import { QueryPaginationDto } from 'src/utils/query-pagination.dto';
 
-export class QueryLandlordDto {
+export class QueryLandlordDto extends QueryPaginationDto {
   @IsUUID('all')
   @IsOptional()
   userId?: string;
@@ -27,12 +21,4 @@ export class QueryLandlordDto {
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;
-
-  @IsNumber()
-  @IsOptional()
-  page?: number;
-
-  @IsNumber()
-  @IsOptional()
-  limit?: number;
 }

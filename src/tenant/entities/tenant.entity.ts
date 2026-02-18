@@ -9,6 +9,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Lease } from './lease.entity';
+import { Unit } from 'src/property/entities/units.entity';
 
 @Entity()
 export class Tenant {
@@ -20,6 +21,9 @@ export class Tenant {
 
   @OneToMany(() => Lease, (lease) => lease.tenant)
   leases: Relation<Lease>[];
+
+  @OneToOne(() => Unit, (unit) => unit.tenant)
+  currentUnit: Relation<Unit>;
 
   @CreateDateColumn()
   createdAt: Date;
