@@ -232,7 +232,9 @@ export class PropertyManagerService {
   async rejectInvite(token: string) {
     const invite = await this.propertyManagerInviteRepository.findOne({
       where: { token },
-      relations: ['landlord'],
+      relations: {
+        landlord: true,
+      },
     });
     if (!invite) {
       throw new NotFoundException('Invite not found');
