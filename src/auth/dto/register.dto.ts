@@ -6,6 +6,7 @@ import {
   IsPhoneNumber,
   IsString,
   IsStrongPassword,
+  IsUUID,
 } from 'class-validator';
 import {
   NonAdminRoles,
@@ -39,4 +40,12 @@ export class RegisterDto {
   @IsEnum(RegistrationTypeEnum)
   @IsOptional()
   registrationType?: RegistrationTypeEnum;
+
+  @IsUUID()
+  @IsOptional()
+  propertyManagerId?: string;
+
+  @IsUUID()
+  @IsOptional()
+  tenantId?: string;
 }
