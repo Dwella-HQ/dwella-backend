@@ -127,14 +127,14 @@ export class PropertyManagerController {
   }
 
   @Public()
-  @Get('accept-invite')
+  @Get('invite/accept-invite')
   async acceptInvite(@Query('token') token: string, @Res() res: Response) {
     const redirectUrl = await this.propertyManagerService.acceptInvite(token);
     return res.redirect(redirectUrl);
   }
 
   @Public()
-  @Get('reject-invite')
+  @Get('invite/reject-invite')
   async rejectInvite(@Query('token') token: string, @Res() res: Response) {
     await this.propertyManagerService.rejectInvite(token);
     return res.redirect(
