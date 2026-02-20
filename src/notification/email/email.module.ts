@@ -1,10 +1,15 @@
 import { Module } from '@nestjs/common';
 import { EmailService } from './email.service';
+import { EmailWorker } from './email.worker';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { EnvironmentVariables } from 'src/config/env.config';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { join } from 'path';
+import { BullModule } from '@nestjs/bullmq';
+import { JOB_NAMES } from 'src/utils/constants';
+import { BullBoardModule } from '@bull-board/nestjs';
+import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 
 @Module({
   imports: [
@@ -41,8 +46,18 @@ import { join } from 'path';
         },
       }),
     }),
+    BullModule.registerQueue({
+      name: JOB_NAMES.EMAIL_NOTIFICATION,
+      defaultJobOptions: {
+        removeOnComplete: true,
+      },
+    }),
+    BullBoardModule.forFeature({
+      name: JOB_NAMES.EMAIL_NOTIFICATION,
+      adapter: BullMQAdapter,
+    }),
   ],
-  providers: [EmailService],
+  providers: [EmailService, EmailWorker],
   exports: [EmailService],
 })
 export class EmailModule {}
