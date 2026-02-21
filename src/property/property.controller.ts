@@ -23,18 +23,14 @@ import { RolesGuard } from 'src/rbac/guards/role.guard';
 import { RequireRoles } from 'src/rbac/decorators/role.decorator';
 import { QueryPropertyDto } from './dto/query-property.dto';
 
-@UseGuards(
-  AuthGuard('jwt'),
-  PermissionsGuard,
-  LandLordApprovedGuard,
-  RolesGuard,
-)
+@UseGuards(AuthGuard('jwt'), PermissionsGuard, RolesGuard)
 @ApiBearerAuth()
 @Controller('property')
 export class PropertyController {
   constructor(private readonly propertyService: PropertyService) {}
 
   @RequirePermissions(PERMISSIONS.CREATE_PROPERTY)
+  @UseGuards(LandLordApprovedGuard)
   @Post()
   async create(@Body() createPropertyDto: CreatePropertyDto) {
     const data = await this.propertyService.create(createPropertyDto);
