@@ -8,10 +8,12 @@ import {
 import {
   MaintenanceRequestLevel,
   MaintenanceRequestPriority,
+  MaintenanceRequestStatus,
   MaintenanceRequestTypes,
 } from 'src/utils/constants';
+import { QueryPaginationDto } from 'src/utils/query-pagination.dto';
 
-export class CreateMaintenanceRequestDto {
+export class QueryMaintenanceRequestDto extends QueryPaginationDto {
   @IsUUID()
   propertyId: string;
 
@@ -37,15 +39,6 @@ export class CreateMaintenanceRequestDto {
   @IsNotEmpty()
   subType: string;
 
-  @IsString()
-  @IsNotEmpty()
-  title: string;
-
-  @IsString()
-  @IsNotEmpty()
-  description: string;
-
-  @IsUUID('4', { each: true })
-  @IsOptional()
-  supportingFileIds?: string[];
+  @IsEnum(MaintenanceRequestStatus)
+  status: MaintenanceRequestStatus;
 }

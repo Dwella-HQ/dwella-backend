@@ -98,6 +98,7 @@ export enum PERMISSIONS {
   DELETE_PROPERTY_MANAGER = 'delete_property_manager',
 
   //MAINTENANCE REQUESTS
+  CREATE_MAINTENANCE_REQUEST = 'create_maintenance_request',
   MANAGE_MAINTENANCE_REQUESTS = 'manage_maintenance_requests',
 
   // CHAT
@@ -353,4 +354,25 @@ export enum SecurityDepositFrequencyEnum {
   QUARTERLY = 'quarterly',
   YEARLY = 'yearly',
   ONE_TIME = 'one_time',
+}
+
+export enum MaintenanceRequestTypes {
+  PLUMBING = 'plumbing',
+}
+
+export enum MaintenanceRequestLevel {
+  PROPERTY = 'PROPERTY',
+  UNIT = 'UNIT',
+}
+
+export enum MaintenanceRequestPriority {
+  HIGH = 'HIGH',
+  MEDIUM = 'MEDIUM',
+  LOW = 'LOW',
+}
+
+export enum MaintenanceRequestStatus {
+  PENDING = 'PENDING',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
 }
