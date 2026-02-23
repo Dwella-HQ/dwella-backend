@@ -27,7 +27,7 @@ export class MaintenanceRequest {
   @Column()
   title: string;
 
-  @ManyToOne(() => Property)
+  @ManyToOne(() => Property, { nullable: false })
   property: Relation<Property>;
 
   @ManyToOne(() => Unit)

@@ -80,6 +80,7 @@ export class MaintenanceRequestController {
     };
   }
 
+  @RequirePermissions(PERMISSIONS.MANAGE_MAINTENANCE_REQUESTS)
   @Patch(':id/status')
   async updateStatus(
     @Param('id') id: string,
