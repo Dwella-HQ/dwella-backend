@@ -18,10 +18,10 @@ import {
 } from './dto/create-transaction.dto';
 import { UpdateTransactionStatusDto } from './dto/update-transaction-status.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
-import { PermissionsGuard } from 'src/rbac/guards/permission.guard';
-import { RolesGuard } from 'src/rbac/guards/role.guard';
+import { PermissionsGuard } from 'src/auth/guards/permission.guard';
+import { RolesGuard } from 'src/auth/guards/role.guard';
 import { Public } from 'src/auth/decorators/public.decorator';
-import { JwtAuthGuard } from 'src/guards/jwt.guard';
+import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 // import { RequirePermissions } from 'src/rbac/decorators/permission.decorator';
 // import { PERMISSIONS } from 'src/utils/constants';
 

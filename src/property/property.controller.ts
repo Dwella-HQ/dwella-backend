@@ -14,12 +14,11 @@ import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
 import { CreateUnitDto } from './dto/create-unit.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { PermissionsGuard } from 'src/rbac/guards/permission.guard';
-import { LandLordApprovedGuard } from 'src/landlord/guards/landlord.guard';
+import { PermissionsGuard } from 'src/auth/guards/permission.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { RequirePermissions } from 'src/rbac/decorators/permission.decorator';
 import { AdminRoles, PERMISSIONS } from 'src/utils/constants';
-import { RolesGuard } from 'src/rbac/guards/role.guard';
+import { RolesGuard } from 'src/auth/guards/role.guard';
 import { RequireRoles } from 'src/rbac/decorators/role.decorator';
 import { QueryPropertyDto } from './dto/query-property.dto';
 
@@ -30,7 +29,6 @@ export class PropertyController {
   constructor(private readonly propertyService: PropertyService) {}
 
   @RequirePermissions(PERMISSIONS.CREATE_PROPERTY)
-  @UseGuards(LandLordApprovedGuard)
   @Post()
   async create(@Body() createPropertyDto: CreatePropertyDto) {
     const data = await this.propertyService.create(createPropertyDto);

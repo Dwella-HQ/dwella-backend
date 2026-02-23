@@ -16,8 +16,8 @@ import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { Request } from 'express';
 import { QueryLandlordDto } from './dto/query-landlord.dto';
-import { PermissionsGuard } from 'src/rbac/guards/permission.guard';
-import { RolesGuard } from 'src/rbac/guards/role.guard';
+import { PermissionsGuard } from 'src/auth/guards/permission.guard';
+import { RolesGuard } from 'src/auth/guards/role.guard';
 import { RequirePermissions } from 'src/rbac/decorators/permission.decorator';
 import { PERMISSIONS } from 'src/utils/constants';
 

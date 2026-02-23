@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
 import { WalletService } from './wallet.service';
 import { CreateLandlordWalletDto } from './dto/create-wallet.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { PermissionsGuard } from 'src/rbac/guards/permission.guard';
+import { PermissionsGuard } from 'src/auth/guards/permission.guard';
 import { LandLordApprovedGuard } from 'src/landlord/guards/landlord.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 

@@ -1,5 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -30,6 +34,9 @@ export class PropertyService {
     const landlord = await this.landlordService.findOne(
       createPropertyDto.landlordId,
     );
+    if (landlord.isApproved === false) {
+      throw new BadRequestException('Landlord is not approved yet');
+    }
     const address = await this.addressService.create(
       landlord.user.id,
       createPropertyDto.address,

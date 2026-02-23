@@ -1,5 +1,5 @@
 import { AuthService } from './auth.service';
-import { LocalAuthGuard } from 'src/guards/loginGuard.guard';
+import { LocalAuthGuard } from 'src/auth/guards/loginGuard.guard';
 import {
   Controller,
   Post,

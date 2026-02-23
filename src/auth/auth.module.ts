@@ -4,9 +4,10 @@ import { AuthController } from './auth.controller';
 import { UserModule } from 'src/user/user.module';
 import { JWTStrategy } from './strategy/jwt.strategy';
 import { LocalStrategy } from './strategy/local.strategy';
+import { RbacModule } from 'src/rbac/rbac.module';
 
 @Module({
-  imports: [UserModule],
+  imports: [UserModule, RbacModule],
   controllers: [AuthController],
   providers: [AuthService, JWTStrategy, LocalStrategy],
   exports: [AuthService],

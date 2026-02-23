@@ -1,6 +1,6 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { SettingsService } from './settings.service';
-import { PermissionsGuard } from 'src/rbac/guards/permission.guard';
+import { PermissionsGuard } from 'src/auth/guards/permission.guard';
 import { AuthGuard } from '@nestjs/passport';
 import { RequirePermissions } from 'src/rbac/decorators/permission.decorator';
 import { PERMISSIONS } from 'src/utils/constants';

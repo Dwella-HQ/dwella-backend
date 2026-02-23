@@ -12,7 +12,7 @@ import { AddressService } from './address.service';
 import { CreateAddressDto } from './dto/create-address.dto';
 import { UpdateAddressDto } from './dto/update-address.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { PermissionsGuard } from 'src/rbac/guards/permission.guard';
+import { PermissionsGuard } from 'src/auth/guards/permission.guard';
 import { RequirePermissions } from 'src/rbac/decorators/permission.decorator';
 import { PERMISSIONS } from 'src/utils/constants';
 

@@ -13,10 +13,10 @@ import {
 import { PropertyManagerService } from './property-manager.service';
 import { CreatePropertyManagerDto } from './dto/create-property-manager.dto';
 import { UpdatePropertyManagerDto } from './dto/update-property-manager.dto';
-import { JwtAuthGuard } from 'src/guards/jwt.guard';
+import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
-import { PermissionsGuard } from 'src/rbac/guards/permission.guard';
-import { RolesGuard } from 'src/rbac/guards/role.guard';
+import { PermissionsGuard } from 'src/auth/guards/permission.guard';
+import { RolesGuard } from 'src/auth/guards/role.guard';
 import { RequirePermissions } from 'src/rbac/decorators/permission.decorator';
 import { AdminRoles, PERMISSIONS } from 'src/utils/constants';
 import { Response } from 'express';
