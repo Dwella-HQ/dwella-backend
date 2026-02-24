@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Injectable } from '@nestjs/common';
 import { CreateRentPaymentDto } from './dto/create-rent-payment.dto';
 import { UpdateRentPaymentDto } from './dto/update-rent-payment.dto';
