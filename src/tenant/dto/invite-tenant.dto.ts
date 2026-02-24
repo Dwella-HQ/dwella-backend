@@ -12,7 +12,7 @@ import {
 } from 'class-validator';
 import {
   RentFrequencyEnum,
-  SecurityDepositFrequencyEnum,
+  ServiceChargeFrequencyEnum,
 } from 'src/utils/constants';
 
 export class InviteTenantDto {
@@ -47,8 +47,8 @@ export class InviteTenantDto {
   @Min(0)
   securityDeposit: number;
 
-  @IsEnum(SecurityDepositFrequencyEnum)
-  securityDepositFrequency: SecurityDepositFrequencyEnum;
+  @IsEnum(ServiceChargeFrequencyEnum)
+  securityDepositFrequency: ServiceChargeFrequencyEnum;
 
   @IsUUID('all')
   leaseDocumentId: string;

@@ -3,7 +3,7 @@ import { Unit } from 'src/property/entities/units.entity';
 import {
   INVITE_STATUS,
   RentFrequencyEnum,
-  SecurityDepositFrequencyEnum,
+  ServiceChargeFrequencyEnum,
 } from 'src/utils/constants';
 import {
   Column,
@@ -42,7 +42,7 @@ export class TenantInvite {
   securityDeposit: number;
 
   @Column({ type: 'text' })
-  securityDepositFrequency: SecurityDepositFrequencyEnum;
+  securityDepositFrequency: ServiceChargeFrequencyEnum;
 
   @ManyToOne(() => File, { nullable: true })
   document: Relation<File>;

@@ -339,6 +339,21 @@ export const DefaultAmenities: CreateAmenityDto[] = [
   { name: 'Elevators', description: 'Elevator access to all floors' },
 ];
 
+export enum NextOfKinRelationshipEnum {
+  PARENT = 'Parent',
+  SIBLING = 'Sibling',
+  SPOUSE = 'Spouse',
+  CHILD = 'Child',
+  FRIEND = 'Friend',
+  OTHER = 'Other',
+}
+export interface NextOfKinDetails {
+  fullName: string;
+  relationship: NextOfKinRelationshipEnum;
+  contactNumber: string;
+  email?: string;
+}
+
 export enum RentFrequencyEnum {
   WEEKLY = 'weekly',
   BIWEEKLY = 'biweekly',
@@ -347,7 +362,7 @@ export enum RentFrequencyEnum {
   YEARLY = 'yearly',
 }
 
-export enum SecurityDepositFrequencyEnum {
+export enum ServiceChargeFrequencyEnum {
   WEEKLY = 'weekly',
   BIWEEKLY = 'biweekly',
   MONTHLY = 'monthly',
@@ -375,4 +390,17 @@ export enum MaintenanceRequestStatus {
   PENDING = 'PENDING',
   IN_PROGRESS = 'IN_PROGRESS',
   COMPLETED = 'COMPLETED',
+}
+
+export enum RentPaymentStatusEnum {
+  PENDING = 'pending',
+  COMPLETED = 'completed',
+  FAILED = 'failed',
+}
+
+export enum RentStatusEnum {
+  PENDING = 'pending',
+  PAID = 'paid',
+  OVERDUE = 'overdue',
+  PARTIAL = 'partial',
 }

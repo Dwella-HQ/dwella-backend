@@ -3,6 +3,7 @@ import {
   CreateDateColumn,
   Entity,
   ManyToOne,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   Relation,
@@ -11,10 +12,12 @@ import {
 import { Tenant } from './tenant.entity';
 import {
   RentFrequencyEnum,
-  SecurityDepositFrequencyEnum,
+  ServiceChargeFrequencyEnum,
 } from 'src/utils/constants';
 import { Unit } from 'src/property/entities/units.entity';
 import { File } from 'src/file/entities/file.entity';
+import { Rent } from 'src/rent/entity/rent.entity';
+import { ColumnNumericTransformer } from 'src/utils/misc';
 
 @Entity()
 export class Lease {
@@ -30,23 +33,41 @@ export class Lease {
   @Column()
   startDate: Date;
 
-  @Column()
+  @Column({ nullable: true })
   endDate: Date;
 
-  @Column('decimal', { precision: 10, scale: 2 })
+  @Column('decimal', {
+    precision: 10,
+    scale: 2,
+    transformer: new ColumnNumericTransformer(),
+  })
   rentAmount: number;
 
   @Column({ type: 'text' })
   rentFrequency: RentFrequencyEnum;
 
-  @Column('decimal', { precision: 10, scale: 2 })
+  @Column('decimal', {
+    precision: 10,
+    scale: 2,
+    transformer: new ColumnNumericTransformer(),
+  })
   securityDeposit: number;
 
+  @Column('decimal', {
+    precision: 10,
+    scale: 2,
+    transformer: new ColumnNumericTransformer(),
+  })
+  serviceCharge: number;
+
   @Column({ type: 'text' })
-  securityDepositFrequency: SecurityDepositFrequencyEnum;
+  serviceChargeFrequency: ServiceChargeFrequencyEnum;
 
   @Column({ default: true })
   isActive: boolean;
+
+  @OneToMany(() => Rent, (rent) => rent.lease)
+  rents: Relation<Rent>[];
 
   @OneToOne(() => File, { nullable: true })
   document: Relation<File>;

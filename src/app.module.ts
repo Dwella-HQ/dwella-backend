@@ -33,6 +33,9 @@ import { AmenitiesModule } from './amenities/amenities.module';
 import { TransactionModule } from './transaction/transaction.module';
 import { ChatModule } from './chat/chat.module';
 import { MaintenanceRequestModule } from './maintenance-request/maintenance-request.module';
+import { RentPaymentModule } from './rent/rent-payment/rent-payment.module';
+import { RentPaymentModule } from './rent-payment/rent-payment.module';
+import { RentModule } from './rent/rent.module';
 
 @Module({
   imports: [
@@ -136,6 +139,8 @@ import { MaintenanceRequestModule } from './maintenance-request/maintenance-requ
     TransactionModule,
     ChatModule,
     MaintenanceRequestModule,
+    RentPaymentModule,
+    RentModule,
   ],
   controllers: [AppController],
   providers: [AppService],
