@@ -1,8 +1,10 @@
 import {
   IsEmail,
+  IsEnum,
   IsNotEmpty,
   IsNumberString,
   IsOptional,
+  IsPhoneNumber,
   IsString,
   Length,
 } from 'class-validator';
@@ -347,10 +349,19 @@ export enum NextOfKinRelationshipEnum {
   FRIEND = 'Friend',
   OTHER = 'Other',
 }
-export interface NextOfKinDetails {
+export class NextOfKinDetails {
+  @IsString()
+  @IsNotEmpty()
   fullName: string;
+
+  @IsEnum(NextOfKinRelationshipEnum)
   relationship: NextOfKinRelationshipEnum;
+
+  @IsPhoneNumber()
   contactNumber: string;
+
+  @IsEmail()
+  @IsOptional()
   email?: string;
 }
 
@@ -403,4 +414,11 @@ export enum RentStatusEnum {
   PAID = 'paid',
   OVERDUE = 'overdue',
   PARTIAL = 'partial',
+}
+
+export enum IdTypeEnum {
+  NATIONAL_ID = 'NATIONAL_ID',
+  DRIVER_LICENSE = 'DRIVER_LICENSE',
+  PASSPORT = 'PASSPORT',
+  OTHER = 'OTHER',
 }

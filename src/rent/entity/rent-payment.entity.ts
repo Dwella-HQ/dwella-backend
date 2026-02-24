@@ -1,3 +1,4 @@
+import { Rent } from 'src/rent/entity/rent.entity';
 import {
   CurrenciesEnum,
   PaymentMethodEnum,
@@ -9,7 +10,9 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToOne,
   PrimaryGeneratedColumn,
+  Relation,
   UpdateDateColumn,
 } from 'typeorm';
 
@@ -44,6 +47,9 @@ export class RentPayment extends BaseEntity {
     nullable: true,
   })
   senderDetails: TransferUserDetails;
+
+  @OneToOne(() => Rent, (rent) => rent.payment)
+  rent: Relation<Rent>;
 
   @CreateDateColumn()
   createdAt: Date;

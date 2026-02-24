@@ -13,6 +13,7 @@ export const configureSwagger = async (app: INestApplication, path: string) => {
   SwaggerModule.setup(path, app, document, {
     swaggerOptions: {
       tagsSorter: 'alpha',
+      persistAuthorization: true,
     },
   });
 };

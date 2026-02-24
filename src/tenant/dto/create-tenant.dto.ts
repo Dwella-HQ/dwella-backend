@@ -1,5 +1,18 @@
-import { IsDateString, IsEnum, IsNumber, IsUUID, Min } from 'class-validator';
+import { Type } from 'class-transformer';
 import {
+  IsBoolean,
+  IsDateString,
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsString,
+  IsUUID,
+  Min,
+  ValidateNested,
+} from 'class-validator';
+import {
+  IdTypeEnum,
+  NextOfKinDetails,
   RentFrequencyEnum,
   ServiceChargeFrequencyEnum,
 } from 'src/utils/constants';
@@ -28,9 +41,38 @@ export class CreateTenantDto {
   @Min(0)
   securityDeposit: number;
 
+  @IsNumber()
+  @Min(0)
+  serviceCharge: number;
+
   @IsEnum(ServiceChargeFrequencyEnum)
-  securityDepositFrequency: ServiceChargeFrequencyEnum;
+  serviceChargeFrequency: ServiceChargeFrequencyEnum;
 
   @IsUUID('all')
   leaseDocumentId: string;
+
+  @IsEnum(IdTypeEnum)
+  idType: IdTypeEnum;
+
+  @IsString()
+  @IsNotEmpty()
+  idNumber: string;
+
+  @IsUUID('all')
+  idDocumentId: string;
+
+  @IsBoolean()
+  isEmployed: boolean;
+
+  @IsString()
+  @IsNotEmpty()
+  employerName: string;
+
+  @IsString()
+  @IsNotEmpty()
+  employerContact: string;
+
+  @Type(() => NextOfKinDetails)
+  @ValidateNested()
+  nextOfKinDetails: NextOfKinDetails;
 }

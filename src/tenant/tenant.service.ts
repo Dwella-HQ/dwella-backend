@@ -12,7 +12,7 @@ import { FileService } from 'src/file/file.service';
 import { QueryPaginationDto } from 'src/utils/query-pagination.dto';
 import { InviteTenantDto } from './dto/invite-tenant.dto';
 import { TenantInvite } from './entities/tenant-invite.entity';
-import { INVITE_STATUS } from 'src/utils/constants';
+import { INVITE_STATUS, ServiceChargeFrequencyEnum } from 'src/utils/constants';
 import { EmailService } from 'src/notification/email/email.service';
 import { EnvironmentVariables } from 'src/config/env.config';
 import { ConfigService } from '@nestjs/config';
@@ -45,7 +45,8 @@ export class TenantService {
       rentFrequency: createTenantDto.rentFrequency,
       rentAmount: createTenantDto.rentAmount,
       securityDeposit: createTenantDto.securityDeposit,
-      securityDepositFrequency: createTenantDto.securityDepositFrequency,
+      serviceCharge: createTenantDto.serviceCharge,
+      serviceChargeFrequency: createTenantDto.serviceChargeFrequency,
     });
     if (createTenantDto.leaseDocumentId) {
       const document = await this.fileService.findFileById(
@@ -58,7 +59,19 @@ export class TenantService {
       user,
       leases: [savedLease],
       currentUnit: unit,
+      employerContact: createTenantDto.employerContact,
+      employerName: createTenantDto.employerName,
+      isEmployed: createTenantDto.isEmployed,
+      idNumber: createTenantDto.idNumber,
+      idType: createTenantDto.idType,
+      nextOfKinDetails: createTenantDto.nextOfKinDetails,
     });
+    if (createTenantDto.idDocumentId) {
+      const idDocument = await this.fileService.findFileById(
+        createTenantDto.idDocumentId,
+      );
+      tenant.idDocument = idDocument;
+    }
     return await this.tenantRepository.save(tenant);
   }
 
@@ -114,7 +127,8 @@ export class TenantService {
       rentFrequency: inviteTenantDto.rentFrequency,
       rentAmount: inviteTenantDto.rentAmount,
       securityDeposit: inviteTenantDto.securityDeposit,
-      securityDepositFrequency: inviteTenantDto.securityDepositFrequency,
+      serviceCharge: inviteTenantDto.serviceCharge,
+      serviceChargeFrequency: inviteTenantDto.serviceChargeFrequency,
       expiresAt,
     });
     if (inviteTenantDto.leaseDocumentId) {
@@ -138,7 +152,8 @@ export class TenantService {
         rentAmount: inviteTenantDto.rentAmount,
         rentFrequency: inviteTenantDto.rentFrequency,
         securityDeposit: inviteTenantDto.securityDeposit,
-        securityDepositFrequency: inviteTenantDto.securityDepositFrequency,
+        serviceCharge: inviteTenantDto.serviceCharge,
+        serviceChargeFrequency: inviteTenantDto.serviceChargeFrequency,
         leaseDocumentLink: savedInvite.document
           ? savedInvite.document.url
           : null,
@@ -173,7 +188,8 @@ export class TenantService {
         rentFrequency: invite.rentFrequency,
         rentAmount: invite.rentAmount,
         securityDeposit: invite.securityDeposit,
-        securityDepositFrequency: invite.securityDepositFrequency,
+        serviceCharge: invite.serviceCharge,
+        serviceChargeFrequency: invite.serviceChargeFrequency,
         document: invite.document,
       });
       const savedLease = await this.leaseRepository.save(lease);
@@ -196,14 +212,23 @@ export class TenantService {
       rentFrequency: invite.rentFrequency,
       rentAmount: invite.rentAmount,
       securityDeposit: invite.securityDeposit,
-      securityDepositFrequency: invite.securityDepositFrequency,
+      serviceCharge: invite.serviceCharge,
+      serviceChargeFrequency: invite.serviceChargeFrequency,
       document: invite.document,
     });
     const savedLease = await this.leaseRepository.save(lease);
+
     const tenant = this.tenantRepository.create({
       user,
       currentUnit: invite.unit,
       leases: [savedLease],
+      employerContact: invite.employerContact,
+      employerName: invite.employerName,
+      isEmployed: invite.isEmployed,
+      idDocument: invite.idDocument,
+      idNumber: invite.idNumber,
+      idType: invite.idType,
+      nextOfKinDetails: invite.nextOfKinDetails,
     });
     const [savedTenant] = await Promise.all([
       this.tenantRepository.save(tenant),
