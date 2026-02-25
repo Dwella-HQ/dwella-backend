@@ -54,7 +54,7 @@ export class Wallet extends BaseEntity {
   @OneToMany(() => VBA, (vba) => vba.wallet)
   vbas?: Relation<VBA[]>;
 
-  @Column()
+  @Column({ nullable: true })
   bvn: string;
 
   @Column({

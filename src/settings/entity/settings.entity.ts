@@ -25,7 +25,7 @@ export class Settings extends BaseEntity {
 
   @Column({
     type: 'text',
-    default: PaymentProviderEnum.FLUTTERWAVE,
+    default: PaymentProviderEnum.PAYSTACK,
   })
   preferredPaymentProvider: PaymentProviderEnum;
 

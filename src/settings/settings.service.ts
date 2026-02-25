@@ -33,6 +33,7 @@ export class SettingsService {
     const settings = await this.settingsRepository.findOne({
       where: { id: this.settingsId },
     });
+    console.log({ settings });
     if (!settings) {
       throw new NotFoundException('Settings not found');
     }

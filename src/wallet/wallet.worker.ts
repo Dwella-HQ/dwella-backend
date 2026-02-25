@@ -37,8 +37,8 @@ export class WalletWorker extends WorkerHost {
           email: wallet.landlord.user.email,
           country: wallet.currency === CurrenciesEnum.NGN ? 'NG' : 'NG',
           first_name: firstName,
-          last_name: lastName,
-          middle_name: middleName,
+          last_name: lastName || undefined,
+          middle_name: middleName || undefined,
           phone: wallet.landlord.user.phoneNumber,
           bvn: wallet.bvn,
           metadata: { walletId: wallet.id },
@@ -55,7 +55,7 @@ export class WalletWorker extends WorkerHost {
           currencyCode: wallet.currency,
           customerName: wallet.landlord.landLordName,
         });
-        const vba = await this.walletService.createVba(wallet.id, {
+        const vba = await this.walletService.assignVba(wallet.id, {
           accountName: response.responseBody.accounts[0].accountName,
           accountNumber: response.responseBody.accounts[0].accountNumber,
           bankName: response.responseBody.accounts[0].bankName,
@@ -70,7 +70,6 @@ export class WalletWorker extends WorkerHost {
         const { firstName, lastName } = breakDownFullName(
           wallet.landlord.landLordName,
         );
-        console.log({ firstName, lastName });
         const response = await this.flutterwaveService.createVirtualBankAccount(
           {
             currency: wallet.currency,
@@ -81,7 +80,7 @@ export class WalletWorker extends WorkerHost {
             reference: wallet.id,
           },
         );
-        const vba = await this.walletService.createVba(wallet.id, {
+        const vba = await this.walletService.assignVba(wallet.id, {
           accountName: `${firstName} ${lastName}`,
           accountNumber: response.data.account_number,
           bankCode: '',

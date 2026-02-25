@@ -22,8 +22,10 @@ export class WebhooksController {
     private readonly monnifyService: MonnifyService,
     private readonly transactionService: TransactionService,
   ) {}
+
   @Post('paystack')
   handlePaystackWebhook(@Body() payload: any) {
+    console.log(payload);
     const eventType = payload.event;
     switch (eventType) {
       case 'dedicatedaccount.assign.success':

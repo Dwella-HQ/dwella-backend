@@ -9,7 +9,11 @@ import { Wallet } from './entities/wallet.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LandlordService } from 'src/landlord/landlord.service';
 import { InjectQueue } from '@nestjs/bullmq';
-import { JOB_NAMES, TransactionTypeEnum } from 'src/utils/constants';
+import {
+  JOB_NAMES,
+  PaymentProviderEnum,
+  TransactionTypeEnum,
+} from 'src/utils/constants';
 import { Queue } from 'bullmq';
 import { VbaService } from './vba/vba.service';
 import { CreateVBADto } from './dto/create-vba.dto';
@@ -18,6 +22,7 @@ import { ConfigService } from '@nestjs/config';
 import { EnvironmentVariables } from 'src/config/env.config';
 import { CreditWalletDto, DebitWalletDto } from './dto/update-wallet.dto';
 import { WalletTransaction } from './entities/wallet-transaction.entity';
+import { AssignVBADto } from './dto/assign-vba.dto';
 
 @Injectable()
 export class WalletService {
@@ -49,12 +54,8 @@ export class WalletService {
     const wallet = this.walletRepository.create({
       landlord: landlord,
       currency: createWalletDto.currency,
-      bvn: createWalletDto.bvn,
     });
     const savedWallet = await this.walletRepository.save(wallet);
-    await this.vbaQueue.add('create-virtual-account:paystack', savedWallet);
-    await this.vbaQueue.add('create-virtual-account:monnify', savedWallet);
-    await this.vbaQueue.add('create-virtual-account:flutterwave', savedWallet);
     return savedWallet;
   }
 
@@ -71,6 +72,7 @@ export class WalletService {
       where: { id },
       relations: {
         vbas: true,
+        landlord: true,
       },
     });
     if (!wallet) {
@@ -83,9 +85,54 @@ export class WalletService {
     return wallet;
   }
 
-  async createVba(walletId: string, payload: CreateVBADto) {
+  async getLandlordWallet(landlordId: string) {
+    const defaultProvider = await this.settingsService.getSetting(
+      'preferredPaymentProvider',
+    );
+    const wallet = await this.walletRepository.findOne({
+      where: { landlord: { id: landlordId }, isActive: true },
+      relations: {
+        vbas: true,
+      },
+    });
+    if (!wallet) {
+      throw new NotFoundException('Wallet not found');
+    }
+    wallet.vba = wallet.vbas?.find(
+      (vba) => vba.provider === defaultProvider && vba.isActive,
+    );
+    wallet.vbas = undefined;
+    return wallet;
+  }
+
+  async createVBa(walletId: string, payload: CreateVBADto) {
+    const dedicatedProvider = await this.settingsService.getSetting(
+      'preferredPaymentProvider',
+    );
     const wallet = await this.findOne(walletId);
-    const vba = await this.vbaService.createVBA(wallet, payload);
+    wallet.bvn = payload.bvn;
+    const savedWallet = await this.walletRepository.save(wallet);
+    if (dedicatedProvider === PaymentProviderEnum.PAYSTACK) {
+      await this.vbaQueue.add('create-virtual-account:paystack', wallet, {
+        jobId: `create-vba-${wallet.id}`,
+      });
+    } else if (dedicatedProvider === PaymentProviderEnum.MONNIFY) {
+      await this.vbaQueue.add('create-virtual-account:monnify', wallet, {
+        jobId: `create-vba-${wallet.id}`,
+      });
+    } else if (dedicatedProvider === PaymentProviderEnum.FLUTTERWAVE) {
+      await this.vbaQueue.add('create-virtual-account:flutterwave', wallet, {
+        jobId: `create-vba-${wallet.id}`,
+      });
+    } else {
+      throw new BadRequestException('Invalid payment provider');
+    }
+    return savedWallet;
+  }
+
+  async assignVba(walletId: string, payload: AssignVBADto) {
+    const wallet = await this.findOne(walletId);
+    const vba = await this.vbaService.assignVBA(wallet, payload);
     return vba;
   }
 

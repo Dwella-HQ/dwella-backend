@@ -41,7 +41,10 @@ export class PaystackService {
         '/dedicated_account/assign',
         { ...payload, preferred_bank: defaultPreferredBank },
       ),
-    );
+    ).catch((error) => {
+      console.error(error);
+      throw new Error('Failed to assign virtual account');
+    });
     return response.data;
   }
 
@@ -51,7 +54,7 @@ export class PaystackService {
     if (payload.event !== 'dedicatedaccount.assign.success') {
       throw new Error('Invalid event type');
     }
-    const wallet = await this.walletService.createVba(
+    const wallet = await this.walletService.assignVba(
       payload.data.customer.metadata.walletId as string,
       {
         accountName: payload.data.dedicated_account.account_name,
