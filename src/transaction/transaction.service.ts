@@ -1,6 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { Injectable, NotFoundException } from '@nestjs/common';
+
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   CreateCreditTransactionDto,
   CreateDebitTransactionDto,
@@ -22,6 +27,7 @@ import { SettingsService } from 'src/settings/settings.service';
 import { Queue } from 'bullmq';
 import { InjectQueue } from '@nestjs/bullmq';
 import { VbaService } from 'src/wallet/vba/vba.service';
+import e from 'express';
 
 @Injectable()
 export class TransactionService {
@@ -29,6 +35,7 @@ export class TransactionService {
     @InjectRepository(Transaction)
     private transactionRepository: Repository<Transaction>,
     private settingsService: SettingsService,
+    @Inject(forwardRef(() => PaystackService))
     private paystackService: PaystackService,
     private flutterwaveService: FlutterwaveService,
     private monnifyService: MonnifyService,
@@ -37,51 +44,45 @@ export class TransactionService {
     private readonly transactionQueue: Queue,
   ) {}
 
-  async createDebit(
-    wallet: Wallet,
-    createDebitTransactionDto: CreateDebitTransactionDto,
-  ) {
+  async createDebit(createDebitTransactionDto: CreateDebitTransactionDto) {
     const transaction = this.transactionRepository.create({
       ...createDebitTransactionDto,
       type: TransactionTypeEnum.DEBIT,
-      wallet: wallet,
     });
     return await this.transactionRepository.save(transaction);
   }
 
-  async createCredit(
-    wallet: Wallet,
-    createCreditTransactionDto: CreateCreditTransactionDto,
-  ) {
+  async createCredit(createCreditTransactionDto: CreateCreditTransactionDto) {
     const provider = (await this.settingsService.getSetting(
       'preferredPaymentProvider',
     )) as PaymentProviderEnum;
     const transaction = await this.transactionRepository.save({
       ...createCreditTransactionDto,
       provider: provider,
-      currency: wallet.currency,
+      currency: createCreditTransactionDto.currency,
       senderDetails: {
         email: 'johnsonolaolu@gmail.com',
         fullName: 'Olalekan Johnson',
       },
-      narration: `Credit to wallet ${wallet.id}`,
+      walletId: createCreditTransactionDto.walletId,
+      narration: createCreditTransactionDto.narration,
       type: TransactionTypeEnum.CREDIT,
-      wallet: wallet,
     });
 
-    // if (provider === PaymentProviderEnum.PAYSTACK) {
-    //   const response =
-    //     await this.paystackService.initiateWalletCredit(transaction);
-    // }
     if (provider === PaymentProviderEnum.FLUTTERWAVE) {
       const response =
         await this.flutterwaveService.initiateWalletCredit(transaction);
       transaction.paymentUrl = response.data.link;
-    }
-    if (provider === PaymentProviderEnum.MONNIFY) {
+    } else if (provider === PaymentProviderEnum.MONNIFY) {
       const response =
         await this.monnifyService.initiateWalletCredit(transaction);
       transaction.paymentUrl = response.responseBody.checkoutUrl;
+    } else if (provider === PaymentProviderEnum.PAYSTACK) {
+      const response =
+        await this.paystackService.initiateWalletCredit(transaction);
+      transaction.paymentUrl = response.data.authorization_url;
+    } else {
+      throw new NotFoundException('No payment provider found');
     }
     return await this.transactionRepository.save(transaction);
   }
@@ -94,9 +95,6 @@ export class TransactionService {
   async findOne(id: string) {
     const transaction = await this.transactionRepository.findOne({
       where: { id },
-      relations: {
-        wallet: true,
-      },
     });
     if (!transaction) {
       throw new NotFoundException('Transaction not found');
@@ -104,65 +102,84 @@ export class TransactionService {
     return transaction;
   }
 
-  async findWalletTransactions(walletId: string) {
-    const transactions = await this.transactionRepository.find({
-      where: { wallet: { id: walletId } },
-      relations: {
-        wallet: true,
-      },
-    });
-    return transactions;
-  }
+  // async handleTransactionSuccess(
+  //   reference: string,
+  //   payload: any,
+  //   provider?: PaymentProviderEnum,
+  // ) {
+  //   const transaction = await this.transactionRepository.findOne({
+  //     where: { id: reference },
+  //     relations: {
+  //       wallet: true,
+  //     },
+  //   });
+  //   if (transaction) {
+  //     if (transaction.provider === PaymentProviderEnum.FLUTTERWAVE) {
+  //       await this.transactionQueue.add('handle_transaction:flutterwave', {
+  //         transaction,
+  //         payload,
+  //       });
+  //     }
+  //   }
+  //   if (provider === PaymentProviderEnum.FLUTTERWAVE) {
+  //     /* empty */
+  //   }
+  //   return true;
+  // }
 
-  async handleTransactionSuccess(
-    reference: string,
-    payload: any,
-    provider?: PaymentProviderEnum,
-  ) {
-    const transaction = await this.transactionRepository.findOne({
-      where: { id: reference },
-      relations: {
-        wallet: true,
-      },
-    });
-    if (transaction) {
-      if (transaction.provider === PaymentProviderEnum.FLUTTERWAVE) {
-        await this.transactionQueue.add('handle_transaction:flutterwave', {
-          transaction,
-          payload,
-        });
-      }
-    }
-    if (provider === PaymentProviderEnum.FLUTTERWAVE) {
-      /* empty */
-    }
-    return true;
-  }
+  // async handleVbaTransactionSuccess(
+  //   vbaNumber: string,
+  //   amount: number,
+  //   narration?: string,
+  //   metadata?: Record<string, any>,
+  // ) {
+  //   const vba = await this.vbaService.findByAccountNumber(vbaNumber);
+  //   if (!vba) {
+  //     throw new NotFoundException('VBA not found');
+  //   }
+  //   const transaction = await this.transactionRepository.save({
+  //     amount,
+  //     currency: vba.currency,
+  //     type: TransactionTypeEnum.CREDIT,
+  //     status: TransactionStatusEnum.PENDING,
+  //     wallet: vba.wallet,
+  //     provider: vba.provider,
+  //     metaData: metadata,
+  //     narration:
+  //       narration ||
+  //       `Credit to wallet ${vba.wallet.id} from VBA ${vba.accountNumber}`,
+  //   });
+  //   await this.transactionQueue.add('handle_transaction_credit_success', {
+  //     transaction,
+  //     payload: metadata,
+  //   });
+  //   return transaction;
+  // }
 
-  async handleTransferSuccess(
-    createCreditTransactionDto: CreateCreditTransactionDto,
-    payload: any,
-  ) {
-    // const transaction = await this.transactionRepository.save({
-    //   amount: createCreditTransactionDto.amount,
-    //   currency: createCreditTransactionDto.currency,
-    //   type: TransactionTypeEnum.CREDIT
-    // })
-    // if ( createTransferTransactionDto.provider === PaymentProviderEnum.FLUTTERWAVE) {
-    //   await this.flutterwaveService.validateTransaction(payload.reference, payload)
-    // }
-  }
+  // async handleTransferSuccess(
+  //   createCreditTransactionDto: CreateCreditTransactionDto,
+  //   payload: any,
+  // ) {
+  //   // const transaction = await this.transactionRepository.save({
+  //   //   amount: createCreditTransactionDto.amount,
+  //   //   currency: createCreditTransactionDto.currency,
+  //   //   type: TransactionTypeEnum.CREDIT
+  //   // })
+  //   // if ( createTransferTransactionDto.provider === PaymentProviderEnum.FLUTTERWAVE) {
+  //   //   await this.flutterwaveService.validateTransaction(payload.reference, payload)
+  //   // }
+  // }
 
-  async updateTransactionStatus(
-    transactionId: string,
-    status: TransactionStatusEnum,
-    metaData?: Record<string, any>,
-  ) {
-    const transaction = await this.findOne(transactionId);
-    transaction.status = status;
-    transaction.metaData = metaData;
-    return await this.transactionRepository.save(transaction);
-  }
+  // async updateTransactionStatus(
+  //   transactionId: string,
+  //   status: TransactionStatusEnum,
+  //   metaData?: Record<string, any>,
+  // ) {
+  //   const transaction = await this.findOne(transactionId);
+  //   transaction.status = status;
+  //   transaction.metaData = metaData;
+  //   return await this.transactionRepository.save(transaction);
+  // }
 
   async remove(id: string) {
     const response = await this.transactionRepository.softDelete({

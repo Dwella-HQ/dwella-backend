@@ -1,9 +1,6 @@
 import {
   Controller,
   Get,
-  Post,
-  Body,
-  Patch,
   Param,
   Delete,
   UseGuards,
@@ -12,11 +9,6 @@ import {
 } from '@nestjs/common';
 import { TransactionService } from './transaction.service';
 import { WalletService } from 'src/wallet/wallet.service';
-import {
-  CreateCreditTransactionDto,
-  CreateDebitTransactionDto,
-} from './dto/create-transaction.dto';
-import { UpdateTransactionStatusDto } from './dto/update-transaction-status.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { PermissionsGuard } from 'src/auth/guards/permission.guard';
 import { RolesGuard } from 'src/auth/guards/role.guard';
@@ -35,39 +27,37 @@ export class TransactionController {
     private readonly walletService: WalletService,
   ) {}
 
-  @Post('debit/:walletId')
-  async createDebit(
-    @Param('walletId') walletId: string,
-    @Body() createDebitTransactionDto: CreateDebitTransactionDto,
-  ) {
-    const wallet = await this.walletService.findOne(walletId);
-    const data = await this.transactionService.createDebit(
-      wallet,
-      createDebitTransactionDto,
-    );
-    return {
-      success: true,
-      message: 'Debit transaction created successfully',
-      data,
-    };
-  }
+  // @Post('debit/:walletId')
+  // async createDebit(
+  //   @Param('walletId') walletId: string,
+  //   @Body() createDebitTransactionDto: CreateDebitTransactionDto,
+  // ) {
+  //   const data = await this.transactionService.createDebit(
+  //     createDebitTransactionDto,
+  //   );
+  //   return {
+  //     success: true,
+  //     message: 'Debit transaction created successfully',
+  //     data,
+  //   };
+  // }
 
-  @Post('credit/:walletId')
-  async createCredit(
-    @Param('walletId') walletId: string,
-    @Body() createCreditTransactionDto: CreateCreditTransactionDto,
-  ) {
-    const wallet = await this.walletService.findOne(walletId);
-    const data = await this.transactionService.createCredit(
-      wallet,
-      createCreditTransactionDto,
-    );
-    return {
-      success: true,
-      message: 'Credit transaction created successfully',
-      data,
-    };
-  }
+  // @Post('credit/:walletId')
+  // async createCredit(
+  //   @Param('walletId') walletId: string,
+  //   @Body() createCreditTransactionDto: CreateCreditTransactionDto,
+  // ) {
+  //   const wallet = await this.walletService.findOne(walletId);
+  //   const data = await this.transactionService.createCredit(
+  //     wallet,
+  //     createCreditTransactionDto,
+  //   );
+  //   return {
+  //     success: true,
+  //     message: 'Credit transaction created successfully',
+  //     data,
+  //   };
+  // }
 
   @Get()
   async findAll() {
@@ -79,15 +69,15 @@ export class TransactionController {
     };
   }
 
-  @Get('wallet/:walletId')
-  async findWalletTransactions(@Param('walletId') walletId: string) {
-    const data = await this.transactionService.findWalletTransactions(walletId);
-    return {
-      success: true,
-      message: 'Wallet transactions retrieved successfully',
-      data,
-    };
-  }
+  // @Get('wallet/:walletId')
+  // async findWalletTransactions(@Param('walletId') walletId: string) {
+  //   const data = await this.transactionService.findWalletTransactions(walletId);
+  //   return {
+  //     success: true,
+  //     message: 'Wallet transactions retrieved successfully',
+  //     data,
+  //   };
+  // }
 
   @Public()
   @Render('transaction-success')
@@ -106,17 +96,17 @@ export class TransactionController {
     };
   }
 
-  @Patch(':id/status')
-  async updateStatus(
-    @Param('id') id: string,
-    @Body() updateData: UpdateTransactionStatusDto,
-  ) {
-    return this.transactionService.updateTransactionStatus(
-      id,
-      updateData.transactionStatus,
-      updateData.metaData,
-    );
-  }
+  // @Patch(':id/status')
+  // async updateStatus(
+  //   @Param('id') id: string,
+  //   @Body() updateData: UpdateTransactionStatusDto,
+  // ) {
+  //   return this.transactionService.updateTransactionStatus(
+  //     id,
+  //     updateData.transactionStatus,
+  //     updateData.metaData,
+  //   );
+  // }
 
   @Delete(':id')
   async remove(@Param('id') id: string) {

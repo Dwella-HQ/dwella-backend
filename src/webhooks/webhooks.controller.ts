@@ -5,6 +5,7 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   InternalServerErrorException,
   Post,
 } from '@nestjs/common';
@@ -23,6 +24,7 @@ export class WebhooksController {
     private readonly transactionService: TransactionService,
   ) {}
 
+  @HttpCode(200)
   @Post('paystack')
   handlePaystackWebhook(@Body() payload: any) {
     console.log(payload);
@@ -30,6 +32,9 @@ export class WebhooksController {
     switch (eventType) {
       case 'dedicatedaccount.assign.success':
         this.paystackService.handleDedicatedAccountAssignSuccess(payload);
+        break;
+      case 'charge.success':
+        this.paystackService.handleChargeSuccess(payload);
         break;
       default:
         throw new InternalServerErrorException(
@@ -40,18 +45,15 @@ export class WebhooksController {
     // Implementation for handling Paystack webhooks will go here
   }
 
+  @HttpCode(200)
   @Post('flutterwave')
-  async handleFlutterwaveWebhook(
+  handleFlutterwaveWebhook(
     @Body() payload: { event: string; data: FlutterwaveChargeCompletedPayload },
   ) {
     console.log({ payload });
     const eventType = payload.event;
     switch (eventType) {
       case 'charge.completed':
-        await this.transactionService.handleTransactionSuccess(
-          payload.data.tx_ref,
-          payload.data,
-        );
         break;
       // case 'transfer.completed':
       //   await this.transactionService.
@@ -64,6 +66,7 @@ export class WebhooksController {
     // Implementation for handling Flutterwave webhooks will go here
   }
 
+  @HttpCode(200)
   @Post('monnify')
   handleMonnifyWebhook(@Body() payload: any) {
     // Implementation for handling Monnify webhooks will go here

@@ -2,22 +2,18 @@ import {
   CurrenciesEnum,
   PaymentMethodEnum,
   PaymentProviderEnum,
+  TransactionActionEnum,
   TransactionStatusEnum,
   TransactionTypeEnum,
   TransferUserDetails,
 } from 'src/utils/constants';
 import { ColumnNumericTransformer } from 'src/utils/misc';
-import { WalletTransaction } from 'src/wallet/entities/wallet-transaction.entity';
-import { Wallet } from 'src/wallet/entities/wallet.entity';
 import {
   BaseEntity,
   Column,
   CreateDateColumn,
   Entity,
-  ManyToOne,
-  OneToOne,
   PrimaryGeneratedColumn,
-  Relation,
   UpdateDateColumn,
 } from 'typeorm';
 
@@ -33,6 +29,12 @@ export class Transaction extends BaseEntity {
 
   @Column({
     type: 'text',
+    default: '',
+  })
+  action: TransactionActionEnum;
+
+  @Column({
+    type: 'text',
   })
   currency: CurrenciesEnum;
 
@@ -41,12 +43,6 @@ export class Transaction extends BaseEntity {
     nullable: true,
   })
   paymentMethod: PaymentMethodEnum;
-
-  @ManyToOne(() => Wallet, { nullable: false })
-  wallet: Relation<Wallet>;
-
-  @OneToOne(() => WalletTransaction, (transaction) => transaction.wallet)
-  walletTransaction: Relation<WalletTransaction>;
 
   @Column('decimal', {
     precision: 15,

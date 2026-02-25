@@ -142,8 +142,8 @@ export enum TransactionStatusEnum {
 }
 
 export enum TransactionActionEnum {
-  INWARD_TRANSFER = 'inward_transfer',
-  OUTWARD_TRANSFER = 'outward_transfer',
+  DEPOSIT = 'deposit',
+  WITHDRAWAL = 'withdrawal',
   RENT_PAYMENT = 'rent_payment',
   SECURITY_DEPOSIT = 'security_deposit',
   MAINTENANCE_FEE = 'maintenance_fee',
@@ -187,8 +187,7 @@ export class TransferUserDetails {
   fullName: string;
 
   @IsEmail()
-  @IsOptional()
-  email?: string;
+  email: string;
 
   @IsNumberString()
   @IsOptional()

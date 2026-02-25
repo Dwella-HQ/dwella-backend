@@ -4,9 +4,7 @@ import {
   CreateDateColumn,
   Entity,
   Index,
-  JoinColumn,
   ManyToOne,
-  OneToOne,
   PrimaryGeneratedColumn,
   Relation,
   UpdateDateColumn,
@@ -16,7 +14,6 @@ import {
   TransactionActionEnum,
   TransactionTypeEnum,
 } from 'src/utils/constants';
-import { Transaction } from 'src/transaction/entities/transaction.entity';
 import { ColumnNumericTransformer } from 'src/utils/misc';
 
 @Entity()
@@ -66,9 +63,10 @@ export class WalletTransaction extends BaseEntity {
   @ManyToOne(() => Wallet, (wallet) => wallet.transactions, { nullable: false })
   wallet: Relation<Wallet>;
 
-  @JoinColumn()
-  @OneToOne(() => Transaction, (transaction) => transaction.walletTransaction)
-  transaction: Relation<Transaction>;
+  @Column({ default: '' })
+  documentId: string;
+
+  transactionDocument: any;
 
   @Column({ nullable: true, type: 'simple-json' })
   metaData: string;

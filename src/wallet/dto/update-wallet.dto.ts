@@ -24,6 +24,10 @@ export class CreditWalletDto {
   @IsString()
   @IsOptional()
   narration?: string;
+
+  @IsUUID()
+  @IsOptional()
+  transactionId?: string;
 }
 
 export class DebitWalletDto {

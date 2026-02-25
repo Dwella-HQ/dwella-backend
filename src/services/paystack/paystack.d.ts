@@ -102,3 +102,156 @@ export interface PaystackDedicatedAccountAssignFailureWebhookPayload {
     };
   };
 }
+
+export interface PaystackInitializeTransactionResponse {
+  status: boolean;
+  message: string;
+  data: {
+    authorization_url: string;
+    access_code: string;
+    reference: string;
+  };
+}
+
+export interface PaystackChargeSuccessWebhookPayload {
+  event: 'charge.success';
+  data: {
+    id: number;
+    domain: string;
+    status: string;
+    reference: string;
+    amount: number;
+    message: null;
+    gateway_response: string;
+    paid_at: string;
+    created_at: string;
+    channel: string;
+    currency: string;
+    ip_address: null;
+    metadata: {
+      receiver_account_number: string;
+      receiver_bank: string;
+      receiver_account_type: null;
+      custom_fields: any[];
+    };
+    fees_breakdown: null;
+    log: null;
+    fees: number;
+    fees_split: null;
+    authorization: {
+      authorization_code: string;
+      bin: string;
+      last4: string;
+      exp_month: string;
+      exp_year: string;
+      channel: string;
+      card_type: string;
+      bank: null;
+      country_code: string;
+      brand: string;
+      reusable: boolean;
+      signature: null;
+      account_name: null;
+      sender_country: string;
+      sender_bank: null;
+      sender_bank_account_number: string;
+      receiver_bank_account_number: string;
+      receiver_bank: string;
+    };
+    customer: {
+      id: number;
+      first_name: string;
+      last_name: string;
+      email: string;
+      customer_code: string;
+      phone: string;
+      metadata: Record<string, any>;
+      risk_action: string;
+      international_format_phone: string;
+    };
+    plan: Record<string, any>;
+    subaccount: Record<string, any>;
+    split: Record<string, any>;
+    order_id: null;
+    paidAt: string;
+    requested_amount: number;
+    pos_transaction_data: null;
+    source: null;
+  };
+}
+
+export interface PaystackTransactionVerificationResponse {
+  status: true;
+  message: 'Verification successful';
+  data: {
+    id: number;
+    domain: string;
+    status: string;
+    reference: string;
+    receipt_number: null;
+    amount: number;
+    message: null;
+    gateway_response: string;
+    paid_at: string;
+    created_at: string;
+    channel: string;
+    currency: string;
+    ip_address: string;
+    metadata: string | Record<string, any>;
+    log: {
+      start_time: number;
+      time_spent: number;
+      attempts: number;
+      errors: number;
+      success: boolean;
+      mobile: boolean;
+      input: unknown[];
+      history: Array<{
+        type: string;
+        message: string;
+        time: number;
+      }>;
+    };
+    fees: number;
+    fees_split: null;
+    authorization: {
+      authorization_code: string;
+      bin: string;
+      last4: string;
+      exp_month: string;
+      exp_year: string;
+      channel: string;
+      card_type: string;
+      bank: string;
+      country_code: string;
+      brand: string;
+      reusable: boolean;
+      signature: string;
+      account_name: null;
+    };
+    customer: {
+      id: number;
+      first_name: null;
+      last_name: null;
+      email: string;
+      customer_code: string;
+      phone: null;
+      metadata: null;
+      risk_action: string;
+      international_format_phone: null;
+    };
+    plan: null;
+    split: Record<string, unknown>;
+    order_id: null;
+    paidAt: string;
+    createdAt: string;
+    requested_amount: number;
+    pos_transaction_data: null;
+    source: null;
+    fees_breakdown: null;
+    connect: null;
+    transaction_date: string;
+    plan_object: Record<string, unknown>;
+    subaccount: Record<string, unknown>;
+  };
+}

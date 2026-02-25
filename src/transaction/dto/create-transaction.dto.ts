@@ -1,26 +1,33 @@
 import { Type } from 'class-transformer';
 import {
+  IsEnum,
   IsNumber,
   IsOptional,
   IsString,
+  IsUUID,
   Min,
   ValidateNested,
 } from 'class-validator';
-import { TransferUserDetails } from 'src/utils/constants';
+import {
+  CurrenciesEnum,
+  TransactionActionEnum,
+  TransferUserDetails,
+} from 'src/utils/constants';
 
 export class CreateDebitTransactionDto {
   @IsNumber()
   @Min(100)
   amount: number;
 
+  @IsEnum(TransactionActionEnum)
+  action: TransactionActionEnum;
+
+  @IsEnum(CurrenciesEnum)
+  currency: CurrenciesEnum;
+
   @IsString()
   @IsOptional()
-  narration: string;
-
-  @IsOptional()
-  @ValidateNested()
-  @Type(() => TransferUserDetails)
-  receiverDetails: TransferUserDetails;
+  narration?: string;
 }
 
 export class CreateCreditTransactionDto {
@@ -28,12 +35,20 @@ export class CreateCreditTransactionDto {
   @Min(100)
   amount: number;
 
+  @IsEnum(TransactionActionEnum)
+  action: TransactionActionEnum;
+
+  @IsEnum(CurrenciesEnum)
+  currency: CurrenciesEnum;
+
+  @Type(() => TransferUserDetails)
+  @ValidateNested()
+  senderDetails: TransferUserDetails;
+
+  @IsUUID()
+  walletId: string;
+
   @IsString()
   @IsOptional()
   narration?: string;
-
-  @IsOptional()
-  @ValidateNested()
-  @Type(() => TransferUserDetails)
-  senderDetails: TransferUserDetails;
 }

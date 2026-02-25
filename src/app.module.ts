@@ -34,6 +34,8 @@ import { TransactionModule } from './transaction/transaction.module';
 import { ChatModule } from './chat/chat.module';
 import { MaintenanceRequestModule } from './maintenance-request/maintenance-request.module';
 import { RentModule } from './rent/rent.module';
+import { DepositModule } from './deposit/deposit.module';
+import { WithdrawalsModule } from './withdrawals/withdrawals.module';
 
 @Module({
   imports: [
@@ -138,6 +140,8 @@ import { RentModule } from './rent/rent.module';
     ChatModule,
     MaintenanceRequestModule,
     RentModule,
+    DepositModule,
+    WithdrawalsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
