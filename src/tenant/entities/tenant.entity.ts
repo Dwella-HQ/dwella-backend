@@ -27,7 +27,7 @@ export class Tenant {
   @OneToMany(() => Lease, (lease) => lease.tenant)
   leases: Relation<Lease>[];
 
-  @OneToOne(() => Unit, (unit) => unit.tenant)
+  @OneToOne(() => Unit, (unit) => unit.tenant, { nullable: false })
   currentUnit: Relation<Unit>;
 
   @Column()

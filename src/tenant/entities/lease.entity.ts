@@ -24,10 +24,10 @@ export class Lease {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Tenant, (tenant) => tenant.leases)
+  @ManyToOne(() => Tenant, (tenant) => tenant.leases, { nullable: false })
   tenant: Relation<Tenant>;
 
-  @ManyToOne(() => Unit, (unit) => unit.leases)
+  @ManyToOne(() => Unit, (unit) => unit.leases, { nullable: false })
   unit: Relation<Unit>;
 
   @Column()

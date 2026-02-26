@@ -211,6 +211,7 @@ export class TenantService {
   async acceptInvite(token: string) {
     const invite = await this.tenantInviteRepository.findOne({
       where: { token },
+      relations: { unit: true },
     });
     if (!invite || invite.expiresAt < new Date()) {
       throw new NotFoundException('Invite not found or expired');
@@ -223,7 +224,20 @@ export class TenantService {
       .findOneByEmail(invite.email)
       .catch(() => null);
     if (!user) {
+      const tenant = await this.tenantRepository.save({
+        currentUnit: invite.unit,
+        idNumber: invite.idNumber,
+        idType: invite.idType,
+        isEmployed: invite.isEmployed,
+        employerName: invite.employerName,
+        employerContact: invite.employerContact,
+        nextOfKinDetails: invite.nextOfKinDetails,
+        idDocument: {
+          id: invite.idDocumentId,
+        },
+      });
       const lease = this.leaseRepository.create({
+        tenant,
         unit: invite.unit,
         startDate: invite.leaseStartDate,
         endDate: invite.leaseEndDate,
@@ -236,30 +250,32 @@ export class TenantService {
           id: invite.documentId,
         },
       });
-      const savedLease = await this.leaseRepository.save(lease);
-      const tenant = this.tenantRepository.create({
-        currentUnit: invite.unit,
-        leases: [savedLease],
-        idNumber: invite.idNumber,
-        idType: invite.idType,
-        isEmployed: invite.isEmployed,
-        employerName: invite.employerName,
-        employerContact: invite.employerContact,
-        nextOfKinDetails: invite.nextOfKinDetails,
-        idDocument: {
-          id: invite.idDocumentId,
-        },
-      });
-      const [savedTenant] = await Promise.all([
-        this.tenantRepository.save(tenant),
+      await Promise.all([
+        this.leaseRepository.save(lease),
         this.tenantInviteRepository.save(invite),
       ]);
-      const redirectUrl = `${this.configService.get('FRONTEND_URL')}/auth/register?tenant-id=${savedTenant.id}`;
+
+      const redirectUrl = `${this.configService.get('FRONTEND_URL')}/auth/register?tenant-id=${tenant.id}`;
       return redirectUrl;
     }
     user.isEmailVerified = true;
+    const tenant = await this.tenantRepository.save({
+      user,
+      currentUnit: invite.unit,
+      employerContact: invite.employerContact,
+      employerName: invite.employerName,
+      isEmployed: invite.isEmployed,
+      idDocument: {
+        id: invite.idDocumentId,
+      },
+      idNumber: invite.idNumber,
+      idType: invite.idType,
+      nextOfKinDetails: invite.nextOfKinDetails,
+    });
+
     const lease = this.leaseRepository.create({
       unit: invite.unit,
+      tenant,
       startDate: invite.leaseStartDate,
       endDate: invite.leaseEndDate,
       rentFrequency: invite.rentFrequency,
@@ -271,24 +287,8 @@ export class TenantService {
         id: invite.documentId,
       },
     });
-    const savedLease = await this.leaseRepository.save(lease);
-
-    const tenant = this.tenantRepository.create({
-      user,
-      currentUnit: invite.unit,
-      leases: [savedLease],
-      employerContact: invite.employerContact,
-      employerName: invite.employerName,
-      isEmployed: invite.isEmployed,
-      idDocument: {
-        id: invite.idDocumentId,
-      },
-      idNumber: invite.idNumber,
-      idType: invite.idType,
-      nextOfKinDetails: invite.nextOfKinDetails,
-    });
     await Promise.all([
-      this.tenantRepository.save(tenant),
+      this.leaseRepository.save(lease),
       user.save(),
       this.tenantInviteRepository.save(invite),
     ]);
