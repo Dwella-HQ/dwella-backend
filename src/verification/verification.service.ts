@@ -45,7 +45,6 @@ export class VerificationService {
     const verification = this.verificationRepository.create({
       type: VerificationTypeEnum.PROPERTY_VERIFICATION,
       property: property,
-      landlord: property.landlord,
     });
     return await this.verificationRepository.save(verification);
   }
