@@ -93,6 +93,9 @@ export enum PERMISSIONS {
   // Transactions
   MANAGE_TRANSACTIONS = 'manage_transactions',
 
+  //TENANT
+  INVITE_TENANT = 'invite_tenant',
+
   //Property Managers
   CREATE_PROPERTY_MANAGER = 'create_property_manager',
   READ_PROPERTY_MANAGER = 'read_property_manager',
