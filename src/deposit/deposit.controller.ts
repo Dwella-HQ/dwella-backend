@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { DepositService } from './deposit.service';
 import { CreateDepositDto } from './dto/create-deposit.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
@@ -16,6 +16,61 @@ export class DepositController {
     return {
       success: true,
       message: 'Deposit created successfully',
+      data: data,
+    };
+  }
+
+  @Get()
+  async findAll() {
+    const data = await this.depositService.findAll();
+    return {
+      success: true,
+      message: 'Deposits retrieved successfully',
+      data: data,
+    };
+  }
+
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    const data = await this.depositService.findOne(id);
+    return {
+      success: true,
+      message: 'Deposit retrieved successfully',
+      data: data,
+    };
+  }
+
+  @Get('reference/:reference')
+  async findByReference(@Param('reference') reference: string) {
+    const data = await this.depositService.getDepositByReference(reference);
+    return {
+      success: true,
+      message: 'Deposit retrieved successfully',
+      data: data,
+    };
+  }
+
+  @Get('wallet-transaction/:walletTransactionId')
+  async findByWalletTransactionId(
+    @Param('walletTransactionId') walletTransactionId: string,
+  ) {
+    const data =
+      await this.depositService.getDepositByWalletTransactionId(
+        walletTransactionId,
+      );
+    return {
+      success: true,
+      message: 'Deposit retrieved successfully',
+      data: data,
+    };
+  }
+
+  @Get('wallet/:walletId')
+  async findByWalletId(@Param('walletId') walletId: string) {
+    const data = await this.depositService.getWalletDeposits(walletId);
+    return {
+      success: true,
+      message: 'Deposits retrieved successfully',
       data: data,
     };
   }

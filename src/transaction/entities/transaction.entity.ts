@@ -8,12 +8,16 @@ import {
   TransferUserDetails,
 } from 'src/utils/constants';
 import { ColumnNumericTransformer } from 'src/utils/misc';
+import { Wallet } from 'src/wallet/entities/wallet.entity';
+import { VBA } from 'src/wallet/vba/entity/vba.entity';
 import {
   BaseEntity,
   Column,
   CreateDateColumn,
   Entity,
+  ManyToOne,
   PrimaryGeneratedColumn,
+  Relation,
   UpdateDateColumn,
 } from 'typeorm';
 
@@ -21,6 +25,9 @@ import {
 export class Transaction extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @ManyToOne(() => Wallet)
+  wallet: Relation<Wallet>;
 
   @Column({
     type: 'text',
@@ -77,6 +84,9 @@ export class Transaction extends BaseEntity {
     default: TransactionStatusEnum.PENDING,
   })
   status: TransactionStatusEnum;
+
+  @ManyToOne(() => VBA, (vba) => vba.transactions, { nullable: true })
+  vba?: Relation<VBA>;
 
   @Column({ nullable: true })
   paymentUrl?: string;

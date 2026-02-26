@@ -1,11 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Deposit } from './entities/deposit.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { WalletService } from 'src/wallet/wallet.service';
 import { CreateDepositDto } from './dto/create-deposit.dto';
 import { TransactionService } from 'src/transaction/transaction.service';
-import { TransactionActionEnum } from 'src/utils/constants';
+import {
+  TransactionActionEnum,
+  TransactionStatusEnum,
+} from 'src/utils/constants';
+import { Transaction } from 'src/transaction/entities/transaction.entity';
 
 @Injectable()
 export class DepositService {
@@ -38,6 +42,105 @@ export class DepositService {
     deposit.transaction = transaction;
     deposit.reference = transaction.id;
     const savedDeposit = await this.depositRepository.save(deposit);
+    return savedDeposit;
+  }
+
+  async findAll() {
+    const deposits = await this.depositRepository.find({
+      relations: { walletTransaction: true, transaction: true },
+    });
+    return deposits;
+  }
+
+  async findOne(id: string) {
+    const deposit = await this.depositRepository.findOne({
+      where: { id },
+      relations: { wallet: true, walletTransaction: true, transaction: true },
+      relationLoadStrategy: 'query',
+    });
+    if (!deposit) {
+      throw new NotFoundException('Deposit not found');
+    }
+    return deposit;
+  }
+
+  async getDepositByReference(reference: string) {
+    const deposit = await this.depositRepository.findOne({
+      where: { reference },
+      relations: { wallet: true, walletTransaction: true, transaction: true },
+      relationLoadStrategy: 'query',
+    });
+    if (!deposit) {
+      throw new NotFoundException('Deposit not found');
+    }
+    return deposit;
+  }
+
+  async getDepositByWalletTransactionId(walletTransactionId: string) {
+    const deposit = await this.depositRepository.findOne({
+      where: { walletTransaction: { id: walletTransactionId } },
+      relations: { wallet: true, walletTransaction: true, transaction: true },
+      relationLoadStrategy: 'query',
+    });
+    if (!deposit) {
+      throw new NotFoundException('Deposit not found');
+    }
+    return deposit;
+  }
+
+  async getWalletDeposits(walletId: string) {
+    const deposits = await this.depositRepository.find({
+      where: { wallet: { id: walletId } },
+      relations: { wallet: true, walletTransaction: true, transaction: true },
+      relationLoadStrategy: 'query',
+    });
+    return deposits;
+  }
+
+  async confirmDeposit(reference: string, transaction: Transaction) {
+    const deposit = await this.getDepositByReference(reference);
+    if (deposit.status === TransactionStatusEnum.COMPLETED) {
+      throw new NotFoundException('Deposit already confirmed');
+    }
+    deposit.status = TransactionStatusEnum.COMPLETED;
+    deposit.transaction = transaction;
+    const savedDeposit = await this.depositRepository.save(deposit);
+    const walletTransaction = await this.walletService.creditWallet(
+      deposit.wallet.id,
+      {
+        amount: deposit.amount,
+        narration: deposit.narration,
+        reference: deposit.reference,
+        action: TransactionActionEnum.DEPOSIT,
+      },
+    );
+    deposit.walletTransaction = walletTransaction;
+    return savedDeposit;
+  }
+
+  async createAndConfirmDeposit(transaction: Transaction) {
+    const deposit = this.depositRepository.create({
+      wallet: transaction.wallet,
+      amount: transaction.amount,
+      currency: transaction.currency,
+      narration: transaction.narration,
+      transaction: transaction,
+      reference: transaction.id,
+      status: TransactionStatusEnum.COMPLETED,
+      senderDetails: transaction.senderDetails,
+      paymentMethod: transaction.paymentMethod,
+    });
+    const savedDeposit = await this.depositRepository.save(deposit);
+    const walletTransaction = await this.walletService.creditWallet(
+      deposit.wallet.id,
+      {
+        amount: deposit.amount,
+        narration: deposit.narration,
+        reference: deposit.reference,
+        action: TransactionActionEnum.DEPOSIT,
+      },
+    );
+    deposit.walletTransaction = walletTransaction;
     return savedDeposit;
   }
 }

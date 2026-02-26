@@ -1,4 +1,5 @@
 import { Exclude, instanceToPlain } from 'class-transformer';
+import { Transaction } from 'src/transaction/entities/transaction.entity';
 import { CurrenciesEnum, PaymentProviderEnum } from 'src/utils/constants';
 import { Wallet } from 'src/wallet/entities/wallet.entity';
 import {
@@ -7,6 +8,7 @@ import {
   CreateDateColumn,
   Entity,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   Relation,
   UpdateDateColumn,
@@ -49,6 +51,9 @@ export class VBA extends BaseEntity {
 
   @Column({ default: true })
   isActive: boolean;
+
+  @OneToMany(() => Transaction, (transaction) => transaction.vba)
+  transactions: Relation<Transaction[]>;
 
   @CreateDateColumn()
   createdAt: Date;

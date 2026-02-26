@@ -15,13 +15,10 @@ import {
 } from 'src/utils/constants';
 import { WalletService } from 'src/wallet/wallet.service';
 import { Transaction } from './entities/transaction.entity';
-import {
-  FlutterwaveChargeCompletedPayload,
-  FlutterwaveTransferCompletedPayload,
-} from 'src/services/flutterwave/flutterwave';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { VbaService } from 'src/wallet/vba/vba.service';
+import { DepositService } from 'src/deposit/deposit.service';
 
 @Processor(JOB_NAMES.HANDLE_TRANSACTION_JOB)
 export class TransactionWorker extends WorkerHost {
@@ -32,6 +29,7 @@ export class TransactionWorker extends WorkerHost {
     private readonly walletService: WalletService,
     private readonly vbaService: VbaService,
     private readonly settingsService: SettingsService,
+    private readonly depositService: DepositService,
     @InjectRepository(Transaction)
     private readonly transactionRepository: Repository<Transaction>,
   ) {
@@ -40,16 +38,52 @@ export class TransactionWorker extends WorkerHost {
   async process(job: Job<any, any, string>) {
     switch (job.name) {
       case 'handle_transaction_credit_success': {
-        return Promise.resolve();
-      }
-      case 'handle_vba_transaction_credit_success': {
-        const { vbaNumber, amount, narration, metadata } = job.data as {
-          vbaNumber: string;
-          amount: number;
-          narration?: string;
+        const { transactionId, metadata } = job.data as {
+          transactionId: string;
           metadata?: Record<string, any>;
         };
-        return Promise.resolve();
+        const transaction = await this.transactionRepository.findOne({
+          where: { id: transactionId },
+        });
+        if (!transaction) {
+          throw new Error('Transaction not found');
+        }
+        transaction.status = TransactionStatusEnum.COMPLETED;
+        transaction.metaData = metadata;
+        await this.transactionRepository.save(transaction);
+        if (transaction?.action === TransactionActionEnum.DEPOSIT) {
+          const deposit = await this.depositService.confirmDeposit(
+            transaction.id,
+            transaction,
+          );
+          return deposit;
+        }
+        return;
+      }
+      case 'handle_vba_transaction_credit_success': {
+        const { accountNumber, amount, narration, provider, metadata } =
+          job.data as {
+            accountNumber: string;
+            amount: number;
+            narration?: string;
+            provider: PaymentProviderEnum;
+            metadata?: Record<string, any>;
+          };
+        const vba = await this.vbaService.findByAccountNumber(accountNumber);
+        const transaction = await this.transactionRepository.save({
+          wallet: vba.wallet,
+          provider: provider,
+          action: TransactionActionEnum.DEPOSIT,
+          currency: vba.wallet.currency,
+          amount,
+          narration: narration || `Deposit to VBA ${accountNumber}`,
+          type: TransactionTypeEnum.CREDIT,
+          status: TransactionStatusEnum.COMPLETED,
+          metaData: metadata,
+        });
+        const deposit =
+          await this.depositService.createAndConfirmDeposit(transaction);
+        return deposit;
       }
       default: {
         throw new Error('Unknown job name');

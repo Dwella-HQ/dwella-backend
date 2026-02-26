@@ -127,6 +127,7 @@ export class PaystackService {
             amount: payload.data.amount / 100,
             narration: undefined,
             metadata: payload.data,
+            provider: PaymentProviderEnum.PAYSTACK,
           },
           { jobId: `transaction_success_${payload.data.reference}` },
         );
