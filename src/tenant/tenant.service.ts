@@ -255,7 +255,7 @@ export class TenantService {
         this.tenantInviteRepository.save(invite),
       ]);
 
-      const redirectUrl = `${this.configService.get('FRONTEND_URL')}/auth/register?tenant-id=${tenant.id}`;
+      const redirectUrl = `${this.configService.get('FRONTEND_URL')}/auth/signup?role=tenant&tenant-id=${tenant.id}`;
       return redirectUrl;
     }
     user.isEmailVerified = true;
