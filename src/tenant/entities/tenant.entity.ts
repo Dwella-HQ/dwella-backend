@@ -20,6 +20,7 @@ export class Tenant {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @JoinColumn()
   @OneToOne(() => User, (user) => user.tenant)
   user: Relation<User>;
 

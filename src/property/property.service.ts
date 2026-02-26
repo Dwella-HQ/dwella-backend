@@ -181,6 +181,7 @@ export class PropertyService {
   async fetchPropertyUnits(propertyId: string) {
     const units = await this.unitRepository.find({
       where: { property: { id: propertyId } },
+      relations: { tenant: true },
     });
     return units;
   }
@@ -188,7 +189,7 @@ export class PropertyService {
   async getUnit(unitId: string) {
     const unit = await this.unitRepository.findOne({
       where: { id: unitId },
-      relations: { property: true },
+      relations: { property: true, tenant: true },
     });
     if (!unit) {
       throw new NotFoundException('Unit not found');

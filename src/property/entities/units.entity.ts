@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
   OneToMany,
   OneToOne,
@@ -53,6 +54,7 @@ export class Unit extends BaseEntity {
   @OneToMany(() => Lease, (lease) => lease.unit)
   leases: Relation<Lease>[];
 
+  @JoinColumn()
   @OneToOne(() => Tenant, (tenant) => tenant.currentUnit)
   tenant: Relation<Tenant>;
 
