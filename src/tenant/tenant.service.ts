@@ -109,6 +109,21 @@ export class TenantService {
     return tenant;
   }
 
+  async getTenantByUserId(userId: string) {
+    const tenant = await this.tenantRepository.findOne({
+      where: { user: { id: userId } },
+      relations: {
+        user: true,
+        leases: true,
+        currentUnit: true,
+      },
+    });
+    if (!tenant) {
+      throw new NotFoundException(`Tenant not found for user`);
+    }
+    return tenant;
+  }
+
   update(id: string, updateTenantDto: UpdateTenantDto) {
     return `This action updates a #${id} tenant`;
   }

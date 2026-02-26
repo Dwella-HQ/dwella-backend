@@ -63,6 +63,16 @@ export class TenantController {
     };
   }
 
+  @Get('user/:userId')
+  async getTenantByUserId(@Param('userId') userId: string) {
+    const data = await this.tenantService.getTenantByUserId(userId);
+    return {
+      success: true,
+      message: 'Tenant retrieved successfully',
+      data,
+    };
+  }
+
   @Patch(':id')
   async update(
     @Param('id') id: string,
