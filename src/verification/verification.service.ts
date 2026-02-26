@@ -158,20 +158,20 @@ export class VerificationService {
     verification.reason = updateVerificationStatusDto.reason;
     verification.verifiedAt = new Date();
     verification.verifiedBy = user;
-    const supportingDocuments: File[] = [];
-    for (const fileId of updateVerificationStatusDto?.supportingDocumentIds ||
-      []) {
-      const file = await this.fileService.findFileById(fileId);
-      supportingDocuments.push(file);
+    if (updateVerificationStatusDto.supportingDocumentIds) {
+      const supportingDocuments: File[] = [];
+      for (const fileId of updateVerificationStatusDto.supportingDocumentIds) {
+        const file = await this.fileService.findFileById(fileId);
+        supportingDocuments.push(file);
+      }
+      verification.supportingDocuments = supportingDocuments;
     }
-    verification.supportingDocuments = supportingDocuments;
+
+    if (verification.status === VerificationStatusEnum.VERIFIED) {
+      await this.landlordService.approveLandlord(verification.landlord.id);
+    }
     const updatedVerification =
       await this.verificationRepository.save(verification);
-    if (updatedVerification.status === VerificationStatusEnum.VERIFIED) {
-      await this.landlordService.approveLandlord(
-        updatedVerification.landlord.id,
-      );
-    }
     return updatedVerification;
   }
 
@@ -188,20 +188,20 @@ export class VerificationService {
     verification.reason = updateVerificationStatusDto.reason;
     verification.verifiedAt = new Date();
     verification.verifiedBy = user;
-    const supportingDocuments: File[] = [];
-    for (const fileId of updateVerificationStatusDto?.supportingDocumentIds ||
-      []) {
-      const file = await this.fileService.findFileById(fileId);
-      supportingDocuments.push(file);
+    if (updateVerificationStatusDto.supportingDocumentIds) {
+      const supportingDocuments: File[] = [];
+      for (const fileId of updateVerificationStatusDto.supportingDocumentIds) {
+        const file = await this.fileService.findFileById(fileId);
+        supportingDocuments.push(file);
+      }
+      verification.supportingDocuments = supportingDocuments;
     }
-    verification.supportingDocuments = supportingDocuments;
+
+    if (verification.status === VerificationStatusEnum.VERIFIED) {
+      await this.propertyService.approveProperty(verification.property.id);
+    }
     const updatedVerification =
       await this.verificationRepository.save(verification);
-    if (updatedVerification.status === VerificationStatusEnum.VERIFIED) {
-      await this.propertyService.approveProperty(
-        updatedVerification.property.id,
-      );
-    }
     return updatedVerification;
   }
 
