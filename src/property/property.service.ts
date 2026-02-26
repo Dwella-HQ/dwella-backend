@@ -166,6 +166,9 @@ export class PropertyService {
 
   async createUnit(propertyId: string, createUnitDto: CreateUnitDto) {
     const property = await this.findOne(propertyId);
+    if (!property.isApproved) {
+      throw new BadRequestException('Property is not approved yet');
+    }
     const unit = this.unitRepository.create({
       ...createUnitDto,
       property,
