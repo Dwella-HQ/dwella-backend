@@ -1,13 +1,3 @@
-import {
-  IsEmail,
-  IsEnum,
-  IsNotEmpty,
-  IsNumberString,
-  IsOptional,
-  IsPhoneNumber,
-  IsString,
-  Length,
-} from 'class-validator';
 import { CreateAmenityDto } from 'src/amenities/dto/create-amenity.dto';
 
 export enum USER_ROLES {
@@ -184,28 +174,6 @@ export const JOB_NAMES = {
   HANDLE_TRANSACTION_JOB: 'HANDLE_TRANSACTION_JOB',
 };
 
-export class TransferUserDetails {
-  @IsString()
-  @IsNotEmpty()
-  fullName: string;
-
-  @IsEmail()
-  email: string;
-
-  @IsNumberString()
-  @IsOptional()
-  bankCode?: string;
-
-  @IsString()
-  @IsOptional()
-  bankName?: string;
-
-  @IsNumberString()
-  @Length(10, 10)
-  @IsOptional()
-  accountNumber?: string;
-}
-
 export enum NotificationTypeEnum {
   INFO = 'info',
   SUCCESS = 'success',
@@ -350,21 +318,6 @@ export enum NextOfKinRelationshipEnum {
   CHILD = 'Child',
   FRIEND = 'Friend',
   OTHER = 'Other',
-}
-export class NextOfKinDetails {
-  @IsString()
-  @IsNotEmpty()
-  fullName: string;
-
-  @IsEnum(NextOfKinRelationshipEnum)
-  relationship: NextOfKinRelationshipEnum;
-
-  @IsPhoneNumber()
-  contactNumber: string;
-
-  @IsEmail()
-  @IsOptional()
-  email?: string;
 }
 
 export enum RentFrequencyEnum {

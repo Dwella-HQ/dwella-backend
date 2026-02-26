@@ -1,19 +1,17 @@
-import { File } from 'src/file/entities/file.entity';
 import { Unit } from 'src/property/entities/units.entity';
 import {
   INVITE_STATUS,
-  NextOfKinDetails,
   RentFrequencyEnum,
   ServiceChargeFrequencyEnum,
 } from 'src/utils/constants';
 import { ColumnNumericTransformer } from 'src/utils/misc';
+import { NextOfKinDetails } from 'src/utils/shared.dto';
 import {
   Column,
   CreateDateColumn,
   Entity,
-  JoinColumn,
+  Index,
   ManyToOne,
-  OneToOne,
   PrimaryGeneratedColumn,
   Relation,
   UpdateDateColumn,
@@ -23,6 +21,9 @@ import {
 export class TenantInvite {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column({ default: '' })
+  fullName: string;
 
   @Column()
   email: string;
@@ -63,8 +64,8 @@ export class TenantInvite {
   @Column({ type: 'text' })
   serviceChargeFrequency: ServiceChargeFrequencyEnum;
 
-  @ManyToOne(() => File, { nullable: true })
-  document: Relation<File>;
+  @Column('text')
+  documentId: string;
 
   @Column({ type: 'text', default: INVITE_STATUS.PENDING })
   status: INVITE_STATUS;
@@ -75,9 +76,8 @@ export class TenantInvite {
   @Column()
   idNumber: string;
 
-  @JoinColumn()
-  @OneToOne(() => File)
-  idDocument: Relation<File>;
+  @Column('text')
+  idDocumentId: string;
 
   @Column()
   isEmployed: boolean;
@@ -91,7 +91,8 @@ export class TenantInvite {
   @Column('json', { nullable: true })
   nextOfKinDetails: NextOfKinDetails;
 
-  @Column({ nullable: true, unique: true })
+  @Index()
+  @Column({ unique: true })
   token: string;
 
   @Column()

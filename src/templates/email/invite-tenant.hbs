@@ -4,7 +4,7 @@
 
 <p>Hello {{name}},</p>
 
-<p>You have been invited by <strong>{{landlordName}}</strong> to become a tenant on Dwella.</p>
+<p>You have been invited to become a tenant on Dwella.</p>
 
 {{#if propertyName}}
 <p><strong>Property:</strong> {{propertyName}}</p>
@@ -15,7 +15,12 @@
 {{/if}}
 
 {{#if propertyAddress}}
-<p><strong>Address:</strong> {{propertyAddress}}</p>
+<p><strong>Address:</strong> </p>
+	<ul>
+		{{#each propertyAddress}}
+			<li><strong>{{@key}}:</strong> {{this}}</li>
+		{{/each}}	
+	</ul>
 {{/if}}
 
 {{#if leaseStartDate}}
@@ -31,7 +36,11 @@
 {{/if}}
 
 {{#if securityDeposit}}
-<p><strong>Security Deposit:</strong> {{securityDeposit}} {{securityDepositFrequency}}</p>
+<p><strong>Security Deposit:</strong> {{securityDeposit}} </p>
+{{/if}}
+
+{{#if serviceCharge}}
+<p><strong>Service Charge:</strong> {{serviceCharge}} {{serviceChargeFrequency}}</p>
 {{/if}}
 
 {{#if leaseDocumentLink}}

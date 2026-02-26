@@ -1,10 +1,7 @@
 import { Rent } from 'src/rent/entity/rent.entity';
-import {
-  CurrenciesEnum,
-  PaymentMethodEnum,
-  TransferUserDetails,
-} from 'src/utils/constants';
+import { CurrenciesEnum, PaymentMethodEnum } from 'src/utils/constants';
 import { ColumnNumericTransformer } from 'src/utils/misc';
+import { TransferUserDetails } from 'src/utils/shared.dto';
 import {
   BaseEntity,
   Column,

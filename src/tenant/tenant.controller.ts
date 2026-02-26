@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   Query,
+  Res,
 } from '@nestjs/common';
 import { TenantService } from './tenant.service';
 import { CreateTenantDto } from './dto/create-tenant.dto';
@@ -19,12 +20,18 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 import { QueryPaginationDto } from 'src/utils/query-pagination.dto';
 import { InviteTenantDto } from './dto/invite-tenant.dto';
 import { Public } from 'src/auth/decorators/public.decorator';
+import { Response } from 'express';
+import { ConfigService } from '@nestjs/config';
+import { EnvironmentVariables } from 'src/config/env.config';
 
 @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @ApiBearerAuth()
 @Controller('tenant')
 export class TenantController {
-  constructor(private readonly tenantService: TenantService) {}
+  constructor(
+    private readonly tenantService: TenantService,
+    private configService: ConfigService<EnvironmentVariables>,
+  ) {}
 
   @Post()
   async create(@Body() createTenantDto: CreateTenantDto) {
@@ -90,23 +97,18 @@ export class TenantController {
   }
 
   @Public()
-  @Get('accept-invite/:token')
-  async acceptInvite(@Param('token') token: string) {
+  @Get('invite/accept-invite')
+  async acceptInvite(@Query('token') token: string, @Res() res: Response) {
     const redirectUrl = await this.tenantService.acceptInvite(token);
-    return {
-      success: true,
-      message: 'Invite accepted successfully',
-      data: { redirectUrl },
-    };
+    res.redirect(redirectUrl);
   }
 
   @Public()
-  @Get('reject-invite/:token')
-  async rejectInvite(@Param('token') token: string) {
+  @Get('invite/reject-invite')
+  async rejectInvite(@Query('token') token: string, @Res() res: Response) {
     await this.tenantService.rejectInvite(token);
-    return {
-      success: true,
-      message: 'Invite rejected successfully',
-    };
+    return res.redirect(
+      `${this.configService.get('FRONTEND_URL')}/invite-rejected`,
+    );
   }
 }

@@ -13,7 +13,7 @@ import {
 import { Lease } from './lease.entity';
 import { Unit } from 'src/property/entities/units.entity';
 import { File } from 'src/file/entities/file.entity';
-import { NextOfKinDetails } from 'src/utils/constants';
+import { NextOfKinDetails } from 'src/utils/shared.dto';
 
 @Entity()
 export class Tenant {

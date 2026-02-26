@@ -1,18 +1,22 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Lease } from './entities/lease.entity';
 import { Tenant } from './entities/tenant.entity';
-import { LessThan, Repository } from 'typeorm';
+import { LessThan, MoreThan, Repository } from 'typeorm';
 import { UserService } from 'src/user/user.service';
 import { PropertyService } from 'src/property/property.service';
 import { FileService } from 'src/file/file.service';
 import { QueryPaginationDto } from 'src/utils/query-pagination.dto';
 import { InviteTenantDto } from './dto/invite-tenant.dto';
 import { TenantInvite } from './entities/tenant-invite.entity';
-import { INVITE_STATUS, ServiceChargeFrequencyEnum } from 'src/utils/constants';
+import { INVITE_STATUS } from 'src/utils/constants';
 import { EmailService } from 'src/notification/email/email.service';
 import { EnvironmentVariables } from 'src/config/env.config';
 import { ConfigService } from '@nestjs/config';
@@ -36,8 +40,11 @@ export class TenantService {
   ) {}
 
   async create(createTenantDto: CreateTenantDto) {
-    const user = await this.userService.findOne(createTenantDto.userId);
     const unit = await this.propertyService.getUnit(createTenantDto.unitId);
+    if (unit.tenant) {
+      throw new BadRequestException('Unit is already occupied by a tenant');
+    }
+    const user = await this.userService.findOne(createTenantDto.userId);
     const lease = this.leaseRepository.create({
       unit,
       startDate: createTenantDto.leaseStartDate,
@@ -116,10 +123,26 @@ export class TenantService {
 
   async inviteTenant(inviteTenantDto: InviteTenantDto) {
     const unit = await this.propertyService.getUnit(inviteTenantDto.unitId);
+    if (unit.tenant) {
+      throw new BadRequestException('Unit is already occupied by a tenant');
+    }
     const expiresAt = addDays(new Date(), 7);
     const token = generateRandomString(32);
+    const activeInvite = await this.tenantInviteRepository.findOne({
+      where: {
+        unit: { id: inviteTenantDto.unitId },
+        status: INVITE_STATUS.PENDING,
+        expiresAt: MoreThan(new Date()),
+      },
+    });
+    if (activeInvite) {
+      throw new BadRequestException(
+        'There is already an active invite for this unit',
+      );
+    }
     const tenantInvite = this.tenantInviteRepository.create({
       email: inviteTenantDto.email,
+      fullName: inviteTenantDto.fullName,
       unit,
       token,
       leaseStartDate: inviteTenantDto.leaseStartDate,
@@ -129,36 +152,56 @@ export class TenantService {
       securityDeposit: inviteTenantDto.securityDeposit,
       serviceCharge: inviteTenantDto.serviceCharge,
       serviceChargeFrequency: inviteTenantDto.serviceChargeFrequency,
+      idType: inviteTenantDto.idType,
+      idNumber: inviteTenantDto.idNumber,
+      isEmployed: inviteTenantDto.isEmployed,
+      employerName: inviteTenantDto.employerName,
+      employerContact: inviteTenantDto.employerContact,
+      nextOfKinDetails: inviteTenantDto.nextOfKinDetails,
       expiresAt,
     });
+    let leaseDocumentLink = '';
     if (inviteTenantDto.leaseDocumentId) {
       const document = await this.fileService.findFileById(
         inviteTenantDto.leaseDocumentId,
       );
-      tenantInvite.document = document;
+      tenantInvite.documentId = document.id;
+      leaseDocumentLink = document.url;
+    }
+    if (inviteTenantDto.idDocumentId) {
+      const idDocument = await this.fileService.findFileById(
+        inviteTenantDto.idDocumentId,
+      );
+      tenantInvite.idDocumentId = idDocument.id;
     }
     const savedInvite = await this.tenantInviteRepository.save(tenantInvite);
     await this.emailService.sendExternalEmail({
-      recipientEmail: inviteTenantDto.email,
+      recipientEmail: savedInvite.email,
       subject: 'You have been invited to become a tenant',
       template: 'invite-tenant',
       context: {
-        name: inviteTenantDto.fullName,
+        name: savedInvite.fullName,
         propertyName: unit.property?.name,
         unitName: unit.name,
-        propertyAddress: unit.property?.address,
-        leaseStartDate: inviteTenantDto.leaseStartDate,
-        leaseEndDate: inviteTenantDto.leaseEndDate,
-        rentAmount: inviteTenantDto.rentAmount,
-        rentFrequency: inviteTenantDto.rentFrequency,
-        securityDeposit: inviteTenantDto.securityDeposit,
-        serviceCharge: inviteTenantDto.serviceCharge,
-        serviceChargeFrequency: inviteTenantDto.serviceChargeFrequency,
-        leaseDocumentLink: savedInvite.document
-          ? savedInvite.document.url
+        propertyAddress: unit.property?.address
+          ? {
+              street: unit.property.address.street,
+              city: unit.property.address.city,
+              state: unit.property.address.state,
+              country: unit.property.address.country,
+              postalCode: unit.property.address.postalCode,
+            }
           : null,
-        acceptLink: `${this.configService.get('BACKEND_URL')}/tenant/accept-invite/${tenantInvite.id}`,
-        rejectLink: `${this.configService.get('BACKEND_URL')}/tenant/reject-invite/${tenantInvite.id}`,
+        leaseStartDate: savedInvite.leaseStartDate,
+        leaseEndDate: savedInvite.leaseEndDate,
+        rentAmount: savedInvite.rentAmount,
+        rentFrequency: savedInvite.rentFrequency,
+        securityDeposit: savedInvite.securityDeposit,
+        serviceCharge: savedInvite.serviceCharge,
+        serviceChargeFrequency: savedInvite.serviceChargeFrequency,
+        leaseDocumentLink,
+        acceptLink: `${this.configService.get('BACKEND_URL')}/tenant/invite/accept-invite?token=${savedInvite.token}`,
+        rejectLink: `${this.configService.get('BACKEND_URL')}/tenant/invite/reject-invite?token=${savedInvite.token}`,
         expirationTime: '7 days',
         template: 'invite-tenant',
       },
@@ -168,7 +211,6 @@ export class TenantService {
   async acceptInvite(token: string) {
     const invite = await this.tenantInviteRepository.findOne({
       where: { token },
-      relations: { unit: { property: true }, document: true },
     });
     if (!invite || invite.expiresAt < new Date()) {
       throw new NotFoundException('Invite not found or expired');
@@ -190,12 +232,23 @@ export class TenantService {
         securityDeposit: invite.securityDeposit,
         serviceCharge: invite.serviceCharge,
         serviceChargeFrequency: invite.serviceChargeFrequency,
-        document: invite.document,
+        document: {
+          id: invite.documentId,
+        },
       });
       const savedLease = await this.leaseRepository.save(lease);
       const tenant = this.tenantRepository.create({
         currentUnit: invite.unit,
         leases: [savedLease],
+        idNumber: invite.idNumber,
+        idType: invite.idType,
+        isEmployed: invite.isEmployed,
+        employerName: invite.employerName,
+        employerContact: invite.employerContact,
+        nextOfKinDetails: invite.nextOfKinDetails,
+        idDocument: {
+          id: invite.idDocumentId,
+        },
       });
       const [savedTenant] = await Promise.all([
         this.tenantRepository.save(tenant),
@@ -214,7 +267,9 @@ export class TenantService {
       securityDeposit: invite.securityDeposit,
       serviceCharge: invite.serviceCharge,
       serviceChargeFrequency: invite.serviceChargeFrequency,
-      document: invite.document,
+      document: {
+        id: invite.documentId,
+      },
     });
     const savedLease = await this.leaseRepository.save(lease);
 
@@ -225,12 +280,14 @@ export class TenantService {
       employerContact: invite.employerContact,
       employerName: invite.employerName,
       isEmployed: invite.isEmployed,
-      idDocument: invite.idDocument,
+      idDocument: {
+        id: invite.idDocumentId,
+      },
       idNumber: invite.idNumber,
       idType: invite.idType,
       nextOfKinDetails: invite.nextOfKinDetails,
     });
-    const [savedTenant] = await Promise.all([
+    await Promise.all([
       this.tenantRepository.save(tenant),
       user.save(),
       this.tenantInviteRepository.save(invite),

@@ -27,8 +27,11 @@ export class EmailWorker extends WorkerHost {
             template,
             context,
           });
-          this.logger.log(`Email sent to ${to} with subject: ${subject}`);
+          this.logger.log(
+            `${template} Email sent to ${to} with subject: ${subject}`,
+          );
         } catch (error) {
+          console.log(error);
           // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
           this.logger.error(`Failed to send email to ${to}: ${error.message}`);
           throw error;

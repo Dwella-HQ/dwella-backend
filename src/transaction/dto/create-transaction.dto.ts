@@ -8,11 +8,8 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import {
-  CurrenciesEnum,
-  TransactionActionEnum,
-  TransferUserDetails,
-} from 'src/utils/constants';
+import { CurrenciesEnum, TransactionActionEnum } from 'src/utils/constants';
+import { TransferUserDetails } from 'src/utils/shared.dto';
 
 export class CreateDebitTransactionDto {
   @IsNumber()

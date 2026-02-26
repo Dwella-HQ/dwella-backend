@@ -1,5 +1,7 @@
+import { Type } from 'class-transformer';
 import {
-  IsDateString,
+  IsBoolean,
+  IsDate,
   IsEmail,
   IsEnum,
   IsNotEmpty,
@@ -9,12 +11,15 @@ import {
   IsString,
   IsUUID,
   Min,
+  ValidateNested,
 } from 'class-validator';
 
 import {
+  IdTypeEnum,
   RentFrequencyEnum,
   ServiceChargeFrequencyEnum,
 } from 'src/utils/constants';
+import { NextOfKinDetails } from 'src/utils/shared.dto';
 
 export class InviteTenantDto {
   @IsEmail()
@@ -31,10 +36,10 @@ export class InviteTenantDto {
   @IsUUID('all')
   unitId: string;
 
-  @IsDateString()
+  @IsDate()
   leaseStartDate: Date;
 
-  @IsDateString()
+  @IsDate()
   leaseEndDate: Date;
 
   @IsEnum(RentFrequencyEnum)
@@ -57,4 +62,29 @@ export class InviteTenantDto {
 
   @IsUUID('all')
   leaseDocumentId: string;
+
+  @IsEnum(IdTypeEnum)
+  idType: IdTypeEnum;
+
+  @IsString()
+  @IsNotEmpty()
+  idNumber: string;
+
+  @IsUUID('all')
+  idDocumentId: string;
+
+  @IsBoolean()
+  isEmployed: boolean;
+
+  @IsString()
+  @IsNotEmpty()
+  employerName: string;
+
+  @IsString()
+  @IsNotEmpty()
+  employerContact: string;
+
+  @Type(() => NextOfKinDetails)
+  @ValidateNested()
+  nextOfKinDetails: NextOfKinDetails;
 }

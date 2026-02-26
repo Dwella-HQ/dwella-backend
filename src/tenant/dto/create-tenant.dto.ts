@@ -12,10 +12,10 @@ import {
 } from 'class-validator';
 import {
   IdTypeEnum,
-  NextOfKinDetails,
   RentFrequencyEnum,
   ServiceChargeFrequencyEnum,
 } from 'src/utils/constants';
+import { NextOfKinDetails } from 'src/utils/shared.dto';
 
 export class CreateTenantDto {
   @IsUUID('all')
