@@ -1,5 +1,5 @@
 import {
-  IsDate,
+  IsDateString,
   IsEmail,
   IsEnum,
   IsNotEmpty,
@@ -31,10 +31,10 @@ export class InviteTenantDto {
   @IsUUID('all')
   unitId: string;
 
-  @IsDate()
+  @IsDateString()
   leaseStartDate: Date;
 
-  @IsDate()
+  @IsDateString()
   leaseEndDate: Date;
 
   @IsEnum(RentFrequencyEnum)
