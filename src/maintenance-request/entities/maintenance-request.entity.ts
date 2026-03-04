@@ -6,7 +6,6 @@ import {
   MaintenanceRequestLevel,
   MaintenanceRequestPriority,
   MaintenanceRequestStatus,
-  MaintenanceRequestTypes,
 } from 'src/utils/constants';
 import {
   Column,
@@ -18,6 +17,8 @@ import {
   Relation,
   UpdateDateColumn,
 } from 'typeorm';
+import { MaintenanceRequestSubType } from '../maintenance-request-types/entities/maintenance-request-subtypes.entity';
+import { MaintenanceRequestType } from '../maintenance-request-types/entities/maintenance-request-type.entity';
 
 @Entity()
 export class MaintenanceRequest {
@@ -39,11 +40,11 @@ export class MaintenanceRequest {
   @Column('text', { default: MaintenanceRequestLevel.UNIT })
   level: MaintenanceRequestLevel;
 
-  @Column('text')
-  type: MaintenanceRequestTypes;
+  @ManyToOne(() => MaintenanceRequestType, { eager: true })
+  type: Relation<MaintenanceRequestType>;
 
-  @Column('text')
-  subType: string;
+  @ManyToOne(() => MaintenanceRequestSubType, { eager: true, nullable: true })
+  subType: Relation<MaintenanceRequestSubType>;
 
   @Column()
   description: string;

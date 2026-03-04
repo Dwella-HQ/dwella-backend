@@ -9,7 +9,6 @@ import {
   MaintenanceRequestLevel,
   MaintenanceRequestPriority,
   MaintenanceRequestStatus,
-  MaintenanceRequestTypes,
 } from 'src/utils/constants';
 import { QueryPaginationDto } from 'src/utils/query-pagination.dto';
 
@@ -29,16 +28,21 @@ export class QueryMaintenanceRequestDto extends QueryPaginationDto {
   @IsOptional()
   level?: MaintenanceRequestLevel;
 
-  @IsEnum(MaintenanceRequestTypes)
-  type: MaintenanceRequestTypes;
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
+  type: string;
 
   @IsEnum(MaintenanceRequestPriority)
+  @IsOptional()
   priority: MaintenanceRequestPriority;
 
   @IsString()
   @IsNotEmpty()
+  @IsOptional()
   subType: string;
 
   @IsEnum(MaintenanceRequestStatus)
+  @IsOptional()
   status: MaintenanceRequestStatus;
 }

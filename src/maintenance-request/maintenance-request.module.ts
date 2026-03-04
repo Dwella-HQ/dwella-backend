@@ -5,14 +5,17 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { MaintenanceRequest } from './entities/maintenance-request.entity';
 import { PropertyModule } from 'src/property/property.module';
 import { TenantModule } from 'src/tenant/tenant.module';
+import { MaintenanceRequestTypesModule } from './maintenance-request-types/maintenance-request-types.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([MaintenanceRequest]),
     PropertyModule,
     TenantModule,
+    MaintenanceRequestTypesModule,
   ],
   controllers: [MaintenanceRequestController],
   providers: [MaintenanceRequestService],
+  exports: [MaintenanceRequestService, MaintenanceRequestTypesModule],
 })
 export class MaintenanceRequestModule {}

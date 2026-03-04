@@ -95,6 +95,7 @@ export enum PERMISSIONS {
   //MAINTENANCE REQUESTS
   CREATE_MAINTENANCE_REQUEST = 'create_maintenance_request',
   MANAGE_MAINTENANCE_REQUESTS = 'manage_maintenance_requests',
+  MANAGE_MAINTENANCE_REQUEST_TYPES = 'manage_maintenance_request_types',
 
   // CHAT
   MANAGE_CHAT = 'manage_chat',
@@ -337,9 +338,40 @@ export enum ServiceChargeFrequencyEnum {
   ONE_TIME = 'one_time',
 }
 
-export enum MaintenanceRequestTypes {
-  PLUMBING = 'plumbing',
-}
+export const DefaultMaintenanceRequestTypes = {
+  plumbing: [
+    'leaking_sink',
+    'leaking_toilet',
+    'blocked_drain',
+    'low_water_pressure',
+    'water_heater_issue',
+    'burst_pipe',
+  ],
+  electrical: [
+    'faulty_switch',
+    'faulty_outlet',
+    'circuit_breaker_issue',
+    'light_fixture_problem',
+    'power_outage',
+    'wiring_issue',
+  ],
+  hvac: [
+    'Ac not working',
+    'Heating not working',
+    'Ventilation issue',
+    'Thermostat problem',
+    'Filter replacement',
+  ],
+  structural: [
+    'cracked_wall',
+    'ceiling_damage',
+    'floor_damage',
+    'door_issue',
+    'window_issue',
+    'roof_leak',
+  ],
+  other: ['general_maintenance', 'lock_key_issue', 'pest_control'],
+};
 
 export enum MaintenanceRequestLevel {
   PROPERTY = 'PROPERTY',

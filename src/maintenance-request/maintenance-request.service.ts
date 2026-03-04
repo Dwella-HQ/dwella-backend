@@ -13,6 +13,7 @@ import { FileService } from 'src/file/file.service';
 import { File } from 'src/file/entities/file.entity';
 import { MaintenanceRequestStatus } from 'src/utils/constants';
 import { QueryMaintenanceRequestDto } from './dto/query-maintenance-request.dto';
+import { MaintenanceRequestTypesService } from './maintenance-request-types/maintenance-request-types.service';
 
 @Injectable()
 export class MaintenanceRequestService {
@@ -22,21 +23,31 @@ export class MaintenanceRequestService {
     private readonly tenantService: TenantService,
     private readonly propertyService: PropertyService,
     private readonly fileService: FileService,
+    private readonly maintenanceRequestTypesService: MaintenanceRequestTypesService,
   ) {}
 
   async create(createMaintenanceRequestDto: CreateMaintenanceRequestDto) {
     const property = await this.propertyService.findOne(
       createMaintenanceRequestDto.propertyId,
     );
+    const type = await this.maintenanceRequestTypesService.findOneByName(
+      createMaintenanceRequestDto.type,
+    );
     const maintenanceRequest = this.maintananceRequestRepository.create({
       title: createMaintenanceRequestDto.title,
       description: createMaintenanceRequestDto.description,
-      type: createMaintenanceRequestDto.type,
+      type,
       priority: createMaintenanceRequestDto.priority,
       level: createMaintenanceRequestDto.level,
-      subType: createMaintenanceRequestDto.subType,
       property,
     });
+    if (createMaintenanceRequestDto.subType) {
+      const subType =
+        await this.maintenanceRequestTypesService.getSubTypesByName(
+          createMaintenanceRequestDto.subType,
+        );
+      maintenanceRequest.subType = subType;
+    }
     if (createMaintenanceRequestDto.tenantId) {
       const tenant = await this.tenantService.findOne(
         createMaintenanceRequestDto.tenantId,

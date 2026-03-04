@@ -8,7 +8,6 @@ import {
 import {
   MaintenanceRequestLevel,
   MaintenanceRequestPriority,
-  MaintenanceRequestTypes,
 } from 'src/utils/constants';
 
 export class CreateMaintenanceRequestDto {
@@ -27,14 +26,16 @@ export class CreateMaintenanceRequestDto {
   @IsOptional()
   level?: MaintenanceRequestLevel;
 
-  @IsEnum(MaintenanceRequestTypes)
-  type: MaintenanceRequestTypes;
+  @IsString()
+  @IsNotEmpty()
+  type: string;
 
   @IsEnum(MaintenanceRequestPriority)
   priority: MaintenanceRequestPriority;
 
   @IsString()
   @IsNotEmpty()
+  @IsOptional()
   subType: string;
 
   @IsString()
