@@ -104,18 +104,20 @@ export class DepositService {
     }
     deposit.status = TransactionStatusEnum.COMPLETED;
     deposit.transaction = transaction;
+    deposit.paymentMethod = transaction.paymentMethod;
+    deposit.senderDetails = transaction.senderDetails;
     const savedDeposit = await this.depositRepository.save(deposit);
     const walletTransaction = await this.walletService.creditWallet(
       deposit.wallet.id,
       {
         amount: deposit.amount,
-        narration: deposit.narration,
+        description: `Deposit of ${deposit.amount} from ${deposit.senderDetails.fullName}`,
         reference: deposit.reference,
         action: TransactionActionEnum.DEPOSIT,
       },
     );
-    deposit.walletTransaction = walletTransaction;
-    return savedDeposit;
+    savedDeposit.walletTransaction = walletTransaction;
+    return this.depositRepository.save(savedDeposit);
   }
 
   async createAndConfirmDeposit(transaction: Transaction) {
@@ -135,7 +137,7 @@ export class DepositService {
       deposit.wallet.id,
       {
         amount: deposit.amount,
-        narration: deposit.narration,
+        description: `Deposit of ${deposit.amount} from ${deposit.senderDetails.fullName}`,
         reference: deposit.reference,
         action: TransactionActionEnum.DEPOSIT,
       },

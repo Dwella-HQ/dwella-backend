@@ -19,6 +19,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { VbaService } from 'src/wallet/vba/vba.service';
 import { DepositService } from 'src/deposit/deposit.service';
+import { TransferUserDetails } from 'src/utils/shared.dto';
 
 @Processor(JOB_NAMES.HANDLE_TRANSACTION_JOB)
 export class TransactionWorker extends WorkerHost {
@@ -38,8 +39,9 @@ export class TransactionWorker extends WorkerHost {
   async process(job: Job<any, any, string>) {
     switch (job.name) {
       case 'handle_transaction_credit_success': {
-        const { transactionId, metadata } = job.data as {
+        const { transactionId, metadata, paymentMethod } = job.data as {
           transactionId: string;
+          paymentMethod: PaymentMethodEnum;
           metadata?: Record<string, any>;
         };
         const transaction = await this.transactionRepository.findOne({
@@ -49,6 +51,7 @@ export class TransactionWorker extends WorkerHost {
           throw new Error('Transaction not found');
         }
         transaction.status = TransactionStatusEnum.COMPLETED;
+        transaction.paymentMethod = paymentMethod;
         transaction.metaData = metadata;
         await this.transactionRepository.save(transaction);
         if (transaction?.action === TransactionActionEnum.DEPOSIT) {
@@ -61,16 +64,23 @@ export class TransactionWorker extends WorkerHost {
         return;
       }
       case 'handle_vba_transaction_credit_success': {
-        const { accountNumber, amount, narration, provider, metadata } =
-          job.data as {
-            accountNumber: string;
-            amount: number;
-            narration?: string;
-            provider: PaymentProviderEnum;
-            metadata?: Record<string, any>;
-          };
+        const {
+          accountNumber,
+          amount,
+          narration,
+          provider,
+          metadata,
+          senderDetails,
+        } = job.data as {
+          accountNumber: string;
+          amount: number;
+          narration?: string;
+          provider: PaymentProviderEnum;
+          metadata?: Record<string, any>;
+          senderDetails?: TransferUserDetails;
+        };
         const vba = await this.vbaService.findByAccountNumber(accountNumber);
-        const transaction = await this.transactionRepository.save({
+        const transaction = this.transactionRepository.create({
           wallet: vba.wallet,
           provider: provider,
           action: TransactionActionEnum.DEPOSIT,
@@ -79,10 +89,14 @@ export class TransactionWorker extends WorkerHost {
           narration: narration || `Deposit to VBA ${accountNumber}`,
           type: TransactionTypeEnum.CREDIT,
           status: TransactionStatusEnum.COMPLETED,
+          paymentMethod: PaymentMethodEnum.BANK_TRANSFER,
+          senderDetails: senderDetails,
           metaData: metadata,
         });
+        const savedTransaction =
+          await this.transactionRepository.save(transaction);
         const deposit =
-          await this.depositService.createAndConfirmDeposit(transaction);
+          await this.depositService.createAndConfirmDeposit(savedTransaction);
         return deposit;
       }
       default: {

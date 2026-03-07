@@ -66,8 +66,6 @@ export class WalletTransaction extends BaseEntity {
   @Column({ default: '' })
   documentId: string;
 
-  transactionDocument: any;
-
   @Column({ nullable: true, type: 'simple-json' })
   metaData: string;
 

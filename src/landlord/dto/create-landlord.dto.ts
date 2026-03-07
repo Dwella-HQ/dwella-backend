@@ -1,12 +1,5 @@
 import { Type } from 'class-transformer';
-import {
-  IsNumberString,
-  IsOptional,
-  IsString,
-  IsUUID,
-  Length,
-  ValidateNested,
-} from 'class-validator';
+import { IsOptional, IsString, IsUUID, ValidateNested } from 'class-validator';
 import { CreateAddressDto } from 'src/address/dto/create-address.dto';
 
 export class CreateLandlordDto {
@@ -16,10 +9,6 @@ export class CreateLandlordDto {
   @IsString()
   @IsOptional()
   landLordName?: string;
-
-  @IsNumberString()
-  @Length(11, 11)
-  bvn: string;
 
   @IsUUID('all')
   @IsOptional()

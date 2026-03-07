@@ -7,7 +7,6 @@ import {
   TransactionTypeEnum,
 } from 'src/utils/constants';
 import { ColumnNumericTransformer } from 'src/utils/misc';
-import { TransferUserDetails } from 'src/utils/shared.dto';
 import { Wallet } from 'src/wallet/entities/wallet.entity';
 import { VBA } from 'src/wallet/vba/entity/vba.entity';
 import {
@@ -60,18 +59,6 @@ export class Transaction extends BaseEntity {
 
   @Column({ default: '' })
   narration: string;
-
-  @Column({
-    type: 'simple-json',
-    nullable: true,
-  })
-  senderDetails: TransferUserDetails;
-
-  @Column({
-    type: 'simple-json',
-    nullable: true,
-  })
-  receiverDetails: TransferUserDetails;
 
   @Column({
     type: 'text',

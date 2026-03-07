@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   BadRequestException,
   Injectable,
@@ -146,6 +147,7 @@ export class WalletService {
       type: TransactionTypeEnum.CREDIT,
       action: creditWalletDto.action,
       wallet: wallet,
+      description: creditWalletDto.description,
     });
     wallet.balance = walletTransaction.postBalance;
     await this.walletRepository.save(wallet);

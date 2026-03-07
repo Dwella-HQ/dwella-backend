@@ -13,10 +13,12 @@ import { NextOfKinRelationshipEnum } from './constants';
 export class TransferUserDetails {
   @IsString()
   @IsNotEmpty()
-  fullName: string;
+  @IsOptional()
+  fullName?: string;
 
   @IsEmail()
-  email: string;
+  @IsOptional()
+  email?: string;
 
   @IsNumberString()
   @IsOptional()

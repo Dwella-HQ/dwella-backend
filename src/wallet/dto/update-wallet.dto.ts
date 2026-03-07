@@ -23,7 +23,10 @@ export class CreditWalletDto {
 
   @IsString()
   @IsOptional()
-  narration?: string;
+  description?: string;
+
+  @IsOptional()
+  transactionDocument?: any;
 }
 
 export class DebitWalletDto {

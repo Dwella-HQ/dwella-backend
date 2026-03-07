@@ -24,6 +24,7 @@ import { Transaction } from 'src/transaction/entities/transaction.entity';
 import { SettingsService } from 'src/settings/settings.service';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
+import { TransferUserDetails } from 'src/utils/shared.dto';
 
 @Injectable()
 export class PaystackService {
@@ -88,7 +89,7 @@ export class PaystackService {
       this.httpService.post<PaystackInitializeTransactionResponse>(
         '/transaction/initialize',
         {
-          email: transaction.senderDetails.email,
+          email: transaction.wallet.landlord.user.email,
           amount: transaction.amount * 100,
           reference: transaction.id,
           currency: transaction.currency,
@@ -134,9 +135,30 @@ export class PaystackService {
         return;
       }
       case 'bank': {
+        await this.transactionQueue.add(
+          'handle_transaction_credit_success',
+          {
+            transactionId: payload.data.reference,
+            paymentMethod: PaymentMethodEnum.BANK_TRANSFER,
+            metadata: payload.data,
+          } as {
+            transactionId: string;
+            paymentMethod: PaymentMethodEnum;
+            metadata?: Record<string, any>;
+          },
+          { jobId: `transaction_success_${payload.data.reference}` },
+        );
         return;
       }
       case 'card': {
+        await this.transactionQueue.add(
+          'handle_transaction_credit_success',
+          {
+            transactionId: payload.data.reference,
+            metadata: payload.data,
+          },
+          { jobId: `transaction_success_${payload.data.reference}` },
+        );
         return;
       }
       default: {

@@ -153,7 +153,7 @@ export interface PaystackChargeSuccessWebhookPayload {
       signature: null;
       account_name: null;
       sender_country: string;
-      sender_bank: null;
+      sender_bank: string;
       sender_bank_account_number: string;
       receiver_bank_account_number: string;
       receiver_bank: string;
