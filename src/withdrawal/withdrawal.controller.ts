@@ -6,23 +6,48 @@ import {
   Patch,
   Param,
   Delete,
+  Headers,
+  UseGuards,
 } from '@nestjs/common';
 import { WithdrawalService } from './withdrawal.service';
 import { CreateWithdrawalDto } from './dto/create-withdrawal.dto';
 import { UpdateWithdrawalDto } from './dto/update-withdrawal.dto';
+import { ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
+import { PermissionsGuard } from 'src/auth/guards/permission.guard';
+import { RolesGuard } from 'src/auth/guards/role.guard';
 
+@UseGuards(JwtAuthGuard, PermissionsGuard, RolesGuard)
+@ApiBearerAuth()
 @Controller('withdrawal')
 export class WithdrawalController {
   constructor(private readonly withdrawalService: WithdrawalService) {}
 
   @Post()
-  create(@Body() createWithdrawalDto: CreateWithdrawalDto) {
-    return this.withdrawalService.create(createWithdrawalDto);
+  async create(
+    @Body() createWithdrawalDto: CreateWithdrawalDto,
+    @Headers('Idempotency-Key') idempotencyKey: string,
+  ) {
+    const data = await this.withdrawalService.create(
+      createWithdrawalDto,
+      idempotencyKey,
+    );
+    return {
+      success: true,
+      message: 'Withdrawal is being processed',
+      data: data,
+    };
   }
 
   @Get()
   findAll() {
     return this.withdrawalService.findAll();
+  }
+
+  @Get('banks/:walletId')
+  async getBanks(@Param('walletId') walletId: string) {
+    const data = await this.withdrawalService.getBanks(walletId);
+    return data;
   }
 
   @Get(':id')

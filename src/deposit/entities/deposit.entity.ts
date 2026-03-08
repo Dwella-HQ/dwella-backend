@@ -57,6 +57,10 @@ export class Deposit extends BaseEntity {
   @Column()
   reference: string;
 
+  @Index()
+  @Column({ default: '' })
+  indempotencyKey: string;
+
   @Column('text', {
     default: TransactionStatusEnum.PENDING,
   })

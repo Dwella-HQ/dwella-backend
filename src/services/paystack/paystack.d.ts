@@ -255,3 +255,33 @@ export interface PaystackTransactionVerificationResponse {
     subaccount: Record<string, unknown>;
   };
 }
+
+export interface PaystackListBanksResponse {
+  status: boolean;
+  message: string;
+  data: Array<{
+    name: string;
+    slug: string;
+    code: string;
+    longcode: string;
+    gateway: string | null;
+    pay_with_bank: boolean;
+    active: boolean;
+    is_deleted: boolean;
+    country: string;
+    currency: string;
+    type: string;
+    id: number;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+}
+
+export interface PaystackResolveAccountResponse {
+  status: boolean;
+  message: string;
+  data: {
+    account_name: string;
+    account_number: string;
+  };
+}

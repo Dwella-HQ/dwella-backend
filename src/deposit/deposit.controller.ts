@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  Param,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { DepositService } from './deposit.service';
 import { CreateDepositDto } from './dto/create-deposit.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
@@ -11,8 +19,14 @@ export class DepositController {
   constructor(private readonly depositService: DepositService) {}
 
   @Post()
-  async createDeposit(@Body() createDepositDto: CreateDepositDto) {
-    const data = await this.depositService.create(createDepositDto);
+  async createDeposit(
+    @Body() createDepositDto: CreateDepositDto,
+    @Headers('Idempotency-Key') idempotencyKey: string,
+  ) {
+    const data = await this.depositService.create(
+      createDepositDto,
+      idempotencyKey,
+    );
     return {
       success: true,
       message: 'Deposit created successfully',

@@ -9,6 +9,8 @@ import type {
   PaystackCustomerResponse,
   PaystackDedicatedAccountAssignSuccessWebhookPayload,
   PaystackInitializeTransactionResponse,
+  PaystackListBanksResponse,
+  PaystackResolveAccountResponse,
   PaystackTransactionVerificationResponse,
 } from './paystack';
 import { lastValueFrom } from 'rxjs';
@@ -165,5 +167,23 @@ export class PaystackService {
         throw new Error('Unknown payment channel');
       }
     }
+  }
+
+  async listBanks(currency = 'NGN') {
+    const response = await lastValueFrom(
+      this.httpService.get<PaystackListBanksResponse>(
+        `/bank?currency=${currency}`,
+      ),
+    );
+    return response.data.data;
+  }
+
+  async resolveAccount(accountNumber: string, bankCode: string) {
+    const response = await lastValueFrom(
+      this.httpService.get<PaystackResolveAccountResponse>(
+        `/bank/resolve?account_number=${accountNumber}&bank_code=${bankCode}`,
+      ),
+    );
+    return response.data.data.account_name;
   }
 }

@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -14,6 +15,8 @@ import {
   TransactionStatusEnum,
 } from 'src/utils/constants';
 import { Transaction } from 'src/transaction/entities/transaction.entity';
+import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
+import ms from 'ms';
 
 @Injectable()
 export class DepositService {
@@ -23,9 +26,25 @@ export class DepositService {
     private readonly walletService: WalletService,
     private readonly transactionService: TransactionService,
     private readonly dataSource: DataSource,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
-  async create(createDepositDto: CreateDepositDto) {
+  async create(createDepositDto: CreateDepositDto, idempotencyKey: string) {
+    if (!idempotencyKey) {
+      throw new BadRequestException('Idempotency-Key header is required');
+    }
+    const key = `deposit:${idempotencyKey}`;
+    const pendingDeposit = await this.cacheManager.get<Deposit>(key);
+    if (pendingDeposit) {
+      return 'A deposit with the same idempotency key is already being processed';
+    }
+    await this.cacheManager.set(key, { status: 'pending' }, ms('10m') / 1000);
+    const existingDeposit = await this.depositRepository.findOne({
+      where: { indempotencyKey: idempotencyKey },
+    });
+    if (existingDeposit) {
+      return existingDeposit;
+    }
     const wallet = await this.walletService.findOne(createDepositDto.walletId);
     const deposit = this.depositRepository.create({
       wallet: wallet,
@@ -47,6 +66,7 @@ export class DepositService {
     deposit.transaction = transaction;
     deposit.reference = transaction.id;
     const savedDeposit = await this.depositRepository.save(deposit);
+    await this.cacheManager.del(key);
     return savedDeposit;
   }
 
