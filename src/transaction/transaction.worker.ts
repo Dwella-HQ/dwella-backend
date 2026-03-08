@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { FlutterwaveService } from 'src/services/flutterwave/flutterwave.service';
@@ -19,7 +18,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { VbaService } from 'src/wallet/vba/vba.service';
 import { DepositService } from 'src/deposit/deposit.service';
-import { TransferUserDetails } from 'src/utils/shared.dto';
 
 @Processor(JOB_NAMES.HANDLE_TRANSACTION_JOB)
 export class TransactionWorker extends WorkerHost {
@@ -64,24 +62,17 @@ export class TransactionWorker extends WorkerHost {
         return;
       }
       case 'handle_vba_transaction_credit_success': {
-        const {
-          accountNumber,
-          amount,
-          narration,
-          provider,
-          metadata,
-          senderDetails,
-        } = job.data as {
-          accountNumber: string;
-          amount: number;
-          narration?: string;
-          provider: PaymentProviderEnum;
-          metadata?: Record<string, any>;
-          senderDetails?: TransferUserDetails;
-        };
+        const { accountNumber, amount, narration, provider, metadata } =
+          job.data as {
+            accountNumber: string;
+            amount: number;
+            narration?: string;
+            provider: PaymentProviderEnum;
+            metadata?: Record<string, any>;
+          };
         const vba = await this.vbaService.findByAccountNumber(accountNumber);
         const transaction = this.transactionRepository.create({
-          wallet: vba.wallet,
+          walletId: vba.wallet.id,
           provider: provider,
           action: TransactionActionEnum.DEPOSIT,
           currency: vba.wallet.currency,
@@ -90,7 +81,10 @@ export class TransactionWorker extends WorkerHost {
           type: TransactionTypeEnum.CREDIT,
           status: TransactionStatusEnum.COMPLETED,
           paymentMethod: PaymentMethodEnum.BANK_TRANSFER,
-          senderDetails: senderDetails,
+          senderDetails: {
+            fullName: vba.accountName,
+            accountNumber: vba.accountNumber,
+          },
           metaData: metadata,
         });
         const savedTransaction =

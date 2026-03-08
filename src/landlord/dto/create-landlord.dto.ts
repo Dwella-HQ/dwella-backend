@@ -10,6 +10,10 @@ export class CreateLandlordDto {
   @IsOptional()
   landLordName?: string;
 
+  @IsString()
+  @IsOptional()
+  landLordEmail?: string;
+
   @IsUUID('all')
   @IsOptional()
   profilePictureId: string;

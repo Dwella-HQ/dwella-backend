@@ -29,6 +29,7 @@ export class LandlordService {
     const landlord = this.landlordRepository.create({
       user: user,
       landLordName: createLandlordDto.landLordName || user.fullName,
+      landLordEmail: createLandlordDto.landLordEmail || user.email,
     });
     if (createLandlordDto.govermentIdDocumentId) {
       const govermentIdDocument = await this.fileService.findFileById(

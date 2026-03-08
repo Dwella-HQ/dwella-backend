@@ -89,7 +89,7 @@ export class PaystackService {
       this.httpService.post<PaystackInitializeTransactionResponse>(
         '/transaction/initialize',
         {
-          email: transaction.wallet.landlord.user.email,
+          email: transaction.senderDetails.email,
           amount: transaction.amount * 100,
           reference: transaction.id,
           currency: transaction.currency,

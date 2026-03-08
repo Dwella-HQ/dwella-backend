@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   BadRequestException,
   Injectable,
@@ -75,6 +74,7 @@ export class WalletService {
         vbas: true,
         landlord: true,
       },
+      relationLoadStrategy: 'query',
     });
     if (!wallet) {
       throw new NotFoundException('Wallet not found');

@@ -1,6 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Deposit } from './entities/deposit.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { WalletService } from 'src/wallet/wallet.service';
 import { CreateDepositDto } from './dto/create-deposit.dto';
@@ -18,6 +22,7 @@ export class DepositService {
     private readonly depositRepository: Repository<Deposit>,
     private readonly walletService: WalletService,
     private readonly transactionService: TransactionService,
+    private readonly dataSource: DataSource,
   ) {}
 
   async create(createDepositDto: CreateDepositDto) {
@@ -34,8 +39,8 @@ export class DepositService {
       narration: createDepositDto.narration,
       action: TransactionActionEnum.DEPOSIT,
       senderDetails: {
-        fullName: wallet.landlord.user.fullName,
-        email: wallet.landlord.user.email,
+        fullName: wallet.landlord.landLordName,
+        email: wallet.landlord.landLordEmail,
       },
       walletId: wallet.id,
     });
@@ -98,51 +103,84 @@ export class DepositService {
   }
 
   async confirmDeposit(reference: string, transaction: Transaction) {
-    const deposit = await this.getDepositByReference(reference);
-    if (deposit.status === TransactionStatusEnum.COMPLETED) {
-      throw new NotFoundException('Deposit already confirmed');
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const deposit = await queryRunner.manager.findOne(Deposit, {
+        where: { reference },
+        relations: { wallet: true, walletTransaction: true, transaction: true },
+        relationLoadStrategy: 'query',
+      });
+      if (!deposit) {
+        throw new NotFoundException('Deposit not found');
+      }
+      if (deposit.status === TransactionStatusEnum.COMPLETED) {
+        throw new BadRequestException('Deposit already confirmed');
+      }
+      deposit.status = TransactionStatusEnum.COMPLETED;
+      deposit.transaction = transaction;
+      deposit.paymentMethod = transaction.paymentMethod;
+      deposit.narration = transaction.narration;
+      deposit.senderDetails = transaction.senderDetails;
+      const savedDeposit = await queryRunner.manager.save(deposit);
+      const walletTransaction = await this.walletService.creditWallet(
+        deposit.wallet.id,
+        {
+          amount: deposit.amount,
+          description: `Deposit of ${deposit.amount} from ${deposit.senderDetails.fullName}`,
+          reference: deposit.reference,
+          action: TransactionActionEnum.DEPOSIT,
+        },
+      );
+      savedDeposit.walletTransaction = walletTransaction;
+      await queryRunner.manager.save(savedDeposit);
+      await queryRunner.commitTransaction();
+      return savedDeposit;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
-    deposit.status = TransactionStatusEnum.COMPLETED;
-    deposit.transaction = transaction;
-    deposit.paymentMethod = transaction.paymentMethod;
-    deposit.senderDetails = transaction.senderDetails;
-    const savedDeposit = await this.depositRepository.save(deposit);
-    const walletTransaction = await this.walletService.creditWallet(
-      deposit.wallet.id,
-      {
-        amount: deposit.amount,
-        description: `Deposit of ${deposit.amount} from ${deposit.senderDetails.fullName}`,
-        reference: deposit.reference,
-        action: TransactionActionEnum.DEPOSIT,
-      },
-    );
-    savedDeposit.walletTransaction = walletTransaction;
-    return this.depositRepository.save(savedDeposit);
   }
 
   async createAndConfirmDeposit(transaction: Transaction) {
-    const deposit = this.depositRepository.create({
-      wallet: transaction.wallet,
-      amount: transaction.amount,
-      currency: transaction.currency,
-      narration: transaction.narration,
-      transaction: transaction,
-      reference: transaction.id,
-      status: TransactionStatusEnum.COMPLETED,
-      senderDetails: transaction.senderDetails,
-      paymentMethod: transaction.paymentMethod,
-    });
-    const savedDeposit = await this.depositRepository.save(deposit);
-    const walletTransaction = await this.walletService.creditWallet(
-      deposit.wallet.id,
-      {
-        amount: deposit.amount,
-        description: `Deposit of ${deposit.amount} from ${deposit.senderDetails.fullName}`,
-        reference: deposit.reference,
-        action: TransactionActionEnum.DEPOSIT,
-      },
-    );
-    deposit.walletTransaction = walletTransaction;
-    return savedDeposit;
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const wallet = await this.walletService.findOne(transaction.walletId);
+      const deposit = this.depositRepository.create({
+        wallet: wallet,
+        amount: transaction.amount,
+        currency: transaction.currency,
+        narration: transaction.narration,
+        transaction: transaction,
+        reference: transaction.id,
+        status: TransactionStatusEnum.COMPLETED,
+        paymentMethod: transaction.paymentMethod,
+        senderDetails: transaction.senderDetails,
+      });
+      const savedDeposit = await queryRunner.manager.save(deposit);
+      const walletTransaction = await this.walletService.creditWallet(
+        deposit.wallet.id,
+        {
+          amount: deposit.amount,
+          description: `Deposit of ${deposit.amount} from ${deposit.senderDetails.fullName}`,
+          reference: deposit.reference,
+          action: TransactionActionEnum.DEPOSIT,
+        },
+      );
+      savedDeposit.walletTransaction = walletTransaction;
+      await queryRunner.manager.save(savedDeposit);
+      await queryRunner.commitTransaction();
+      return savedDeposit;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 }

@@ -31,6 +31,9 @@ export class Landlord extends BaseEntity {
   @Column()
   landLordName: string;
 
+  @Column({ default: '' })
+  landLordEmail: string;
+
   @JoinColumn()
   @OneToOne(() => File, { nullable: true, eager: true })
   profilePicture: Relation<File>;

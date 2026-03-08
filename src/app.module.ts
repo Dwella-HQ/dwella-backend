@@ -35,7 +35,7 @@ import { ChatModule } from './chat/chat.module';
 import { MaintenanceRequestModule } from './maintenance-request/maintenance-request.module';
 import { RentModule } from './rent/rent.module';
 import { DepositModule } from './deposit/deposit.module';
-import { WithdrawalsModule } from './withdrawals/withdrawals.module';
+import { WithdrawalModule } from './withdrawal/withdrawal.module';
 
 @Module({
   imports: [
@@ -141,7 +141,7 @@ import { WithdrawalsModule } from './withdrawals/withdrawals.module';
     MaintenanceRequestModule,
     RentModule,
     DepositModule,
-    WithdrawalsModule,
+    WithdrawalModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -7,7 +7,7 @@ import {
   TransactionTypeEnum,
 } from 'src/utils/constants';
 import { ColumnNumericTransformer } from 'src/utils/misc';
-import { Wallet } from 'src/wallet/entities/wallet.entity';
+import { TransferUserDetails } from 'src/utils/shared.dto';
 import { VBA } from 'src/wallet/vba/entity/vba.entity';
 import {
   BaseEntity,
@@ -25,8 +25,8 @@ export class Transaction extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Wallet)
-  wallet: Relation<Wallet>;
+  @Column({ default: '' })
+  walletId: string;
 
   @Column({
     type: 'text',
@@ -59,6 +59,18 @@ export class Transaction extends BaseEntity {
 
   @Column({ default: '' })
   narration: string;
+
+  @Column({
+    type: 'simple-json',
+    nullable: true,
+  })
+  senderDetails: TransferUserDetails;
+
+  @Column({
+    type: 'simple-json',
+    nullable: true,
+  })
+  receiverDetails: TransferUserDetails;
 
   @Column({
     type: 'text',

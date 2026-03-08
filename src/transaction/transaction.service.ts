@@ -28,6 +28,7 @@ import { Queue } from 'bullmq';
 import { InjectQueue } from '@nestjs/bullmq';
 import { VbaService } from 'src/wallet/vba/vba.service';
 import e from 'express';
+import { WalletService } from 'src/wallet/wallet.service';
 
 @Injectable()
 export class TransactionService {
@@ -40,6 +41,7 @@ export class TransactionService {
     private flutterwaveService: FlutterwaveService,
     private monnifyService: MonnifyService,
     private readonly vbaService: VbaService,
+    private readonly walletService: WalletService,
     @InjectQueue(JOB_NAMES.HANDLE_TRANSACTION_JOB)
     private readonly transactionQueue: Queue,
   ) {}
@@ -56,35 +58,33 @@ export class TransactionService {
     const provider = (await this.settingsService.getSetting(
       'preferredPaymentProvider',
     )) as PaymentProviderEnum;
-    const transaction = await this.transactionRepository.save({
+    const transaction = this.transactionRepository.create({
       ...createCreditTransactionDto,
       provider: provider,
       currency: createCreditTransactionDto.currency,
-      senderDetails: {
-        email: 'johnsonolaolu@gmail.com',
-        fullName: 'Olalekan Johnson',
-      },
+      senderDetails: createCreditTransactionDto.senderDetails,
       walletId: createCreditTransactionDto.walletId,
       narration: createCreditTransactionDto.narration,
       type: TransactionTypeEnum.CREDIT,
     });
-
+    const savedTransaction = await this.transactionRepository.save(transaction);
+    //TODO - Refactor this to use a strategy pattern instead of if else
     if (provider === PaymentProviderEnum.FLUTTERWAVE) {
       const response =
-        await this.flutterwaveService.initiateWalletCredit(transaction);
-      transaction.paymentUrl = response.data.link;
+        await this.flutterwaveService.initiateWalletCredit(savedTransaction);
+      savedTransaction.paymentUrl = response.data.link;
     } else if (provider === PaymentProviderEnum.MONNIFY) {
       const response =
-        await this.monnifyService.initiateWalletCredit(transaction);
-      transaction.paymentUrl = response.responseBody.checkoutUrl;
+        await this.monnifyService.initiateWalletCredit(savedTransaction);
+      savedTransaction.paymentUrl = response.responseBody.checkoutUrl;
     } else if (provider === PaymentProviderEnum.PAYSTACK) {
       const response =
-        await this.paystackService.initiateWalletCredit(transaction);
-      transaction.paymentUrl = response.data.authorization_url;
+        await this.paystackService.initiateWalletCredit(savedTransaction);
+      savedTransaction.paymentUrl = response.data.authorization_url;
     } else {
       throw new NotFoundException('No payment provider found');
     }
-    return await this.transactionRepository.save(transaction);
+    return await this.transactionRepository.save(savedTransaction);
   }
 
   async findAll() {
