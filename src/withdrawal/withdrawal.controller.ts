@@ -16,6 +16,7 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { PermissionsGuard } from 'src/auth/guards/permission.guard';
 import { RolesGuard } from 'src/auth/guards/role.guard';
+import { ResolveAccountDto } from './dto/resolve-account.dto';
 
 @UseGuards(JwtAuthGuard, PermissionsGuard, RolesGuard)
 @ApiBearerAuth()
@@ -47,7 +48,21 @@ export class WithdrawalController {
   @Get('banks/:walletId')
   async getBanks(@Param('walletId') walletId: string) {
     const data = await this.withdrawalService.getBanks(walletId);
-    return data;
+    return {
+      success: true,
+      message: 'Banks retrieved successfully',
+      data: data,
+    };
+  }
+
+  @Post('resolve-account')
+  async resolveAccount(@Body() resolveAccountDto: ResolveAccountDto) {
+    const data = await this.withdrawalService.resolveAccount(resolveAccountDto);
+    return {
+      success: true,
+      message: 'Account resolved successfully',
+      data: data,
+    };
   }
 
   @Get(':id')

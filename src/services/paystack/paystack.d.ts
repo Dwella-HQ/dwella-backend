@@ -285,3 +285,111 @@ export interface PaystackResolveAccountResponse {
     account_number: string;
   };
 }
+
+export interface PaystackCreateTransferRecipientResponse {
+  status: boolean;
+  message: string;
+  data: {
+    active: boolean;
+    createdAt: string;
+    currency: string;
+    domain: string;
+    id: number;
+    integration: number;
+    name: string;
+    recipient_code: string;
+    type: string;
+    updatedAt: string;
+    is_deleted: boolean;
+    details: {
+      authorization_code: string | null;
+      account_number: string;
+      account_name: string;
+      bank_code: string;
+      bank_name: string;
+    };
+  };
+}
+
+export interface PaystackCreateTransferResponse {
+  status: boolean;
+  message: string;
+  data: {
+    transfersessionid: any[];
+    transfertrials: any[];
+    domain: string;
+    amount: number;
+    currency: string;
+    reference: string;
+    source: string;
+    source_details: null;
+    reason: string;
+    status: string;
+    failures: null;
+    transfer_code: string;
+    titan_code: string | null;
+    transferred_at: string | null;
+    id: number;
+    integration: number;
+    request: number;
+    recipient: number;
+    createdAt: string;
+    updatedAt: string;
+  };
+}
+
+export interface PaystackConfirmWithdrawalPayload {
+  event: 'transfer.success';
+  data: {
+    amount: number;
+    createdAt: string;
+    currency: string;
+    domain: string;
+    failures: null;
+    id: number;
+    integration: {
+      id: number;
+      is_live: boolean;
+      business_name: string;
+      logo_path: string;
+    };
+    reason: string;
+    reference: string;
+    source: string;
+    source_details: null;
+    status: 'success';
+    titan_code: null;
+    transfer_code: string;
+    transferred_at: string | null;
+    updatedAt: string;
+    recipient: {
+      active: boolean;
+      createdAt: string;
+      currency: string;
+      description: string;
+      domain: string;
+      email: string | null;
+      id: number;
+      integration: number;
+      metadata: Record<string, unknown> | null;
+      name: string;
+      recipient_code: string;
+      type: string;
+      updatedAt: string;
+      is_deleted: boolean;
+      details: {
+        authorization_code: string | null;
+        account_number: string;
+        account_name: string | null;
+        bank_code: string;
+        bank_name: string;
+      };
+    };
+    session: {
+      provider: null;
+      id: null;
+    };
+    fee_charged: number;
+    gateway_response: null;
+  };
+}

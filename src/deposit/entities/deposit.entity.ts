@@ -58,7 +58,7 @@ export class Deposit extends BaseEntity {
   reference: string;
 
   @Index()
-  @Column({ default: '' })
+  @Column({ nullable: true, unique: true })
   indempotencyKey: string;
 
   @Column('text', {

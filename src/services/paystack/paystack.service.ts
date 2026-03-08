@@ -5,7 +5,10 @@ import type {
   PaystackAssignVirtualAccountPayload,
   PaystackAssignVirtualAccountResponse,
   PaystackChargeSuccessWebhookPayload,
+  PaystackConfirmWithdrawalPayload,
   PaystackCreateCustomerPayload,
+  PaystackCreateTransferRecipientResponse,
+  PaystackCreateTransferResponse,
   PaystackCustomerResponse,
   PaystackDedicatedAccountAssignSuccessWebhookPayload,
   PaystackInitializeTransactionResponse,
@@ -27,6 +30,7 @@ import { SettingsService } from 'src/settings/settings.service';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { TransferUserDetails } from 'src/utils/shared.dto';
+import { Withdrawal } from 'src/withdrawal/entities/withdrawal.entity';
 
 @Injectable()
 export class PaystackService {
@@ -157,6 +161,7 @@ export class PaystackService {
           'handle_transaction_credit_success',
           {
             transactionId: payload.data.reference,
+            paymentMethod: PaymentMethodEnum.CARD,
             metadata: payload.data,
           },
           { jobId: `transaction_success_${payload.data.reference}` },
@@ -185,5 +190,53 @@ export class PaystackService {
       ),
     );
     return response.data.data.account_name;
+  }
+
+  async initiateWithdrawal(transaction: Transaction) {
+    const transferRecipientData = await lastValueFrom(
+      this.httpService.post<PaystackCreateTransferRecipientResponse>(
+        '/transferrecipient',
+        {
+          type: 'nuban',
+          name: transaction.receiverDetails.fullName,
+          account_number: transaction.receiverDetails.accountNumber,
+          bank_code: transaction.receiverDetails.bankCode,
+          currency: transaction.currency,
+        },
+      ),
+    );
+    console.log({ transaction });
+    const recipientCode = transferRecipientData.data.data.recipient_code;
+    const transferResponse = await lastValueFrom(
+      this.httpService.post<PaystackCreateTransferResponse>('/transfer', {
+        source: 'balance',
+        amount: transaction.amount * 100,
+        recipient: recipientCode,
+        reference: transaction.id,
+      }),
+    );
+    return transferResponse.data;
+  }
+
+  async confirmWithdrawal(payload: PaystackConfirmWithdrawalPayload) {
+    if (payload.event !== 'transfer.success') {
+      throw new Error('Invalid event type');
+    }
+    const response = await lastValueFrom(
+      this.httpService.get<PaystackTransactionVerificationResponse>(
+        `/transfer/verify/${payload.data.reference}`,
+      ),
+    );
+    if (!response.data.status || response.data.data.status !== 'success') {
+      throw new Error('Transfer verification failed');
+    }
+    await this.transactionQueue.add(
+      'handle_transaction_debit_success',
+      {
+        transactionId: payload.data.reference,
+        metadata: payload.data,
+      },
+      { jobId: `transaction_debit_success_${payload.data.reference}` },
+    );
   }
 }

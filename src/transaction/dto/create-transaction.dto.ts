@@ -22,6 +22,13 @@ export class CreateDebitTransactionDto {
   @IsEnum(CurrenciesEnum)
   currency: CurrenciesEnum;
 
+  @Type(() => TransferUserDetails)
+  @ValidateNested()
+  receiverDetails: TransferUserDetails;
+
+  @IsUUID()
+  walletId: string;
+
   @IsString()
   @IsOptional()
   narration?: string;

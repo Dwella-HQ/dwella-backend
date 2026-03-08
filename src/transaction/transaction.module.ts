@@ -10,12 +10,14 @@ import { JOB_NAMES } from 'src/utils/constants';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { TransactionWorker } from './transaction.worker';
 import { DepositModule } from 'src/deposit/deposit.module';
+import { WithdrawalModule } from 'src/withdrawal/withdrawal.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Transaction]),
     forwardRef(() => WalletModule),
     forwardRef(() => DepositModule),
+    forwardRef(() => WithdrawalModule),
     BullModule.registerQueue({
       name: JOB_NAMES.HANDLE_TRANSACTION_JOB,
     }),

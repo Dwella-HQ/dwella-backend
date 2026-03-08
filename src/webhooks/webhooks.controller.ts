@@ -36,6 +36,9 @@ export class WebhooksController {
       case 'charge.success':
         this.paystackService.handleChargeSuccess(payload);
         break;
+      case 'transfer.success':
+        this.paystackService.confirmWithdrawal(payload);
+        break;
       default:
         throw new InternalServerErrorException(
           'Unhandled Paystack webhook event',

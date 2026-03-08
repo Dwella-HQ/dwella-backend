@@ -4,6 +4,7 @@ import {
   Inject,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { CreateWithdrawalDto } from './dto/create-withdrawal.dto';
 import { UpdateWithdrawalDto } from './dto/update-withdrawal.dto';
@@ -12,16 +13,32 @@ import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
 import { WalletService } from 'src/wallet/wallet.service';
 import ms from 'ms';
 import { SettingsService } from 'src/settings/settings.service';
-import { PaymentProviderEnum } from 'src/utils/constants';
+import {
+  JOB_NAMES,
+  PaymentProviderEnum,
+  TransactionActionEnum,
+  TransactionStatusEnum,
+} from 'src/utils/constants';
 import { ResolveAccountDto } from './dto/resolve-account.dto';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
+import { DataSource, Repository } from 'typeorm';
+import { Withdrawal } from './entities/withdrawal.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Transaction } from 'src/transaction/entities/transaction.entity';
 
 @Injectable()
 export class WithdrawalService {
   constructor(
+    @InjectRepository(Withdrawal)
+    private readonly withdrawalRepository: Repository<Withdrawal>,
     private readonly walletService: WalletService,
     private readonly paystackService: PaystackService,
     private readonly settingsService: SettingsService,
+    @InjectQueue(JOB_NAMES.WITHDRAWAL_TRANSFER_JOB)
+    private readonly withdrawalQueue: Queue,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private readonly dataSource: DataSource,
   ) {}
   async create(
     createWithdrawalDto: CreateWithdrawalDto,
@@ -48,7 +65,9 @@ export class WithdrawalService {
     ) {
       throw new BadRequestException('Recipient bank details are required');
     }
-    // await
+    await this.withdrawalQueue.add('process-withdrawal', createWithdrawalDto, {
+      jobId: idempotencyKey,
+    });
     await this.cacheManager.del(key);
   }
 
@@ -105,5 +124,42 @@ export class WithdrawalService {
       return accountName;
     }
     throw new InternalServerErrorException('No payment provider configured');
+  }
+
+  async confirmWithdrawal(reference: string, transaction: Transaction) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const withdrawal = await queryRunner.manager.findOne(Withdrawal, {
+        where: { reference },
+        relations: ['wallet'],
+      });
+      if (!withdrawal) {
+        throw new NotFoundException('Withdrawal not found');
+      }
+      withdrawal.status = TransactionStatusEnum.COMPLETED;
+      withdrawal.transaction = transaction;
+      const savedWithdrawal = await queryRunner.manager.save(withdrawal);
+      const walletTransaction = await this.walletService.debitWallet(
+        withdrawal.wallet.id,
+        {
+          amount: savedWithdrawal.amount,
+          narration: `Withdrawal of ${savedWithdrawal.amount} ${savedWithdrawal.currency}`,
+          reference: savedWithdrawal.reference,
+          action: TransactionActionEnum.WITHDRAWAL,
+        },
+      );
+      savedWithdrawal.walletTransaction = walletTransaction;
+      await queryRunner.manager.save(savedWithdrawal);
+      await queryRunner.commitTransaction();
+      return savedWithdrawal;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 }

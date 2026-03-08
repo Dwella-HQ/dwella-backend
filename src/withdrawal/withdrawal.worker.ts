@@ -2,17 +2,21 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject } from '@nestjs/common';
 import { Job } from 'bullmq';
-import { PaystackService } from 'src/services/paystack/paystack.service';
-import { SettingsService } from 'src/settings/settings.service';
-import { JOB_NAMES } from 'src/utils/constants';
+import { JOB_NAMES, TransactionActionEnum } from 'src/utils/constants';
 import { WalletService } from 'src/wallet/wallet.service';
+import { CreateWithdrawalDto } from './dto/create-withdrawal.dto';
+import { TransactionService } from 'src/transaction/transaction.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Withdrawal } from './entities/withdrawal.entity';
 
 @Processor(JOB_NAMES.WITHDRAWAL_TRANSFER_JOB)
 export class WithdrawalWorker extends WorkerHost {
   constructor(
+    @InjectRepository(Withdrawal)
+    private readonly withdrawalRepository: Repository<Withdrawal>,
     private readonly walletService: WalletService,
-    private readonly paystackService: PaystackService,
-    private readonly settingsService: SettingsService,
+    private readonly transactionService: TransactionService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {
     super();
@@ -20,9 +24,34 @@ export class WithdrawalWorker extends WorkerHost {
   // eslint-disable-next-line @typescript-eslint/require-await
   async process(job: Job<any, any, string>) {
     switch (job.name) {
-      case 'hello': {
-        console.log('Hello world');
-        break;
+      case 'process-withdrawal': {
+        const createWithdrawalDto = job.data as CreateWithdrawalDto;
+        const wallet = await this.walletService.findOne(
+          createWithdrawalDto.walletId,
+        );
+        const withdrawal = this.withdrawalRepository.create({
+          wallet: wallet,
+          amount: createWithdrawalDto.amount,
+          currency: wallet.currency,
+          narration: createWithdrawalDto.narration,
+          recipientDetails: createWithdrawalDto.recipientDetails,
+        });
+        const transaction = await this.transactionService.createDebit({
+          action: TransactionActionEnum.WITHDRAWAL,
+          amount: createWithdrawalDto.amount,
+          currency: wallet.currency,
+          receiverDetails: createWithdrawalDto.recipientDetails,
+          walletId: createWithdrawalDto.walletId,
+          narration: createWithdrawalDto.narration,
+        });
+        withdrawal.transaction = transaction;
+        withdrawal.reference = transaction.id;
+        const savedWithdrawal =
+          await this.withdrawalRepository.save(withdrawal);
+        return savedWithdrawal;
+      }
+      default: {
+        throw new Error('Unknown job name');
       }
     }
   }

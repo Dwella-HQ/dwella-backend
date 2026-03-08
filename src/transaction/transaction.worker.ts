@@ -18,6 +18,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { VbaService } from 'src/wallet/vba/vba.service';
 import { DepositService } from 'src/deposit/deposit.service';
+import { WithdrawalService } from 'src/withdrawal/withdrawal.service';
 
 @Processor(JOB_NAMES.HANDLE_TRANSACTION_JOB)
 export class TransactionWorker extends WorkerHost {
@@ -29,6 +30,7 @@ export class TransactionWorker extends WorkerHost {
     private readonly vbaService: VbaService,
     private readonly settingsService: SettingsService,
     private readonly depositService: DepositService,
+    private readonly withdrawalService: WithdrawalService,
     @InjectRepository(Transaction)
     private readonly transactionRepository: Repository<Transaction>,
   ) {
@@ -92,6 +94,29 @@ export class TransactionWorker extends WorkerHost {
         const deposit =
           await this.depositService.createAndConfirmDeposit(savedTransaction);
         return deposit;
+      }
+      case 'handle_transaction_debit_success': {
+        const { transactionId, metadata } = job.data as {
+          transactionId: string;
+          metadata?: Record<string, any>;
+        };
+        const transaction = await this.transactionRepository.findOne({
+          where: { id: transactionId },
+        });
+        if (!transaction) {
+          throw new Error('Transaction not found');
+        }
+        transaction.status = TransactionStatusEnum.COMPLETED;
+        transaction.metaData = metadata;
+        await this.transactionRepository.save(transaction);
+        if (transaction?.action === TransactionActionEnum.WITHDRAWAL) {
+          const withdrawal = await this.withdrawalService.confirmWithdrawal(
+            transaction.id,
+            transaction,
+          );
+          return withdrawal;
+        }
+        return;
       }
       default: {
         throw new Error('Unknown job name');

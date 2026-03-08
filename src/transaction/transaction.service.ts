@@ -46,14 +46,6 @@ export class TransactionService {
     private readonly transactionQueue: Queue,
   ) {}
 
-  async createDebit(createDebitTransactionDto: CreateDebitTransactionDto) {
-    const transaction = this.transactionRepository.create({
-      ...createDebitTransactionDto,
-      type: TransactionTypeEnum.DEBIT,
-    });
-    return await this.transactionRepository.save(transaction);
-  }
-
   async createCredit(createCreditTransactionDto: CreateCreditTransactionDto) {
     const provider = (await this.settingsService.getSetting(
       'preferredPaymentProvider',
@@ -85,6 +77,26 @@ export class TransactionService {
       throw new NotFoundException('No payment provider found');
     }
     return await this.transactionRepository.save(savedTransaction);
+  }
+
+  async createDebit(createDebitTransactionDto: CreateDebitTransactionDto) {
+    const provider = (await this.settingsService.getSetting(
+      'preferredPaymentProvider',
+    )) as PaymentProviderEnum;
+    const transaction = this.transactionRepository.create({
+      ...createDebitTransactionDto,
+      provider: provider,
+      currency: createDebitTransactionDto.currency,
+      receiverDetails: createDebitTransactionDto.receiverDetails,
+      walletId: createDebitTransactionDto.walletId,
+      narration: createDebitTransactionDto.narration,
+      type: TransactionTypeEnum.DEBIT,
+    });
+    const savedTransaction = await this.transactionRepository.save(transaction);
+    if (provider === PaymentProviderEnum.PAYSTACK) {
+      await this.paystackService.initiateWithdrawal(savedTransaction);
+    }
+    return savedTransaction;
   }
 
   async findAll() {
