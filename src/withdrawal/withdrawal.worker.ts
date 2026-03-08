@@ -21,7 +21,7 @@ export class WithdrawalWorker extends WorkerHost {
   ) {
     super();
   }
-  // eslint-disable-next-line @typescript-eslint/require-await
+
   async process(job: Job<any, any, string>) {
     switch (job.name) {
       case 'process-withdrawal': {
