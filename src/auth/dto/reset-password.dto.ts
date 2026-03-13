@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsString, IsStrongPassword } from 'class-validator';
 
-export class ChangePasswordDto {
+export class ResetPasswordDto {
   @IsStrongPassword({
     minLength: 8,
     minLowercase: 1,

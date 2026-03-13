@@ -1,3 +1,4 @@
+import { Rent } from 'src/rent/entity/rent.entity';
 import { Transaction } from 'src/transaction/entities/transaction.entity';
 import {
   CurrenciesEnum,
@@ -23,7 +24,7 @@ import {
 } from 'typeorm';
 
 @Entity()
-export class Deposit extends BaseEntity {
+export class RentPayment extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -39,6 +40,12 @@ export class Deposit extends BaseEntity {
   })
   currency: CurrenciesEnum;
 
+  @Column({
+    type: 'text',
+    nullable: true,
+  })
+  paymentMethod: PaymentMethodEnum;
+
   @Column({ default: '' })
   narration: string;
 
@@ -48,6 +55,10 @@ export class Deposit extends BaseEntity {
 
   @ManyToOne(() => Wallet)
   wallet: Relation<Wallet>;
+
+  @Index()
+  @Column({ unique: true })
+  indempotencyKey: string;
 
   @JoinColumn({ name: 'walletTransactionId' })
   @OneToOne(() => WalletTransaction)
@@ -61,21 +72,18 @@ export class Deposit extends BaseEntity {
   @Column()
   reference: string;
 
-  @Index()
-  // TODO - remove nullable
-  @Column({ nullable: true, unique: true })
-  indempotencyKey: string;
-
-  @Column('text', {
-    default: TransactionStatusEnum.PENDING,
+  @Column({
+    type: 'simple-json',
+    nullable: true,
   })
-  status: TransactionStatusEnum;
-
-  @Column('json', { nullable: true })
   senderDetails: TransferUserDetails;
 
-  @Column('text', { nullable: true })
-  paymentMethod: PaymentMethodEnum;
+  @Column({ type: 'text', default: TransactionStatusEnum.PENDING })
+  status: TransactionStatusEnum;
+
+  @ManyToOne(() => Rent, (rent) => rent.payments)
+  @JoinColumn()
+  rent: Relation<Rent>;
 
   @CreateDateColumn()
   createdAt: Date;

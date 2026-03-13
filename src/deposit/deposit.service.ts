@@ -34,7 +34,7 @@ export class DepositService {
       throw new BadRequestException('Idempotency-Key header is required');
     }
     const key = `deposit:${idempotencyKey}`;
-    const pendingDeposit = await this.cacheManager.get<Deposit>(key);
+    const pendingDeposit = await this.cacheManager.get<{ status: string }>(key);
     if (pendingDeposit) {
       return 'A deposit with the same idempotency key is already being processed';
     }
@@ -103,7 +103,7 @@ export class DepositService {
 
   async getDepositByWalletTransactionId(walletTransactionId: string) {
     const deposit = await this.depositRepository.findOne({
-      where: { walletTransaction: { id: walletTransactionId } },
+      where: { walletTransactionId },
       relations: { wallet: true, walletTransaction: true, transaction: true },
       relationLoadStrategy: 'query',
     });

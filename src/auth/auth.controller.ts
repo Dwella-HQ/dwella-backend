@@ -19,7 +19,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { Response, Request } from 'express';
 import { VerifyEmailDto } from './dto/verify-email.dto';
-import { ChangePasswordDto } from './dto/change-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { GoogleLoginDto } from './dto/google-login.dto';
 import { FacebookLoginDto } from './dto/facebook-login.dto';
 import { ConfigService } from '@nestjs/config';
@@ -145,7 +145,7 @@ export class AuthController {
   }
 
   @Post('reset-password')
-  async resetPassword(@Body() changePasswordDto: ChangePasswordDto) {
+  async resetPassword(@Body() changePasswordDto: ResetPasswordDto) {
     const user = await this.authService.resetPassword(changePasswordDto);
     return {
       success: true,

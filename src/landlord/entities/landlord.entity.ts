@@ -15,6 +15,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { LandlordSettings } from './landlord-settings.entity';
+import { Property } from 'src/property/entities/property.entity';
 
 @Entity()
 export class Landlord extends BaseEntity {
@@ -74,6 +75,9 @@ export class Landlord extends BaseEntity {
 
   @Column({ default: false })
   isApproved: boolean;
+
+  @OneToMany(() => Property, (property) => property.landlord)
+  properties: Relation<Property[]>;
 
   @CreateDateColumn()
   createdAt: Date;

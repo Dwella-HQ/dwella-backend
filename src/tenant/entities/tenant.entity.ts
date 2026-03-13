@@ -21,7 +21,7 @@ export class Tenant {
   id: string;
 
   @JoinColumn()
-  @OneToOne(() => User, (user) => user.tenant)
+  @OneToOne(() => User, (user) => user.tenant, { eager: true })
   user: Relation<User>;
 
   @OneToMany(() => Lease, (lease) => lease.tenant)

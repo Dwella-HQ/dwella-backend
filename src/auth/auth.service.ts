@@ -2,7 +2,7 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { RegistrationTypeEnum } from 'src/utils/constants';
 import { RegisterDto } from './dto/register.dto';
-import { ChangePasswordDto } from './dto/change-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { generateRandomString } from 'src/utils/misc';
 import { JwtService } from '@nestjs/jwt';
 import { GoogleAuthService } from 'src/services/google/google-auth.service';
@@ -45,7 +45,7 @@ export class AuthService {
     return user;
   }
 
-  async resetPassword(changePasswordDto: ChangePasswordDto) {
+  async resetPassword(changePasswordDto: ResetPasswordDto) {
     const user = await this.userService.resetPassword(
       changePasswordDto.token,
       changePasswordDto.password,

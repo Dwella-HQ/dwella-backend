@@ -36,6 +36,7 @@ import { MaintenanceRequestModule } from './maintenance-request/maintenance-requ
 import { RentModule } from './rent/rent.module';
 import { DepositModule } from './deposit/deposit.module';
 import { WithdrawalModule } from './withdrawal/withdrawal.module';
+import { RentPaymentModule } from './rent-payment/rent-payment.module';
 
 @Module({
   imports: [
@@ -142,6 +143,7 @@ import { WithdrawalModule } from './withdrawal/withdrawal.module';
     RentModule,
     DepositModule,
     WithdrawalModule,
+    RentPaymentModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -395,12 +395,6 @@ export enum MaintenanceRequestStatus {
   COMPLETED = 'COMPLETED',
 }
 
-export enum RentPaymentStatusEnum {
-  PENDING = 'pending',
-  COMPLETED = 'completed',
-  FAILED = 'failed',
-}
-
 export enum RentStatusEnum {
   PENDING = 'pending',
   PAID = 'paid',

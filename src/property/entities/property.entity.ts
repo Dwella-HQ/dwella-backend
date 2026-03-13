@@ -25,7 +25,7 @@ export class Property extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Landlord)
+  @ManyToOne(() => Landlord, (landlord) => landlord.properties)
   landlord: Relation<Landlord>;
 
   @Column()

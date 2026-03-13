@@ -1,4 +1,4 @@
-import { RentPayment } from 'src/rent/entity/rent-payment.entity';
+import { RentPayment } from 'src/rent-payment/entities/rent-payment.entity';
 import { Lease } from 'src/tenant/entities/lease.entity';
 import { RentStatusEnum } from 'src/utils/constants';
 import { ColumnNumericTransformer } from 'src/utils/misc';
@@ -7,8 +7,9 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
-  OneToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   Relation,
   UpdateDateColumn,
@@ -19,8 +20,12 @@ export class Rent extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @JoinColumn({ name: 'leaseId' })
   @ManyToOne(() => Lease, (lease) => lease.rents)
   lease: Relation<Lease>;
+
+  @Column()
+  leaseId: string;
 
   @Column('decimal', {
     precision: 10,
@@ -32,8 +37,8 @@ export class Rent extends BaseEntity {
   @Column({ type: 'text', default: RentStatusEnum.PENDING })
   status: RentStatusEnum;
 
-  @OneToOne(() => RentPayment, (rentPayment) => rentPayment.rent)
-  payment: Relation<RentPayment>;
+  @OneToMany(() => RentPayment, (rentPayment) => rentPayment.rent)
+  payments: Relation<RentPayment[]>;
 
   @Column()
   paymentDate: Date;

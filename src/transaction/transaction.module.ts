@@ -11,6 +11,7 @@ import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { TransactionWorker } from './transaction.worker';
 import { DepositModule } from 'src/deposit/deposit.module';
 import { WithdrawalModule } from 'src/withdrawal/withdrawal.module';
+import { RentPaymentModule } from 'src/rent-payment/rent-payment.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { WithdrawalModule } from 'src/withdrawal/withdrawal.module';
     forwardRef(() => WalletModule),
     forwardRef(() => DepositModule),
     forwardRef(() => WithdrawalModule),
+    forwardRef(() => RentPaymentModule),
     BullModule.registerQueue({
       name: JOB_NAMES.HANDLE_TRANSACTION_JOB,
     }),

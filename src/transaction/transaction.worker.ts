@@ -19,6 +19,7 @@ import { Repository } from 'typeorm';
 import { VbaService } from 'src/wallet/vba/vba.service';
 import { DepositService } from 'src/deposit/deposit.service';
 import { WithdrawalService } from 'src/withdrawal/withdrawal.service';
+import { RentPaymentService } from 'src/rent-payment/rent-payment.service';
 
 @Processor(JOB_NAMES.HANDLE_TRANSACTION_JOB)
 export class TransactionWorker extends WorkerHost {
@@ -31,6 +32,7 @@ export class TransactionWorker extends WorkerHost {
     private readonly settingsService: SettingsService,
     private readonly depositService: DepositService,
     private readonly withdrawalService: WithdrawalService,
+    private readonly rentPaymentService: RentPaymentService,
     @InjectRepository(Transaction)
     private readonly transactionRepository: Repository<Transaction>,
   ) {
@@ -115,6 +117,13 @@ export class TransactionWorker extends WorkerHost {
             transaction,
           );
           return withdrawal;
+        }
+        if (transaction?.action === TransactionActionEnum.RENT_PAYMENT) {
+          const rentPayment = await this.rentPaymentService.confirmRentPayment(
+            transaction.id,
+            transaction,
+          );
+          return rentPayment;
         }
         return;
       }

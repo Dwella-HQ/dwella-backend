@@ -10,6 +10,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { LandlordService } from 'src/landlord/landlord.service';
 import { InjectQueue } from '@nestjs/bullmq';
 import {
+  CurrenciesEnum,
   JOB_NAMES,
   PaymentProviderEnum,
   TransactionTypeEnum,
@@ -185,6 +186,30 @@ export class WalletService {
     return wallet.save();
   }
 
+  async findWalletForLease(
+    leaseId: string,
+    currency: CurrenciesEnum = CurrenciesEnum.NGN,
+  ) {
+    const wallet = await this.walletRepository.findOne({
+      where: {
+        landlord: {
+          properties: {
+            units: {
+              leases: {
+                id: leaseId,
+              },
+            },
+          },
+        },
+        currency,
+      },
+      relationLoadStrategy: 'query',
+    });
+    if (!wallet) {
+      throw new NotFoundException('Wallet not found for lease');
+    }
+    return wallet;
+  }
   // remove(id: number) {
   //   return `This action removes a #${id} wallet`;
   // }
