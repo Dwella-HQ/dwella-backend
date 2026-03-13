@@ -22,6 +22,7 @@ import { PermissionsGuard } from 'src/auth/guards/permission.guard';
 import { QueryUserDto } from './dto/query-user.dto';
 import { RequirePermissions } from 'src/rbac/decorators/permission.decorator';
 import { PERMISSIONS } from 'src/utils/constants';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), RolesGuard, PermissionsGuard)
@@ -68,6 +69,14 @@ export class UserController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.userService.update(id, updateUserDto);
+  }
+
+  @Patch(':id/password')
+  updatePassword(
+    @Param('id') id: string,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ) {
+    return this.userService.updatePassword(id, changePasswordDto);
   }
 
   @Delete(':id')

@@ -1,3 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import {
+  registerDecorator,
+  ValidationArguments,
+  ValidationOptions,
+} from 'class-validator';
+
 export function isBcryptHash(str: string) {
   const bcryptRegex = /^\$2[aby]\$[0-9]{2}\$[./A-Za-z0-9]{53}$/;
   return bcryptRegex.test(str);
@@ -41,4 +49,28 @@ export class ColumnNumericTransformer {
   from(data: string): number {
     return parseFloat(data);
   }
+}
+
+export function MatchPassword(
+  property: string,
+  validationOptions?: ValidationOptions,
+) {
+  return function (object: object, propertyName: string) {
+    registerDecorator({
+      name: 'Match',
+      target: object.constructor,
+      propertyName,
+      constraints: [property],
+      options: validationOptions,
+      validator: {
+        validate(value: string, args: ValidationArguments) {
+          const [relatedPropertyName] = args.constraints;
+          const relatedValue = (args.object as Record<string, string>)[
+            relatedPropertyName
+          ];
+          return value === relatedValue;
+        },
+      },
+    });
+  };
 }

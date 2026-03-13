@@ -14,6 +14,7 @@ import {
   Relation,
   UpdateDateColumn,
 } from 'typeorm';
+import { LandlordSettings } from './landlord-settings.entity';
 
 @Entity()
 export class Landlord extends BaseEntity {
@@ -28,11 +29,14 @@ export class Landlord extends BaseEntity {
   @JoinColumn()
   address: Relation<Address>;
 
-  @Column()
-  landLordName: string;
+  @Column({ unique: true })
+  businessName: string;
 
-  @Column({ default: '' })
-  landLordEmail: string;
+  @Column({ unique: true })
+  businessEmail: string;
+
+  @Column({ nullable: true })
+  businessPhoneNumber: string;
 
   @JoinColumn()
   @OneToOne(() => File, { nullable: true, eager: true })
@@ -60,6 +64,13 @@ export class Landlord extends BaseEntity {
     (propertyManager) => propertyManager.landlord,
   )
   propertyManagers: Relation<PropertyManager[]>;
+
+  @JoinColumn()
+  @OneToOne(() => LandlordSettings, (settings) => settings.landlord, {
+    cascade: true,
+    eager: true,
+  })
+  settings: Relation<LandlordSettings>;
 
   @Column({ default: true })
   isActive: boolean;

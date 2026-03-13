@@ -22,6 +22,7 @@ import ms from 'ms';
 import { RegistrationTypeEnum, USER_ROLES } from 'src/utils/constants';
 import { QueryUserDto } from './dto/query-user.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Injectable()
 export class UserService {
@@ -155,7 +156,7 @@ export class UserService {
     return true;
   }
 
-  async changePassword(token: string, password: string) {
+  async resetPassword(token: string, password: string) {
     const payload = await this.jwtService
       .verifyAsync<{ email: string; sub: string }>(token)
       .catch(() => {
@@ -270,5 +271,18 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
     return true;
+  }
+
+  async updatePassword(userId: string, changePasswordDto: ChangePasswordDto) {
+    const user = await this.findOne(userId);
+    const isCurrentPasswordValid = await user.comparePasswords(
+      changePasswordDto.currentPassword,
+    );
+    if (!isCurrentPasswordValid) {
+      throw new BadRequestException('Current password is incorrect');
+    }
+    user.password = changePasswordDto.newPassword;
+    await user.save();
+    //TODO send password change notification email
   }
 }

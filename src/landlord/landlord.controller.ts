@@ -20,6 +20,11 @@ import { PermissionsGuard } from 'src/auth/guards/permission.guard';
 import { RolesGuard } from 'src/auth/guards/role.guard';
 import { RequirePermissions } from 'src/rbac/decorators/permission.decorator';
 import { PERMISSIONS } from 'src/utils/constants';
+import { UpdateLadlordProfileDto } from './dto/update-landlord-profile.dto';
+import { UploadLandlordDocumentsDto } from './dto/upload-landlord-documents.dto';
+import { UpdateLandlordPlatformPreferencesDto } from './dto/update-landlord-platform-preferences.dto';
+import { UploadLandlordNotificationPreferencesDto } from './dto/update-landlord-notification-preferences.dto';
+import { UpdateLandlordGracePeriodDto } from './dto/update-landlord-grace-period.dto';
 
 @UseGuards(AuthGuard('jwt'), PermissionsGuard, RolesGuard)
 @ApiBearerAuth()
@@ -79,6 +84,7 @@ export class LandlordController {
       success: true,
     };
   }
+
   @RequirePermissions(PERMISSIONS.UPDATE_LANDLORD)
   @Patch(':id')
   async update(
@@ -111,6 +117,104 @@ export class LandlordController {
     const data = await this.landlordService.remove(id);
     return {
       message: 'Landlord deleted successfully',
+      data,
+      success: true,
+    };
+  }
+
+  @RequirePermissions(PERMISSIONS.READ_LANDLORD)
+  @Get(':id/settings')
+  async getLandlordSettings(@Param('id') id: string) {
+    const data = await this.landlordService.getLandlordSettings(id);
+    return {
+      message: 'Landlord settings fetched successfully',
+      data,
+      success: true,
+    };
+  }
+
+  @RequirePermissions(PERMISSIONS.UPDATE_LANDLORD)
+  @Patch(':id/profile')
+  async updateProfile(
+    @Param('id') id: string,
+    @Body() updateLadlordProfileDto: UpdateLadlordProfileDto,
+  ) {
+    const data = await this.landlordService.updateProfile(
+      id,
+      updateLadlordProfileDto,
+    );
+    return {
+      message: 'Landlord profile updated successfully',
+      data,
+      success: true,
+    };
+  }
+
+  @RequirePermissions(PERMISSIONS.UPDATE_LANDLORD)
+  @Patch(':id/documents')
+  async updateDocuments(
+    @Param('id') id: string,
+    @Body() updateLandlordDocumentsDto: UploadLandlordDocumentsDto,
+  ) {
+    const data = await this.landlordService.updateDocuments(
+      id,
+      updateLandlordDocumentsDto,
+    );
+    return {
+      message: 'Landlord documents updated successfully',
+      data,
+      success: true,
+    };
+  }
+
+  @RequirePermissions(PERMISSIONS.UPDATE_LANDLORD)
+  @Patch(':id/settings/platform-preferences')
+  async updatePlatformPreferences(
+    @Param('id') id: string,
+    @Body() updatePlatformPreferencesDto: UpdateLandlordPlatformPreferencesDto,
+  ) {
+    const data = await this.landlordService.updateLandlordPlatformPreferences(
+      id,
+      updatePlatformPreferencesDto,
+    );
+    return {
+      message: 'Landlord platform preferences updated successfully',
+      data,
+      success: true,
+    };
+  }
+
+  @RequirePermissions(PERMISSIONS.UPDATE_LANDLORD)
+  @Patch(':id/settings/notification-preferences')
+  async updateNotificationPreferences(
+    @Param('id') id: string,
+    @Body()
+    updateLandlordNotificationPreferencesDto: UploadLandlordNotificationPreferencesDto,
+  ) {
+    const data =
+      await this.landlordService.updateLandlordNotificationPreferences(
+        id,
+        updateLandlordNotificationPreferencesDto,
+      );
+    return {
+      message: 'Landlord notification preferences updated successfully',
+      data,
+      success: true,
+    };
+  }
+
+  @RequirePermissions(PERMISSIONS.UPDATE_LANDLORD)
+  @Patch(':id/settings/grace-periods')
+  async updateGracePeriods(
+    @Param('id') id: string,
+    @Body() updateLandlordGracePeriodDto: UpdateLandlordGracePeriodDto,
+  ) {
+    const data = await this.landlordService.updateLandlordGracePeriods(
+      id,
+      updateLandlordGracePeriodDto,
+    );
+    return {
+      message: 'Landlord grace periods updated successfully',
       data,
       success: true,
     };

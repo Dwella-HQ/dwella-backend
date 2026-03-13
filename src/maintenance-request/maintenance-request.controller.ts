@@ -20,6 +20,7 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 import { RequirePermissions } from 'src/rbac/decorators/permission.decorator';
 import { PERMISSIONS } from 'src/utils/constants';
 import { UpdateMaintenanceRequestStatusDto } from './dto/update-maintenance-request-status.dto';
+import { QueryMaintenanceRequestsDto } from './dto/query-maintenance-requests.dto';
 
 @UseGuards(JwtAuthGuard, PermissionsGuard, RolesGuard)
 @ApiBearerAuth()
@@ -47,6 +48,17 @@ export class MaintenanceRequestController {
   @Get()
   async findAll(@Query() queryDto: QueryPaginationDto) {
     const data = await this.maintenanceRequestService.findAll(queryDto);
+    return {
+      success: true,
+      message: 'Maintenance requests retrieved successfully',
+      data,
+    };
+  }
+
+  @Get('query')
+  async query(@Query() queryDto: QueryMaintenanceRequestsDto) {
+    const data =
+      await this.maintenanceRequestService.queryMaintenanceRequests(queryDto);
     return {
       success: true,
       message: 'Maintenance requests retrieved successfully',

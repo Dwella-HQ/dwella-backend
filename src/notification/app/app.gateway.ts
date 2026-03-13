@@ -41,7 +41,9 @@ export class AppNotificationGateway
   server: Server;
 
   async handleConnection(client: Socket) {
-    const token = client.handshake.query.token || client.handshake.auth.token;
+    const token =
+      (client.handshake.query.token as string) ||
+      (client.handshake.auth.token as string);
     if (!token) {
       client.emit('error', { message: 'Authentication failed: Token missing' });
       client.disconnect(); // ❌ reject connection

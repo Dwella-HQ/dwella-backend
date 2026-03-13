@@ -176,7 +176,7 @@ export class PropertyManagerService {
       template: 'invite-property-manager',
       context: {
         name: invitePropertyManagerDto.fullName,
-        landlordName: landlord.landLordName,
+        landlordName: landlord.businessName,
         acceptLink: `${this.configService.get('BACKEND_URL')}/property-manager/invite/accept-invite?token=${token}`,
         rejectLink: `${this.configService.get('BACKEND_URL')}/property-manager/invite/reject-invite?token=${token}`,
         expirationTime: `7 days`,

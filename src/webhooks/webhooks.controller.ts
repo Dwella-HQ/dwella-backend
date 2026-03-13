@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -31,13 +32,13 @@ export class WebhooksController {
     const eventType = payload.event;
     switch (eventType) {
       case 'dedicatedaccount.assign.success':
-        this.paystackService.handleDedicatedAccountAssignSuccess(payload);
+        void this.paystackService.handleDedicatedAccountAssignSuccess(payload);
         break;
       case 'charge.success':
-        this.paystackService.handleChargeSuccess(payload);
+        void this.paystackService.handleChargeSuccess(payload);
         break;
       case 'transfer.success':
-        this.paystackService.confirmWithdrawal(payload);
+        void this.paystackService.confirmWithdrawal(payload);
         break;
       default:
         throw new InternalServerErrorException(

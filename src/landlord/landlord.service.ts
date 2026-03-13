@@ -10,12 +10,20 @@ import { EmailService } from 'src/notification/email/email.service';
 import { QueryLandlordDto } from './dto/query-landlord.dto';
 import { AddressService } from 'src/address/address.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { UpdateLadlordProfileDto } from './dto/update-landlord-profile.dto';
+import { UploadLandlordDocumentsDto } from './dto/upload-landlord-documents.dto';
+import { UploadLandlordNotificationPreferencesDto } from './dto/update-landlord-notification-preferences.dto';
+import { LandlordSettings } from './entities/landlord-settings.entity';
+import { UpdateLandlordPlatformPreferencesDto } from './dto/update-landlord-platform-preferences.dto';
+import { UpdateLandlordGracePeriodDto } from './dto/update-landlord-grace-period.dto';
 
 @Injectable()
 export class LandlordService {
   constructor(
     @InjectRepository(Landlord)
     private readonly landlordRepository: Repository<Landlord>,
+    @InjectRepository(LandlordSettings)
+    private readonly landlordSettingsRepository: Repository<LandlordSettings>,
     private readonly userService: UserService,
     private readonly fileService: FileService,
     private readonly emailService: EmailService,
@@ -28,8 +36,8 @@ export class LandlordService {
 
     const landlord = this.landlordRepository.create({
       user: user,
-      landLordName: createLandlordDto.landLordName || user.fullName,
-      landLordEmail: createLandlordDto.landLordEmail || user.email,
+      businessName: createLandlordDto.businessName || user.fullName,
+      businessEmail: createLandlordDto.businessEmail || user.email,
     });
     if (createLandlordDto.govermentIdDocumentId) {
       const govermentIdDocument = await this.fileService.findFileById(
@@ -69,7 +77,10 @@ export class LandlordService {
     );
     landlord.address = address;
     const savedLandlord = await this.landlordRepository.save(landlord);
-
+    const landlordSettings = this.landlordSettingsRepository.create({
+      landlord: savedLandlord,
+    });
+    await this.landlordSettingsRepository.save(landlordSettings);
     this.eventEmitter.emit('landlord.created', savedLandlord.id);
     return savedLandlord;
   }
@@ -80,7 +91,7 @@ export class LandlordService {
     const updatedLandlord = await this.landlordRepository.save(landlord);
     await this.emailService.sendMailToUser({
       context: {
-        name: landlord.landLordName,
+        name: landlord.user.fullName,
         dashboardLink: `${process.env.FRONTEND_URL}/landlord/dashboard`,
       },
       subject: 'Your Landlord Application is Approved',
@@ -168,6 +179,7 @@ export class LandlordService {
         taxIdentificationNumberDocument: true,
         user: true,
       },
+      relationLoadStrategy: 'query',
     });
     if (!landlord) {
       throw new NotFoundException('Landlord not found');
@@ -204,9 +216,146 @@ export class LandlordService {
     return updatedLandlord;
   }
 
+  async getLandlordSettings(landlordId: string) {
+    const landlordSettings = await this.landlordSettingsRepository.findOne({
+      where: { landlord: { id: landlordId } },
+    });
+    if (!landlordSettings) {
+      throw new NotFoundException('Landlord settings not found');
+    }
+    return landlordSettings;
+  }
+
   async remove(id: string) {
     const landlord = await this.findOne(id);
     await this.userService.remove(landlord.user.id);
     return landlord.softRemove();
+  }
+
+  async updateProfilePicure(landlordId: string, profilePictureId: string) {
+    const landlord = await this.findOne(landlordId);
+    const file = await this.fileService.findFileById(profilePictureId);
+    landlord.profilePicture = file;
+    return this.landlordRepository.save(landlord);
+  }
+
+  async updateProfile(
+    landlordId: string,
+    updateLadlordProfileDto: UpdateLadlordProfileDto,
+  ) {
+    const landlord = await this.findOne(landlordId);
+    for (const key in updateLadlordProfileDto) {
+      if (landlord[key]) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        landlord[key] = updateLadlordProfileDto[key];
+      }
+    }
+    if (updateLadlordProfileDto.address) {
+      await this.addressService.update(
+        landlord.address.id,
+        updateLadlordProfileDto.address,
+      );
+    }
+    return this.landlordRepository.save(landlord);
+  }
+
+  async updateDocuments(
+    lanlordId: string,
+    updateLandlordDocumentsDto: UploadLandlordDocumentsDto,
+  ) {
+    const landlord = await this.findOne(lanlordId);
+    if (updateLandlordDocumentsDto.govermentIdDocumentId) {
+      const govermentIdDocument = await this.fileService.findFileById(
+        updateLandlordDocumentsDto.govermentIdDocumentId,
+      );
+      landlord.govermentIdDocument = govermentIdDocument;
+    }
+    if (updateLandlordDocumentsDto.landSurveyDocumentId) {
+      const landSurveyDocument = await this.fileService.findFileById(
+        updateLandlordDocumentsDto.landSurveyDocumentId,
+      );
+      landlord.landSurveyDocument = landSurveyDocument;
+    }
+    if (updateLandlordDocumentsDto.proofOfOwnershipDocumentId) {
+      const proofOfOwnershipDocument = await this.fileService.findFileById(
+        updateLandlordDocumentsDto.proofOfOwnershipDocumentId,
+      );
+      landlord.proofOfOwnershipDocument = proofOfOwnershipDocument;
+    }
+    if (updateLandlordDocumentsDto.taxIdentificationNumberDocumentId) {
+      const taxIdentificationNumberDocument =
+        await this.fileService.findFileById(
+          updateLandlordDocumentsDto.taxIdentificationNumberDocumentId,
+        );
+      landlord.taxIdentificationNumberDocument =
+        taxIdentificationNumberDocument;
+    }
+    return this.landlordRepository.save(landlord);
+  }
+
+  async updateLandlordNotificationPreferences(
+    landlordId: string,
+    uploadLandlordNotificationPreferencesDto: UploadLandlordNotificationPreferencesDto,
+  ) {
+    const landlordSettings = await this.getLandlordSettings(landlordId);
+    if (uploadLandlordNotificationPreferencesDto.paymentNotifications) {
+      landlordSettings.notificationPreferences.paymentNotifications =
+        uploadLandlordNotificationPreferencesDto.paymentNotifications;
+    }
+    if (
+      uploadLandlordNotificationPreferencesDto.maintenanceRequestNotifications
+    ) {
+      landlordSettings.notificationPreferences.maintenanceRequestNotifications =
+        uploadLandlordNotificationPreferencesDto.maintenanceRequestNotifications;
+    }
+    if (uploadLandlordNotificationPreferencesDto.overDueNotifications) {
+      landlordSettings.notificationPreferences.overDueNotifications =
+        uploadLandlordNotificationPreferencesDto.overDueNotifications;
+    }
+    if (uploadLandlordNotificationPreferencesDto.weeklyReportsNotifications) {
+      landlordSettings.notificationPreferences.weeklyReportsNotifications =
+        uploadLandlordNotificationPreferencesDto.weeklyReportsNotifications;
+    }
+    return this.landlordSettingsRepository.save(landlordSettings);
+  }
+
+  async updateLandlordPlatformPreferences(
+    landlordId: string,
+    updateLandlordPlatformPreferencesDto: UpdateLandlordPlatformPreferencesDto,
+  ) {
+    const landlordSettings = await this.getLandlordSettings(landlordId);
+    if (updateLandlordPlatformPreferencesDto.defaultCurrency) {
+      landlordSettings.platformPreferences.defaultCurrency =
+        updateLandlordPlatformPreferencesDto.defaultCurrency;
+    }
+    if (updateLandlordPlatformPreferencesDto.defaultLateFeeAmount) {
+      landlordSettings.platformPreferences.defaultLateFeeAmount =
+        updateLandlordPlatformPreferencesDto.defaultLateFeeAmount;
+    }
+    if (updateLandlordPlatformPreferencesDto.language) {
+      landlordSettings.platformPreferences.language =
+        updateLandlordPlatformPreferencesDto.language;
+    }
+    return this.landlordSettingsRepository.save(landlordSettings);
+  }
+
+  async updateLandlordGracePeriods(
+    landlordId: string,
+    updateLandlordGracePeriodDto: UpdateLandlordGracePeriodDto,
+  ) {
+    const landlordSettings = await this.getLandlordSettings(landlordId);
+    if (updateLandlordGracePeriodDto.monthlyRentGracePeriod) {
+      landlordSettings.gracePeriodPeriods.monthlyRentDueDateGracePeriod =
+        updateLandlordGracePeriodDto.monthlyRentGracePeriod;
+    }
+    if (updateLandlordGracePeriodDto.quarterlyRentGracePeriod) {
+      landlordSettings.gracePeriodPeriods.quarterlyRentDueDateGracePeriod =
+        updateLandlordGracePeriodDto.quarterlyRentGracePeriod;
+    }
+    if (updateLandlordGracePeriodDto.yearlyRentGracePeriod) {
+      landlordSettings.gracePeriodPeriods.yearlyRentDueDateGracePeriod =
+        updateLandlordGracePeriodDto.yearlyRentGracePeriod;
+    }
+    return this.landlordSettingsRepository.save(landlordSettings);
   }
 }

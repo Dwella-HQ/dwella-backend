@@ -29,7 +29,7 @@ export class Rent extends BaseEntity {
   })
   amount: number;
 
-  @Column({ type: 'text' })
+  @Column({ type: 'text', default: RentStatusEnum.PENDING })
   status: RentStatusEnum;
 
   @OneToOne(() => RentPayment, (rentPayment) => rentPayment.rent)

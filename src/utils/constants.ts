@@ -123,6 +123,10 @@ export enum CurrenciesEnum {
   NGN = 'NGN',
 }
 
+export enum LanguagesEnum {
+  ENGLISH = 'en',
+}
+
 export enum TransactionTypeEnum {
   CREDIT = 'credit',
   DEBIT = 'debit',
@@ -409,4 +413,36 @@ export enum IdTypeEnum {
   DRIVER_LICENSE = 'DRIVER_LICENSE',
   PASSPORT = 'PASSPORT',
   OTHER = 'OTHER',
+}
+
+export enum NotificationChannelEnum {
+  EMAIL_NOTIFICATION = 'EMAIL_NOTIFICATION',
+  APP_NOTIFICATION = 'APP_NOTIFICATION',
+  PUSH_NOTIFICATION = 'PUSH_NOTIFICATION',
+}
+
+export enum MonthlyRentGracePeriodEnum {
+  NO_GRACE_PERIOD = 'NO_GRACE_PERIOD',
+  ONE_WEEK = 'ONE_WEEK',
+  TWO_WEEKS = 'TWO_WEEKS',
+}
+
+export enum QuarterlyRentGracePeriodEnum {
+  NO_GRACE_PERIOD = 'NO_GRACE_PERIOD',
+  ONE_WEEK = 'ONE_WEEK',
+  TWO_WEEKS = 'TWO_WEEKS',
+  THREE_WEEKS = 'THREE_WEEKS',
+  ONE_MONTH = 'ONE_MONTH',
+  FIVE_WEEKS = 'FIVE_WEEKS',
+  SIX_WEEKS = 'SIX_WEEKS',
+}
+
+export enum YearlyRentGracePeriodEnum {
+  NO_GRACE_PERIOD = 'NO_GRACE_PERIOD',
+  ONE_MONTH = 'ONE_MONTH',
+  TWO_MONTHS = 'TWO_MONTHS',
+  THREE_MONTHS = 'THREE_MONTHS',
+  FOUR_MONTHS = 'FOUR_MONTHS',
+  FIVE_MONTHS = 'FIVE_MONTHS',
+  SIX_MONTHS = 'SIX_MONTHS',
 }

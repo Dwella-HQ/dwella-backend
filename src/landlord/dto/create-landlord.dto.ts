@@ -8,11 +8,11 @@ export class CreateLandlordDto {
 
   @IsString()
   @IsOptional()
-  landLordName?: string;
+  businessName?: string;
 
   @IsString()
   @IsOptional()
-  landLordEmail?: string;
+  businessEmail?: string;
 
   @IsUUID('all')
   @IsOptional()

@@ -200,7 +200,7 @@ export class TenantService {
         unitName: unit.name,
         propertyAddress: unit.property?.address
           ? {
-              street: unit.property.address.street,
+              address: unit.property.address.address,
               city: unit.property.address.city,
               state: unit.property.address.state,
               country: unit.property.address.country,

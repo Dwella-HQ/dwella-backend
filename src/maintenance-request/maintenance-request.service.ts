@@ -14,6 +14,7 @@ import { File } from 'src/file/entities/file.entity';
 import { MaintenanceRequestStatus } from 'src/utils/constants';
 import { QueryMaintenanceRequestDto } from './dto/query-maintenance-request.dto';
 import { MaintenanceRequestTypesService } from './maintenance-request-types/maintenance-request-types.service';
+import { QueryMaintenanceRequestsDto } from './dto/query-maintenance-requests.dto';
 
 @Injectable()
 export class MaintenanceRequestService {
@@ -206,5 +207,56 @@ export class MaintenanceRequestService {
       throw new NotFoundException('Maintenance request not found');
     }
     return true;
+  }
+
+  async queryMaintenanceRequests(query: QueryMaintenanceRequestsDto) {
+    const queryBuilder =
+      this.maintananceRequestRepository.createQueryBuilder(
+        'maintenanceRequest',
+      );
+    queryBuilder.leftJoinAndSelect('maintenanceRequest.property', 'property');
+    queryBuilder.leftJoinAndSelect('maintenanceRequest.tenant', 'tenant');
+    queryBuilder.leftJoinAndSelect('maintenanceRequest.unit', 'unit');
+    queryBuilder.leftJoinAndSelect(
+      'maintenanceRequest.supportingFiles',
+      'file',
+    );
+
+    if (query.propertyId) {
+      queryBuilder.andWhere('property.id = :propertyId', {
+        propertyId: query.propertyId,
+      });
+    }
+    if (query.tenantId) {
+      queryBuilder.andWhere('tenant.id = :tenantId', {
+        tenantId: query.tenantId,
+      });
+    }
+    if (query.unitId) {
+      queryBuilder.andWhere('unit.id = :unitId', { unitId: query.unitId });
+    }
+    if (query.status) {
+      queryBuilder.andWhere('maintenanceRequest.status = :status', {
+        status: query.status,
+      });
+    }
+    if (query.priority) {
+      queryBuilder.andWhere('maintenanceRequest.priority = :priority', {
+        priority: query.priority,
+      });
+    }
+    if (query.type) {
+      queryBuilder.andWhere('maintenanceRequest.type = :type', {
+        type: query.type,
+      });
+    }
+    if (query.subType) {
+      queryBuilder.andWhere('maintenanceRequest.subType = :subType', {
+        subType: query.subType,
+      });
+    }
+    queryBuilder.orderBy('maintenanceRequest.createdAt', 'DESC');
+    const maintenanceRequests = await queryBuilder.getMany();
+    return maintenanceRequests;
   }
 }

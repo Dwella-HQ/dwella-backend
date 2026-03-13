@@ -19,7 +19,7 @@ export class Address extends BaseEntity {
   user: Relation<User>;
 
   @Column({ nullable: true })
-  street: string;
+  address: string;
 
   @Column()
   city: string;

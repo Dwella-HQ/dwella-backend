@@ -46,7 +46,7 @@ export class AuthService {
   }
 
   async resetPassword(changePasswordDto: ChangePasswordDto) {
-    const user = await this.userService.changePassword(
+    const user = await this.userService.resetPassword(
       changePasswordDto.token,
       changePasswordDto.password,
     );

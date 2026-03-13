@@ -31,7 +31,7 @@ export class WalletWorker extends WorkerHost {
       case 'create-virtual-account:paystack': {
         const wallet = job.data as Wallet;
         const { firstName, middleName, lastName } = breakDownFullName(
-          wallet.landlord.landLordName,
+          wallet.landlord.businessName,
         );
         const response = await this.paystackService.assignVirtualAccount({
           email: wallet.landlord.user.email,
@@ -48,12 +48,12 @@ export class WalletWorker extends WorkerHost {
       case 'create-virtual-account:monnify': {
         const wallet = job.data as Wallet;
         const response = await this.monnifyService.createVirtualAccount({
-          accountName: wallet.landlord.landLordName,
+          accountName: wallet.landlord.businessName,
           customerEmail: wallet.landlord.user.email,
           bvn: wallet.bvn,
           accountReference: wallet.id,
           currencyCode: wallet.currency,
-          customerName: wallet.landlord.landLordName,
+          customerName: wallet.landlord.businessName,
         });
         const vba = await this.walletService.assignVba(wallet.id, {
           accountName: response.responseBody.accounts[0].accountName,
@@ -68,7 +68,7 @@ export class WalletWorker extends WorkerHost {
       case 'create-virtual-account:flutterwave': {
         const wallet = job.data as Wallet;
         const { firstName, lastName } = breakDownFullName(
-          wallet.landlord.landLordName,
+          wallet.landlord.businessName,
         );
         const response = await this.flutterwaveService.createVirtualBankAccount(
           {
@@ -81,7 +81,7 @@ export class WalletWorker extends WorkerHost {
           },
         );
         const vba = await this.walletService.assignVba(wallet.id, {
-          accountName: `${firstName} ${lastName}`,
+          accountName: wallet.landlord.businessName,
           accountNumber: response.data.account_number,
           bankCode: '',
           bankName: response.data.bank_name,
