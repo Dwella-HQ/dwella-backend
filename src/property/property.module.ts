@@ -5,9 +5,13 @@ import { LandlordModule } from 'src/landlord/landlord.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Property } from './entities/property.entity';
 import { Unit } from './entities/units.entity';
+import { PropertySettings } from './entities/property-settings.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Property, Unit]), LandlordModule],
+  imports: [
+    TypeOrmModule.forFeature([Property, PropertySettings, Unit]),
+    LandlordModule,
+  ],
   controllers: [PropertyController],
   providers: [PropertyService],
   exports: [PropertyService],

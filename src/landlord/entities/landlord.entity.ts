@@ -66,10 +66,7 @@ export class Landlord extends BaseEntity {
   propertyManagers: Relation<PropertyManager[]>;
 
   @JoinColumn()
-  @OneToOne(() => LandlordSettings, (settings) => settings.landlord, {
-    cascade: true,
-    eager: true,
-  })
+  @OneToOne(() => LandlordSettings, (settings) => settings.landlord)
   settings: Relation<LandlordSettings>;
 
   @Column({ default: true })

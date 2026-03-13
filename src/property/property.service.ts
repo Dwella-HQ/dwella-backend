@@ -17,11 +17,15 @@ import { Unit } from './entities/units.entity';
 import { EmailService } from 'src/notification/email/email.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { FileService } from 'src/file/file.service';
+import { PropertySettings } from './entities/property-settings.entity';
+import { UpdatePropertyGracePeriodDto } from './dto/update-property-grace-period.dto';
 @Injectable()
 export class PropertyService {
   constructor(
     @InjectRepository(Property)
     private propertyRepository: Repository<Property>,
+    @InjectRepository(PropertySettings)
+    private propertySettingsRepository: Repository<PropertySettings>,
     @InjectRepository(Unit)
     private unitRepository: Repository<Unit>,
     private addressService: AddressService,
@@ -30,6 +34,7 @@ export class PropertyService {
     private fileService: FileService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
+
   async create(createPropertyDto: CreatePropertyDto) {
     const landlord = await this.landlordService.findOne(
       createPropertyDto.landlordId,
@@ -62,6 +67,14 @@ export class PropertyService {
       property.documents = [...(property.documents || []), file];
     }
     const savedProperty = await this.propertyRepository.save(property);
+    const propertySettings = this.propertySettingsRepository.create({
+      property: savedProperty,
+    });
+    const landlordSettings = await this.landlordService.getLandlordSettings(
+      landlord.id,
+    );
+    propertySettings.gracePeriodPeriods = landlordSettings.gracePeriodPeriods;
+    await this.propertySettingsRepository.save(propertySettings);
     this.eventEmitter.emit('property.created', savedProperty.id);
     return savedProperty;
   }
@@ -216,6 +229,37 @@ export class PropertyService {
       this.unitRepository.softDelete(unitId),
     ]);
     return true;
+  }
+
+  async getPropertySettings(propertyId: string) {
+    const propertySettings = await this.propertySettingsRepository.findOne({
+      where: { property: { id: propertyId } },
+    });
+    if (!propertySettings) {
+      throw new NotFoundException('Property settings not found');
+    }
+    return propertySettings;
+  }
+
+  async updateGracePeriod(
+    propertyId: string,
+    updateGracePeriodDto: UpdatePropertyGracePeriodDto,
+  ) {
+    const propertySettings = await this.getPropertySettings(propertyId);
+    if (updateGracePeriodDto.monthlyRentGracePeriod) {
+      propertySettings.gracePeriodPeriods.monthlyRentDueDateGracePeriod =
+        updateGracePeriodDto.monthlyRentGracePeriod;
+    }
+    if (updateGracePeriodDto.quarterlyRentGracePeriod) {
+      propertySettings.gracePeriodPeriods.quarterlyRentDueDateGracePeriod =
+        updateGracePeriodDto.quarterlyRentGracePeriod;
+    }
+    if (updateGracePeriodDto.yearlyRentGracePeriod) {
+      propertySettings.gracePeriodPeriods.yearlyRentDueDateGracePeriod =
+        updateGracePeriodDto.yearlyRentGracePeriod;
+    }
+
+    return await this.propertySettingsRepository.save(propertySettings);
   }
 
   async remove(id: string) {

@@ -21,6 +21,7 @@ import { AdminRoles, PERMISSIONS } from 'src/utils/constants';
 import { RolesGuard } from 'src/auth/guards/role.guard';
 import { RequireRoles } from 'src/rbac/decorators/role.decorator';
 import { QueryPropertyDto } from './dto/query-property.dto';
+import { UpdatePropertyGracePeriodDto } from './dto/update-property-grace-period.dto';
 
 @UseGuards(AuthGuard('jwt'), PermissionsGuard, RolesGuard)
 @ApiBearerAuth()
@@ -93,6 +94,33 @@ export class PropertyController {
     return {
       success: true,
       message: 'Property updated successfully',
+      data: data,
+    };
+  }
+
+  @Get(':id/settings')
+  async getPropertySettings(@Param('id') id: string) {
+    const data = await this.propertyService.getPropertySettings(id);
+    return {
+      success: true,
+      message: 'Property settings retrieved successfully',
+      data: data,
+    };
+  }
+
+  @Patch(':id/settings/grace-period')
+  @RequirePermissions(PERMISSIONS.UPDATE_PROPERTY)
+  async updateGracePeriod(
+    @Param('id') id: string,
+    @Body() updateGracePeriodDto: UpdatePropertyGracePeriodDto,
+  ) {
+    const data = await this.propertyService.updateGracePeriod(
+      id,
+      updateGracePeriodDto,
+    );
+    return {
+      success: true,
+      message: 'Grace period updated successfully',
       data: data,
     };
   }

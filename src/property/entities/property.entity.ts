@@ -5,6 +5,7 @@ import {
   BaseEntity,
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   ManyToMany,
@@ -17,6 +18,7 @@ import {
 } from 'typeorm';
 import { Unit } from './units.entity';
 import { PropertyManager } from 'src/property-manager/entities/property-manager.entity';
+import { PropertySettings } from './property-settings.entity';
 
 @Entity()
 export class Property extends BaseEntity {
@@ -84,8 +86,15 @@ export class Property extends BaseEntity {
   )
   propertyManagers: Relation<PropertyManager[]>;
 
+  @JoinColumn()
+  @OneToOne(() => PropertySettings, (settings) => settings.property)
+  settings: Relation<PropertySettings>;
+
   @Column('simple-array', { nullable: true })
   amenities: string[];
+
+  @DeleteDateColumn()
+  deletedAt: Date;
 
   @CreateDateColumn()
   createdAt: Date;
