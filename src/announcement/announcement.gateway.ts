@@ -19,7 +19,7 @@ import { Cache } from '@nestjs/cache-manager';
   cors: {
     origin: '*',
   },
-  namespace: 'announcements',
+  namespace: 'announcement',
   transports: ['websocket'],
 })
 export class AnnouncementGateway

@@ -1,5 +1,6 @@
 import { Exclude, instanceToPlain } from 'class-transformer';
 import { Announcement } from 'src/announcement/entities/announcement.entity';
+import { ChatMessage } from 'src/chat/entities/chat-message.entity';
 import { MaintenanceRequest } from 'src/maintenance-request/entities/maintenance-request.entity';
 import { Property } from 'src/property/entities/property.entity';
 import { User } from 'src/user/entities/user.entity';
@@ -105,6 +106,12 @@ export class File extends BaseEntity {
     onDelete: 'CASCADE',
   })
   announcement: Relation<Announcement>;
+
+  @ManyToOne(() => ChatMessage, (chatMessage) => chatMessage.files, {
+    nullable: true,
+    onDelete: 'CASCADE',
+  })
+  chatMessage: Relation<ChatMessage>;
 
   toJSON() {
     return instanceToPlain(this);
