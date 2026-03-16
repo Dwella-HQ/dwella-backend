@@ -115,6 +115,7 @@ export class PropertyManagerService {
       relations: {
         user: true,
         landlord: true,
+        properties: true,
       },
     });
     return propertyManagers;

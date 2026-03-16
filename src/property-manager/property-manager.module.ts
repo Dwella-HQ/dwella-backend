@@ -17,5 +17,6 @@ import { PropertyManagerInvite } from './entities/property-manager-invite.entity
   ],
   controllers: [PropertyManagerController],
   providers: [PropertyManagerService],
+  exports: [PropertyManagerService],
 })
 export class PropertyManagerModule {}

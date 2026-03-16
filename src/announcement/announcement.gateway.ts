@@ -26,7 +26,6 @@ export class AnnouncementGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
   private logger = new Logger(AnnouncementGateway.name);
-  private rooms = new Set<string>();
 
   constructor(
     private readonly announcementService: AnnouncementService,
@@ -38,6 +37,10 @@ export class AnnouncementGateway
   @WebSocketServer()
   server: Server;
 
+  afterInit() {
+    this.announcementService.bindServer(this.server);
+  }
+
   async handleConnection(client: Socket) {
     const token =
       (client.handshake.query.token as string) ||
@@ -46,6 +49,7 @@ export class AnnouncementGateway
       client.emit('error', { message: 'Authentication failed: Token missing' });
       client.disconnect(); // ❌ reject connection
     }
+
     try {
       const payload = await this.jwtService.verifyAsync<JwtPayload>(token);
       const { sub, tokenId } = payload as { sub: string; tokenId: string };
@@ -55,10 +59,7 @@ export class AnnouncementGateway
         throw new Error('Invalid token');
       }
       const user = await this.authService.getUser(sub);
-      await client.join(`user:${sub}`);
-      if (!user) {
-        throw new Error('Invalid token');
-      }
+      await this.announcementService.joinRoom(client, user);
       (client as any).data.user = user;
     } catch {
       client.emit('error', { message: 'Authentication failed: Invalid token' });
@@ -69,17 +70,5 @@ export class AnnouncementGateway
   handleDisconnect(client: Socket) {
     console.log((client as any).data.user);
     // cleanup if needed
-  }
-
-  joinRoom(userId: string) {
-    if (!this.server) {
-      this.logger.warn('Socket server not bound yet');
-      return;
-    }
-    if (this.rooms.has(userId)) {
-      return; // already joined
-    }
-    this.server.socketsJoin(`user:${userId}`);
-    this.rooms.add(userId);
   }
 }

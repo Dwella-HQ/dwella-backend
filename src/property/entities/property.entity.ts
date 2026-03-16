@@ -75,7 +75,6 @@ export class Property extends BaseEntity {
   documents: Relation<File[]>;
 
   @OneToMany(() => Unit, (units) => units.property, {
-    eager: true,
     cascade: true,
   })
   units: Relation<Unit[]>;

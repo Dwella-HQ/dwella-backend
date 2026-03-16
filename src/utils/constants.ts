@@ -109,6 +109,10 @@ export enum PERMISSIONS {
   READ_PAYMENT = 'read_payment',
   UPDATE_PAYMENT = 'update_payment',
   DELETE_PAYMENT = 'delete_payment',
+
+  // Announcements
+  MANAGE_LANDLORD_ANNOUNCEMENT = 'manage_landlord_announcement',
+  MANAGE_PROPERTY_ANNOUNCEMENT = 'manage_property_announcement',
 }
 
 export enum RegistrationTypeEnum {
@@ -439,4 +443,9 @@ export enum YearlyRentGracePeriodEnum {
   FOUR_MONTHS = 'FOUR_MONTHS',
   FIVE_MONTHS = 'FIVE_MONTHS',
   SIX_MONTHS = 'SIX_MONTHS',
+}
+
+export enum AnnounementLevelEnum {
+  PROPERTY = 'PROPERTY',
+  LANDLORD = 'LANDLORD',
 }

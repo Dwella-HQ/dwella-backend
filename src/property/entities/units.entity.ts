@@ -23,6 +23,7 @@ export class Unit extends BaseEntity {
 
   @ManyToOne(() => Property, (property) => property.units, {
     nullable: false,
+    eager: true,
     onDelete: 'CASCADE',
   })
   property: Relation<Property>;

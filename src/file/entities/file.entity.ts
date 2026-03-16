@@ -1,4 +1,5 @@
 import { Exclude, instanceToPlain } from 'class-transformer';
+import { Announcement } from 'src/announcement/entities/announcement.entity';
 import { MaintenanceRequest } from 'src/maintenance-request/entities/maintenance-request.entity';
 import { Property } from 'src/property/entities/property.entity';
 import { User } from 'src/user/entities/user.entity';
@@ -98,6 +99,12 @@ export class File extends BaseEntity {
     },
   )
   maintenanceRequest: Relation<MaintenanceRequest>;
+
+  @ManyToOne(() => Announcement, (announcement) => announcement.files, {
+    nullable: true,
+    onDelete: 'CASCADE',
+  })
+  announcement: Relation<Announcement>;
 
   toJSON() {
     return instanceToPlain(this);
