@@ -1,4 +1,9 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { RegistrationTypeEnum } from 'src/utils/constants';
 import { RegisterDto } from './dto/register.dto';
@@ -167,6 +172,20 @@ export class AuthService {
     if (!result) {
       throw new BadRequestException('Wrong details provided');
     }
+    return user;
+  }
+
+  async verifyToken(token: string) {
+    const { sub, tokenId }: { sub: string; email: string; tokenId: string } =
+      await this.jwtService.verifyAsync(token, {
+        secret: this.configService.get<string>('JWT_SECRET_KEY'),
+      });
+    const cachedTokens =
+      (await this.cacheManager.get<string[]>(`tokens:${sub}`)) || [];
+    if (!cachedTokens.includes(tokenId)) {
+      throw new UnauthorizedException('Invalid token');
+    }
+    const user = await this.getUser(sub);
     return user;
   }
 

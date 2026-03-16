@@ -7,7 +7,7 @@ import { Cache } from 'cache-manager';
 import { EnvironmentVariables } from 'src/config/env.config';
 import { User } from 'src/user/entities/user.entity';
 
-interface JwtPayload {
+export interface JwtPayload {
   sub: string;
   email: string;
   tokenId: string;

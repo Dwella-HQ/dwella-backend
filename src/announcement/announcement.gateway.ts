@@ -1,39 +1,35 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import { Inject, Logger, UseGuards } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { Server, Socket } from 'socket.io';
 import {
-  MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
-  SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { AppNotificationService } from './app.service';
-import { JwtService } from '@nestjs/jwt';
 import { AuthService } from 'src/auth/auth.service';
-import { Inject, Logger, UseGuards } from '@nestjs/common';
-import { Server, Socket } from 'socket.io';
-import { Cache } from 'cache-manager';
-import { AppNotification } from './entities/app.entity';
-import { GetNotificationsDto } from './dto/get-notifications.dto';
 import { WsAuthGuard } from 'src/auth/guards/ws.guard';
+import { AnnouncementService } from './announcement.service';
+import { JwtPayload } from 'src/auth/strategy/jwt.strategy';
+import { Cache } from '@nestjs/cache-manager';
 
 @UseGuards(WsAuthGuard) // Use global WS guard for authentication
 @WebSocketGateway({
   cors: {
     origin: '*',
   },
-  namespace: 'notifications',
+  namespace: 'announcements',
   transports: ['websocket'],
 })
-export class AppNotificationGateway
+export class AnnouncementGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
-  private logger = new Logger(AppNotificationGateway.name);
+  private logger = new Logger(AnnouncementGateway.name);
   private rooms = new Set<string>();
 
   constructor(
-    private readonly appNotificationService: AppNotificationService,
+    private readonly announcementService: AnnouncementService,
     private readonly jwtService: JwtService,
     private readonly authService: AuthService,
     @Inject('CACHE_MANAGER') private cacheManager: Cache,
@@ -51,7 +47,7 @@ export class AppNotificationGateway
       client.disconnect(); // ❌ reject connection
     }
     try {
-      const payload = await this.jwtService.verifyAsync(token);
+      const payload = await this.jwtService.verifyAsync<JwtPayload>(token);
       const { sub, tokenId } = payload as { sub: string; tokenId: string };
       const cachedTokens =
         (await this.cacheManager.get<string[]>(`tokens:${sub}`)) || [];
@@ -71,7 +67,7 @@ export class AppNotificationGateway
   }
 
   handleDisconnect(client: Socket) {
-    console.log((client as any).user);
+    console.log((client as any).data.user);
     // cleanup if needed
   }
 
@@ -85,44 +81,5 @@ export class AppNotificationGateway
     }
     this.server.socketsJoin(`user:${userId}`);
     this.rooms.add(userId);
-  }
-
-  emitToUser(userId: string, notifications: AppNotification[]) {
-    if (!this.server) {
-      this.logger.warn('Socket server not bound yet');
-      return;
-    }
-    this.server
-      .to(`user:${userId}`)
-      .emit('notifications:load', notifications || []);
-  }
-
-  @SubscribeMessage('notification:load')
-  loadNotifications(
-    @MessageBody() data: GetNotificationsDto,
-    // @ConnectedSocket() client: Socket,
-  ) {
-    console.log('Load Notifications', { data });
-    void this.appNotificationService.getUserNotification(data);
-  }
-
-  @SubscribeMessage('notification:read')
-  readNotifications(
-    @MessageBody() data: { notificationId: string; userId: string },
-  ) {
-    void this.appNotificationService.readNotication(
-      data.userId,
-      data.notificationId,
-    );
-  }
-
-  @SubscribeMessage('notification:delete')
-  deleteNotifications(
-    @MessageBody() data: { notificationId: string; userId: string },
-  ) {
-    void this.appNotificationService.deleteNotification(
-      data.userId,
-      data.notificationId,
-    );
   }
 }
