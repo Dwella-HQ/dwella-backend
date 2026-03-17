@@ -2,6 +2,7 @@ import {
   BaseEntity,
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -20,10 +21,13 @@ export class Chat extends BaseEntity {
   participants: Relation<ChatParticipant>[];
 
   @Column('simple-json', { nullable: true })
-  lastMessage: Relation<ChatMessage>;
+  lastMessage: Relation<Partial<ChatMessage>>;
 
   @Column()
   lastMessageDate: Date;
+
+  @DeleteDateColumn()
+  deletedAt: Date;
 
   @CreateDateColumn()
   createdAt: Date;

@@ -6,6 +6,7 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
   WebSocketServer,
+  ConnectedSocket,
 } from '@nestjs/websockets';
 import { ChatService } from './chat.service';
 import { CreateChatDto } from './dto/create-chat.dto';
@@ -17,6 +18,9 @@ import { JwtService } from '@nestjs/jwt';
 import { AuthService } from 'src/auth/auth.service';
 import { JwtPayload } from 'src/auth/strategy/jwt.strategy';
 import { Cache } from '@nestjs/cache-manager';
+import { DeleteMessagesDto } from './dto/delete-messages.dto';
+import { GetChatMessagesDto } from './dto/get-chat-messages.dto';
+import { ReadMessagesDto } from './dto/read-messages.dto';
 
 @UseGuards(WsAuthGuard) // Use global WS guard for authentication
 @WebSocketGateway({
@@ -75,7 +79,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('chat')
-  async joinChat(@MessageBody() roleId: string, client: Socket) {
+  async joinChat(
+    @MessageBody() roleId: string,
+    @ConnectedSocket() client: Socket,
+  ) {
     const chats = await this.chatService.getUserChatIds(roleId);
     for (const chatId of chats) {
       void client.join(chatId);
@@ -94,8 +101,23 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('findOneChat')
-  findOne(@MessageBody() id: number) {
+  findOne(@MessageBody() id: string) {
     return this.chatService.findOne(id);
+  }
+
+  @SubscribeMessage('getChatMessages')
+  getMessages(@MessageBody() getChatMessagesDto: GetChatMessagesDto) {
+    return this.chatService.getChatMessages(getChatMessagesDto);
+  }
+
+  @SubscribeMessage('readChatMessages')
+  readMessages(@MessageBody() readMessagesDto: ReadMessagesDto) {
+    return this.chatService.readMessages(readMessagesDto);
+  }
+
+  @SubscribeMessage('deleteChatMessages')
+  deleteMessages(@MessageBody() deleteMessagesDto: DeleteMessagesDto) {
+    return this.chatService.deleteMessages(deleteMessagesDto);
   }
 
   @SubscribeMessage('updateChat')
@@ -104,7 +126,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('removeChat')
-  remove(@MessageBody() id: number) {
+  remove(@MessageBody() id: string) {
     return this.chatService.remove(id);
   }
 }

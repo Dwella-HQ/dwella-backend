@@ -9,13 +9,17 @@ import { PropertyManagerService } from 'src/property-manager/property-manager.se
 import { LandlordService } from 'src/landlord/landlord.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Chat } from './entities/chat.entity';
-import { LessThan, Repository } from 'typeorm';
+import { In, LessThan, Repository } from 'typeorm';
 import { ChatParticipant } from './entities/chat-participant.entity';
 import { ChatMessage } from './entities/chat-message.entity';
 import { USER_ROLES } from 'src/utils/constants';
 import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
 import ms from 'ms';
 import { GetChatMessagesDto } from './dto/get-chat-messages.dto';
+import { CreateChatMessageDto } from './dto/create-chat-message.dto';
+import { FileService } from 'src/file/file.service';
+import { ReadMessagesDto } from './dto/read-messages.dto';
+import { DeleteMessagesDto } from './dto/delete-messages.dto';
 
 @Injectable()
 export class ChatService {
@@ -26,6 +30,7 @@ export class ChatService {
     private readonly tenantService: TenantService,
     private readonly propertyManagerService: PropertyManagerService,
     private readonly landlordService: LandlordService,
+    private readonly fileService: FileService,
     @InjectRepository(Chat) private readonly chatRepository: Repository<Chat>,
     @InjectRepository(ChatParticipant)
     private readonly chatParticipantRepository: Repository<ChatParticipant>,
@@ -99,24 +104,137 @@ export class ChatService {
       participants.push(participant);
     }
     chat.participants = participants;
-    await this.chatRepository.save(chat);
-    return chat;
+    const savedChat = await this.chatRepository.save(chat);
+    for (const participant of participants) {
+      await this.cacheManager.del(`user:${participant.roleId}:chatIds`);
+    }
+    return savedChat;
+  }
+
+  async getUserChats(roleId: string) {
+    const chatIds = await this.getUserChatIds(roleId);
+    const chats = await this.chatRepository.find({
+      where: {
+        id: In(chatIds),
+      },
+      relations: {
+        participants: {
+          user: true,
+        },
+      },
+    });
+    this.server.to(`user:${roleId}`).emit('load:chats', chats);
+    return chats;
+  }
+
+  async addChatMessage(createChatMessageDto: CreateChatMessageDto) {
+    const chat = await this.findOne(createChatMessageDto.chatId);
+    const participant = chat.participants.find(
+      (p) => p.id === createChatMessageDto.participantId,
+    );
+    if (!participant) {
+      throw new BadRequestException(`Invalid participant`);
+    }
+    const message = this.chatMessageRepository.create({
+      chat,
+      participant,
+      content: createChatMessageDto.content,
+    });
+    if (
+      createChatMessageDto.fileIds &&
+      createChatMessageDto.fileIds.length > 0
+    ) {
+      const files = await Promise.all(
+        createChatMessageDto.fileIds.map(async (fileId) => {
+          const file = await this.fileService.findFileById(fileId);
+          return file;
+        }),
+      );
+      message.files = files;
+    }
+    const savedMessage = await this.chatMessageRepository.save(message);
+    chat.lastMessage = {
+      ...savedMessage,
+      chat: undefined,
+    };
+    void this.dispatchMessages(chat.id);
+    return savedMessage;
   }
 
   findAll() {
     return `This action returns all chat`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} chat`;
+  async findOne(id: string) {
+    const chat = await this.chatRepository.findOne({
+      where: {
+        id,
+      },
+      relations: {
+        participants: {
+          user: true,
+        },
+      },
+    });
+    if (!chat) {
+      throw new BadRequestException(`Chat message not found`);
+    }
+    return chat;
   }
 
   update(id: number, updateChatDto: UpdateChatDto) {
     return `This action updates a #${id} chat`;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} chat`;
+  async readMessages(readMessagesDto: ReadMessagesDto) {
+    const results = await this.chatMessageRepository.update(
+      {
+        id: In(readMessagesDto.messageIds),
+        chat: {
+          id: readMessagesDto.chatId,
+        },
+      },
+      {
+        isRead: true,
+      },
+    );
+    if (results.affected && results.affected > 0) {
+      void this.dispatchMessages(readMessagesDto.chatId);
+      return { message: `Messages marked as read successfully` };
+    } else {
+      throw new BadRequestException(`Messages not found`);
+    }
+  }
+
+  async deleteMessages(deleteMessagesDto: DeleteMessagesDto) {
+    const results = await this.chatMessageRepository.update(
+      {
+        id: In(deleteMessagesDto.messageIds),
+        chat: {
+          id: deleteMessagesDto.chatId,
+        },
+      },
+      {
+        isDeleted: true,
+        content: '',
+        files: [],
+      },
+    );
+    if (results.affected && results.affected > 0) {
+      void this.dispatchMessages(deleteMessagesDto.chatId);
+      return { message: `Messages deleted successfully` };
+    } else {
+      throw new BadRequestException(`Messages not found`);
+    }
+  }
+
+  async remove(id: string) {
+    const result = await this.chatRepository.softDelete(id);
+    if (result.affected && result.affected > 0) {
+      return { message: `Chat ${id} removed successfully` };
+    } else {
+      throw new BadRequestException(`Chat not found`);
+    }
   }
 
   async getChatMessages(getChatMessagesDto: GetChatMessagesDto) {
@@ -132,7 +250,7 @@ export class ChatService {
       order: {
         createdAt: 'DESC',
       },
-      take: getChatMessagesDto.limit,
+      take: getChatMessagesDto.limit || 50,
     });
     this.server
       .to(`chat:${getChatMessagesDto.chatId}`)

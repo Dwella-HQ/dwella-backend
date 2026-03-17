@@ -30,6 +30,12 @@ export class ChatMessage extends BaseEntity {
   @OneToMany(() => File, (file) => file.chatMessage, { eager: true })
   files: Relation<File[]>;
 
+  @Column({ default: false })
+  isRead: boolean;
+
+  @Column({ default: false })
+  isDeleted: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 
