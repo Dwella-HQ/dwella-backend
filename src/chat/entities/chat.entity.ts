@@ -20,7 +20,7 @@ export class Chat extends BaseEntity {
   participants: Relation<ChatParticipant>[];
 
   @Column('simple-json', { nullable: true })
-  lastMessage: ChatMessage;
+  lastMessage: Relation<ChatMessage>;
 
   @Column()
   lastMessageDate: Date;
