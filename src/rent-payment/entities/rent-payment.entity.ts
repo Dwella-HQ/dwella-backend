@@ -29,11 +29,27 @@ export class RentPayment extends BaseEntity {
   id: string;
 
   @Column('decimal', {
-    precision: 15,
+    precision: 10,
     scale: 2,
     transformer: new ColumnNumericTransformer(),
   })
   amount: number;
+
+  @Column('decimal', {
+    precision: 10,
+    scale: 2,
+    transformer: new ColumnNumericTransformer(),
+    default: 0,
+  })
+  lateFee: number;
+
+  @Column('decimal', {
+    precision: 10,
+    scale: 2,
+    transformer: new ColumnNumericTransformer(),
+    default: 0,
+  })
+  totalAmount: number;
 
   @Column({
     type: 'text',

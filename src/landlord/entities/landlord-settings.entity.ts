@@ -12,6 +12,7 @@ import { Landlord } from './landlord.entity';
 import {
   CurrenciesEnum,
   LanguagesEnum,
+  LateFeeTypeEnum,
   MonthlyRentGracePeriodEnum,
   NotificationChannelEnum,
   QuarterlyRentGracePeriodEnum,
@@ -68,6 +69,17 @@ export class LandlordSettings extends BaseEntity {
     monthlyRentDueDateGracePeriod: MonthlyRentGracePeriodEnum;
     quarterlyRentDueDateGracePeriod: QuarterlyRentGracePeriodEnum;
     yearlyRentDueDateGracePeriod: YearlyRentGracePeriodEnum;
+  };
+
+  @Column('simple-json', {
+    default: {
+      lateFeeAmount: 0,
+      lateFeeType: LateFeeTypeEnum.FIXED,
+    },
+  })
+  lateFeeSettings: {
+    lateFeeAmount: number;
+    lateFeeType: LateFeeTypeEnum;
   };
 
   @CreateDateColumn()

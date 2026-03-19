@@ -1,6 +1,6 @@
 import { RentPayment } from 'src/rent-payment/entities/rent-payment.entity';
 import { Lease } from 'src/tenant/entities/lease.entity';
-import { RentStatusEnum } from 'src/utils/constants';
+import { CurrenciesEnum, RentStatusEnum } from 'src/utils/constants';
 import { ColumnNumericTransformer } from 'src/utils/misc';
 import {
   BaseEntity,
@@ -33,6 +33,25 @@ export class Rent extends BaseEntity {
     transformer: new ColumnNumericTransformer(),
   })
   amount: number;
+
+  @Column('decimal', {
+    precision: 10,
+    scale: 2,
+    transformer: new ColumnNumericTransformer(),
+    default: 0,
+  })
+  lateFee: number;
+
+  @Column('decimal', {
+    precision: 10,
+    scale: 2,
+    transformer: new ColumnNumericTransformer(),
+    default: 0,
+  })
+  totalAmount: number;
+
+  @Column({ type: 'text', default: CurrenciesEnum.NGN })
+  currency: string;
 
   @Column({ type: 'text', default: RentStatusEnum.PENDING })
   status: RentStatusEnum;

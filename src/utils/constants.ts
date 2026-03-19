@@ -147,6 +147,7 @@ export enum TransactionActionEnum {
   DEPOSIT = 'deposit',
   WITHDRAWAL = 'withdrawal',
   RENT_PAYMENT = 'rent_payment',
+  RENT_PAYMENT_LATE_FEE = 'rent_payment_late_fee',
   SECURITY_DEPOSIT = 'security_deposit',
   MAINTENANCE_FEE = 'maintenance_fee',
   UTILITY_BILL = 'utility_bill',
@@ -182,6 +183,7 @@ export const JOB_NAMES = {
   VBA_CREATION_JOB: 'VBA_CREATION_JOB',
   HANDLE_TRANSACTION_JOB: 'HANDLE_TRANSACTION_JOB',
   WITHDRAWAL_TRANSFER_JOB: 'WITHDRAWAL_TRANSFER_JOB',
+  RENT_MANAGEMENT_JOB: 'RENT_MANAGEMENT_JOB',
 };
 
 export enum NotificationTypeEnum {
@@ -448,4 +450,9 @@ export enum YearlyRentGracePeriodEnum {
 export enum AnnounementLevelEnum {
   PROPERTY = 'PROPERTY',
   LANDLORD = 'LANDLORD',
+}
+
+export enum LateFeeTypeEnum {
+  FIXED = 'fixed',
+  PERCENTAGE = 'percentage',
 }

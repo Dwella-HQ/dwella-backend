@@ -63,13 +63,15 @@ export class RentPaymentService {
     const rentPayment = this.rentPaymentRepository.create({
       wallet: wallet,
       rent: rent,
+      totalAmount: rent.totalAmount,
+      lateFee: rent.lateFee,
       amount: rent.amount,
       currency: wallet.currency,
       narration: `Rent payment for ${rent.lease.unit.name} from ${format(rent.startDate, 'do MMMM yyyy')} to ${format(rent.endDate, 'do MMMM yyyy')}`,
       indempotencyKey: idempotencyKey,
     });
     const transaction = await this.transactionService.createCredit({
-      amount: rent.amount,
+      amount: rent.totalAmount,
       currency: wallet.currency,
       narration: rentPayment.narration,
       action: TransactionActionEnum.RENT_PAYMENT,
@@ -165,6 +167,14 @@ export class RentPaymentService {
           action: TransactionActionEnum.RENT_PAYMENT,
         },
       );
+      if (rentPayment.lateFee > 0) {
+        await this.walletService.creditWallet(rentPayment.wallet.id, {
+          amount: rentPayment.lateFee,
+          description: `Late fee of ${rentPayment.lateFee} for rent payment from ${rentPayment.senderDetails.fullName}`,
+          reference: `${rentPayment.reference}-late-fee`,
+          action: TransactionActionEnum.RENT_PAYMENT_LATE_FEE,
+        });
+      }
       savedRentPayment.walletTransaction = walletTransaction;
       await queryRunner.manager.save(savedRentPayment);
       await queryRunner.commitTransaction();

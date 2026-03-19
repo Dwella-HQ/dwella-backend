@@ -19,6 +19,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { FileService } from 'src/file/file.service';
 import { PropertySettings } from './entities/property-settings.entity';
 import { UpdatePropertyGracePeriodDto } from './dto/update-property-grace-period.dto';
+import { UpdatePropertyLateFeeDto } from './dto/update-propert-late-fee.dto';
 @Injectable()
 export class PropertyService {
   constructor(
@@ -74,6 +75,7 @@ export class PropertyService {
       landlord.id,
     );
     propertySettings.gracePeriodPeriods = landlordSettings.gracePeriodPeriods;
+    propertySettings.lateFeeSettings = landlordSettings.lateFeeSettings;
     await this.propertySettingsRepository.save(propertySettings);
     this.eventEmitter.emit('property.created', savedProperty.id);
     return savedProperty;
@@ -259,6 +261,22 @@ export class PropertyService {
         updateGracePeriodDto.yearlyRentGracePeriod;
     }
 
+    return await this.propertySettingsRepository.save(propertySettings);
+  }
+
+  async updateLateFeeSettings(
+    propertyId: string,
+    updateLateFeeDto: UpdatePropertyLateFeeDto,
+  ) {
+    const propertySettings = await this.getPropertySettings(propertyId);
+    if (updateLateFeeDto.lateFeeAmount !== undefined) {
+      propertySettings.lateFeeSettings.lateFeeAmount =
+        updateLateFeeDto.lateFeeAmount;
+    }
+    if (updateLateFeeDto.lateFeeType) {
+      propertySettings.lateFeeSettings.lateFeeType =
+        updateLateFeeDto.lateFeeType;
+    }
     return await this.propertySettingsRepository.save(propertySettings);
   }
 

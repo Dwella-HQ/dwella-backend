@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { Property } from './property.entity';
 import {
+  LateFeeTypeEnum,
   MonthlyRentGracePeriodEnum,
   QuarterlyRentGracePeriodEnum,
   YearlyRentGracePeriodEnum,
@@ -35,6 +36,17 @@ export class PropertySettings extends BaseEntity {
     monthlyRentDueDateGracePeriod: MonthlyRentGracePeriodEnum;
     quarterlyRentDueDateGracePeriod: QuarterlyRentGracePeriodEnum;
     yearlyRentDueDateGracePeriod: YearlyRentGracePeriodEnum;
+  };
+
+  @Column('simple-json', {
+    default: {
+      lateFeeAmount: 0,
+      lateFeeType: LateFeeTypeEnum.FIXED,
+    },
+  })
+  lateFeeSettings: {
+    lateFeeAmount: number;
+    lateFeeType: LateFeeTypeEnum;
   };
 
   @CreateDateColumn()

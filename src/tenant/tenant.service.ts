@@ -22,6 +22,7 @@ import { EnvironmentVariables } from 'src/config/env.config';
 import { ConfigService } from '@nestjs/config';
 import { addDays } from 'date-fns';
 import { generateRandomString } from 'src/utils/misc';
+import { QueryLeaseDto } from './dto/query-lease.dto';
 
 @Injectable()
 export class TenantService {
@@ -324,5 +325,43 @@ export class TenantService {
     invite.status = INVITE_STATUS.REJECTED;
     await this.tenantInviteRepository.save(invite);
     return true;
+  }
+
+  async queryLease(queryLeaseDto: QueryLeaseDto) {
+    const queryBuilder = this.leaseRepository.createQueryBuilder('lease');
+    queryBuilder.leftJoinAndSelect('lease.tenant', 'tenant');
+    queryBuilder.leftJoinAndSelect('lease.unit', 'unit');
+    queryBuilder.leftJoinAndSelect('unit.property', 'property');
+    if (queryLeaseDto.tenantId) {
+      queryBuilder.andWhere('lease.tenantId = :tenantId', {
+        tenantId: queryLeaseDto.tenantId,
+      });
+    }
+    if (queryLeaseDto.propertyId) {
+      queryBuilder.andWhere('unit.propertyId = :propertyId', {
+        propertyId: queryLeaseDto.propertyId,
+      });
+    }
+    if (queryLeaseDto.leaseId) {
+      queryBuilder.andWhere('lease.id = :leaseId', {
+        leaseId: queryLeaseDto.leaseId,
+      });
+    }
+    if (queryLeaseDto.active !== undefined) {
+      queryBuilder.andWhere('lease.isActive = :active', {
+        active: queryLeaseDto.active,
+      });
+    }
+    if (queryLeaseDto.startDate) {
+      queryBuilder.andWhere('lease.startDate >= :startDate', {
+        startDate: queryLeaseDto.startDate,
+      });
+    }
+    if (queryLeaseDto.endDate) {
+      queryBuilder.andWhere('lease.endDate <= :endDate', {
+        endDate: queryLeaseDto.endDate,
+      });
+    }
+    return queryBuilder.getMany();
   }
 }
