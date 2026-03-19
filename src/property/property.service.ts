@@ -19,7 +19,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { FileService } from 'src/file/file.service';
 import { PropertySettings } from './entities/property-settings.entity';
 import { UpdatePropertyGracePeriodDto } from './dto/update-property-grace-period.dto';
-import { UpdatePropertyLateFeeDto } from './dto/update-propert-late-fee.dto';
+import { UpdatePropertyLateFeeDto } from './dto/update-property-late-fee.dto';
 @Injectable()
 export class PropertyService {
   constructor(

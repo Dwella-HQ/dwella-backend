@@ -16,6 +16,7 @@ import { UploadLandlordNotificationPreferencesDto } from './dto/update-landlord-
 import { LandlordSettings } from './entities/landlord-settings.entity';
 import { UpdateLandlordPlatformPreferencesDto } from './dto/update-landlord-platform-preferences.dto';
 import { UpdateLandlordGracePeriodDto } from './dto/update-landlord-grace-period.dto';
+import { UpdateLandlordLateFeeDto } from './dto/update-landlord-late-fee.dto';
 
 @Injectable()
 export class LandlordService {
@@ -355,6 +356,22 @@ export class LandlordService {
     if (updateLandlordGracePeriodDto.yearlyRentGracePeriod) {
       landlordSettings.gracePeriodPeriods.yearlyRentDueDateGracePeriod =
         updateLandlordGracePeriodDto.yearlyRentGracePeriod;
+    }
+    return this.landlordSettingsRepository.save(landlordSettings);
+  }
+
+  async updateLandlordLateFeeSettings(
+    landlordId: string,
+    updateLandlordLateFeeDto: UpdateLandlordLateFeeDto,
+  ) {
+    const landlordSettings = await this.getLandlordSettings(landlordId);
+    if (updateLandlordLateFeeDto.lateFeeAmount) {
+      landlordSettings.lateFeeSettings.lateFeeAmount =
+        updateLandlordLateFeeDto.lateFeeAmount;
+    }
+    if (updateLandlordLateFeeDto.lateFeeType) {
+      landlordSettings.lateFeeSettings.lateFeeType =
+        updateLandlordLateFeeDto.lateFeeType;
     }
     return this.landlordSettingsRepository.save(landlordSettings);
   }

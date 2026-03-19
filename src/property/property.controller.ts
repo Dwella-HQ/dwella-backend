@@ -22,6 +22,7 @@ import { RolesGuard } from 'src/auth/guards/role.guard';
 import { RequireRoles } from 'src/rbac/decorators/role.decorator';
 import { QueryPropertyDto } from './dto/query-property.dto';
 import { UpdatePropertyGracePeriodDto } from './dto/update-property-grace-period.dto';
+import { UpdatePropertyLateFeeDto } from './dto/update-property-late-fee.dto';
 
 @UseGuards(AuthGuard('jwt'), PermissionsGuard, RolesGuard)
 @ApiBearerAuth()
@@ -121,6 +122,23 @@ export class PropertyController {
     return {
       success: true,
       message: 'Grace period updated successfully',
+      data: data,
+    };
+  }
+
+  @Patch(':id/settings/late-fee')
+  @RequirePermissions(PERMISSIONS.UPDATE_PROPERTY)
+  async updateLateFee(
+    @Param('id') id: string,
+    @Body() updateLateFeeDto: UpdatePropertyLateFeeDto,
+  ) {
+    const data = await this.propertyService.updateLateFeeSettings(
+      id,
+      updateLateFeeDto,
+    );
+    return {
+      success: true,
+      message: 'Late fee updated successfully',
       data: data,
     };
   }

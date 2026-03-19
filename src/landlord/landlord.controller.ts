@@ -25,6 +25,7 @@ import { UploadLandlordDocumentsDto } from './dto/upload-landlord-documents.dto'
 import { UpdateLandlordPlatformPreferencesDto } from './dto/update-landlord-platform-preferences.dto';
 import { UploadLandlordNotificationPreferencesDto } from './dto/update-landlord-notification-preferences.dto';
 import { UpdateLandlordGracePeriodDto } from './dto/update-landlord-grace-period.dto';
+import { UpdateLandlordLateFeeDto } from './dto/update-landlord-late-fee.dto';
 
 @UseGuards(AuthGuard('jwt'), PermissionsGuard, RolesGuard)
 @ApiBearerAuth()
@@ -215,6 +216,23 @@ export class LandlordController {
     );
     return {
       message: 'Landlord grace periods updated successfully',
+      data,
+      success: true,
+    };
+  }
+
+  @RequirePermissions(PERMISSIONS.UPDATE_LANDLORD)
+  @Patch(':id/settings/late-fee')
+  async updateLateFeeSettings(
+    @Param('id') id: string,
+    @Body() updateLandlordLateFeeDto: UpdateLandlordLateFeeDto,
+  ) {
+    const data = await this.landlordService.updateLandlordLateFeeSettings(
+      id,
+      updateLandlordLateFeeDto,
+    );
+    return {
+      message: 'Landlord late fee settings updated successfully',
       data,
       success: true,
     };
