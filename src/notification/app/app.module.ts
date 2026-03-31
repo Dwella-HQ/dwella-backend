@@ -42,5 +42,6 @@ import { AppNotification } from './entities/app.entity';
     AppNotificationService,
     AppNotificationWorker,
   ],
+  exports: [AppNotificationService],
 })
 export class AppModule {}

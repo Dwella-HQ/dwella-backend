@@ -456,3 +456,22 @@ export enum LateFeeTypeEnum {
   FIXED = 'fixed',
   PERCENTAGE = 'percentage',
 }
+
+export enum NotificationMediumEnum {
+  EMAIL = 'email',
+  APP = 'app',
+  PUSH = 'push',
+}
+
+type UniqueArray<T extends readonly any[], Seen = never> = T extends readonly [
+  infer Head,
+  ...infer Tail,
+]
+  ? Head extends Seen
+    ? never
+    : UniqueArray<Tail, Seen | Head>
+  : T;
+
+export type UniqueNotificationMediumArray<
+  T extends readonly NotificationMediumEnum[],
+> = UniqueArray<T>;

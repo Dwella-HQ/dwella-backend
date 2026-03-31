@@ -5,6 +5,9 @@ import {
   ValidationArguments,
   ValidationOptions,
 } from 'class-validator';
+import fs from 'fs';
+import path from 'path';
+import Handlebars from 'handlebars';
 
 export function isBcryptHash(str: string) {
   const bcryptRegex = /^\$2[aby]\$[0-9]{2}\$[./A-Za-z0-9]{53}$/;
@@ -73,4 +76,21 @@ export function MatchPassword(
       },
     });
   };
+}
+
+export function formatHbsText(
+  templateName: string,
+  context: Record<string, any>,
+): string {
+  const filePath = path.join(
+    process.cwd(),
+    'src/templates/text',
+    `${templateName}.hbs`,
+  );
+
+  const source = fs.readFileSync(filePath, 'utf-8');
+
+  const template = Handlebars.compile(source);
+
+  return template(context);
 }

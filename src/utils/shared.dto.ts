@@ -3,6 +3,7 @@ import {
   IsEnum,
   IsNotEmpty,
   IsNumberString,
+  IsObject,
   IsOptional,
   IsPhoneNumber,
   IsString,
@@ -48,4 +49,18 @@ export class NextOfKinDetails {
   @IsEmail()
   @IsOptional()
   email?: string;
+}
+
+export class SendUserNotificationDto {
+  @IsString()
+  @IsNotEmpty()
+  title: string;
+
+  @IsString()
+  @IsNotEmpty()
+  templateName: string;
+
+  @IsOptional()
+  @IsObject()
+  context?: Record<string, any>;
 }
