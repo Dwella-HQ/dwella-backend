@@ -1,5 +1,6 @@
 import { plainToInstance } from 'class-transformer';
 import {
+  IsEmail,
   IsEnum,
   IsNotEmpty,
   IsNumber,
@@ -187,6 +188,14 @@ export class EnvironmentVariables {
   @IsString()
   @IsNotEmpty()
   FLUTTERWAVE_BASE_URL: string;
+
+  @IsEmail()
+  @IsNotEmpty()
+  DWELLA_SUPPORT_EMAIL: string = 'support@dwella.com';
+
+  @IsString()
+  @IsNotEmpty()
+  DWELLA_SUPPORT_PHONE: string = '+1234567890';
 }
 
 export function validateEnv(config: Record<string, unknown>) {

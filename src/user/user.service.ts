@@ -19,10 +19,16 @@ import { JwtService } from '@nestjs/jwt';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import ms from 'ms';
-import { RegistrationTypeEnum, USER_ROLES } from 'src/utils/constants';
+import {
+  NotificationMediumEnum,
+  RegistrationTypeEnum,
+  USER_ROLES,
+} from 'src/utils/constants';
 import { QueryUserDto } from './dto/query-user.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { NotificationService } from 'src/notification/notification.service';
+import { CurrentDeviceInfo } from 'src/auth/decorators/current-device.decorator';
 
 @Injectable()
 export class UserService {
@@ -35,6 +41,7 @@ export class UserService {
     private readonly configService: ConfigService<EnvironmentVariables>,
     private readonly jwtService: JwtService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async create(createUserDto: CreateUserDto) {
@@ -104,10 +111,22 @@ export class UserService {
         ms(this.configService.get('JWT_EXPIRES_IN') as ms.StringValue),
       ); // 30 minutes
     }
+
     await this.emailService.sendMailToUser({
       user,
       subject: 'Verify your email address',
       template: 'verify-email',
+      context: {
+        name: user.fullName,
+        verificationLink,
+        expirationTime: this.configService.get<string>('JWT_EXPIRES_IN'),
+      },
+    });
+
+    await this.notificationService.sendNotificationToUser(user, {
+      title: 'Verify your email address',
+      medium: [NotificationMediumEnum.EMAIL],
+      templateName: 'verify-email',
       context: {
         name: user.fullName,
         verificationLink,
@@ -143,10 +162,10 @@ export class UserService {
         'FRONTEND_URL',
       )}/auth/reset-password?token=${token}`,
     );
-    await this.emailService.sendMailToUser({
-      user,
-      subject: 'Password Reset Request',
-      template: 'reset-password',
+    await this.notificationService.sendNotificationToUser(user, {
+      title: 'Password Reset Request',
+      medium: [NotificationMediumEnum.EMAIL],
+      templateName: 'reset-password',
       context: {
         fullName: user.fullName,
         resetLink,
@@ -273,7 +292,11 @@ export class UserService {
     return true;
   }
 
-  async updatePassword(userId: string, changePasswordDto: ChangePasswordDto) {
+  async updatePassword(
+    userId: string,
+    changePasswordDto: ChangePasswordDto,
+    currentDevice?: CurrentDeviceInfo,
+  ) {
     const user = await this.findOne(userId);
     const isCurrentPasswordValid = await user.comparePasswords(
       changePasswordDto.currentPassword,
@@ -282,7 +305,15 @@ export class UserService {
       throw new BadRequestException('Current password is incorrect');
     }
     user.password = changePasswordDto.newPassword;
-    await user.save();
-    //TODO send password change notification email
+    await this.notificationService.sendNotificationToUser(user, {
+      title: 'Password Changed',
+      medium: [NotificationMediumEnum.EMAIL],
+      templateName: 'notify-password-change',
+      context: {
+        fullName: user.fullName,
+        currentDevice,
+      },
+    });
+    return await user.save();
   }
 }

@@ -23,6 +23,10 @@ import { QueryUserDto } from './dto/query-user.dto';
 import { RequirePermissions } from 'src/rbac/decorators/permission.decorator';
 import { PERMISSIONS } from 'src/utils/constants';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import {
+  CurrentDevice,
+  CurrentDeviceInfo,
+} from 'src/auth/decorators/current-device.decorator';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), RolesGuard, PermissionsGuard)
@@ -75,8 +79,9 @@ export class UserController {
   updatePassword(
     @Param('id') id: string,
     @Body() changePasswordDto: ChangePasswordDto,
+    @CurrentDevice() currentDevice: CurrentDeviceInfo,
   ) {
-    return this.userService.updatePassword(id, changePasswordDto);
+    return this.userService.updatePassword(id, changePasswordDto, currentDevice);
   }
 
   @Delete(':id')
