@@ -81,7 +81,11 @@ export class UserController {
     @Body() changePasswordDto: ChangePasswordDto,
     @CurrentDevice() currentDevice: CurrentDeviceInfo,
   ) {
-    return this.userService.updatePassword(id, changePasswordDto, currentDevice);
+    return this.userService.updatePassword(
+      id,
+      changePasswordDto,
+      currentDevice,
+    );
   }
 
   @Delete(':id')
