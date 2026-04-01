@@ -29,6 +29,8 @@ import { PropertyManagerInvite } from './entities/property-manager-invite.entity
 import { EnvironmentVariables } from 'src/config/env.config';
 import { EmailService } from 'src/notification/email/email.service';
 import { ConfigService } from '@nestjs/config';
+import { User } from 'src/user/entities/user.entity';
+import { OnEvent } from '@nestjs/event-emitter';
 
 @Injectable()
 export class PropertyManagerService {
@@ -70,6 +72,14 @@ export class PropertyManagerService {
     return this.propertyManagerRepository.save(propertyManager);
   }
 
+  @OnEvent('propertyManager.created')
+  async propertyManagerUserCreated(user: User) {
+    const propertyManager = await this.findOneByEmail(user.email);
+    propertyManager.user = user;
+    propertyManager.isActive = true;
+    await this.propertyManagerRepository.save(propertyManager);
+  }
+
   async findAll() {
     const propertyManagers = await this.propertyManagerRepository.find({
       relations: {
@@ -83,6 +93,20 @@ export class PropertyManagerService {
   async findOne(id: string) {
     const propertyManager = await this.propertyManagerRepository.findOne({
       where: { id },
+      relations: {
+        user: true,
+        landlord: true,
+      },
+    });
+    if (!propertyManager) {
+      throw new NotFoundException('Property Manager not found');
+    }
+    return propertyManager;
+  }
+
+  async findOneByEmail(email: string) {
+    const propertyManager = await this.propertyManagerRepository.findOne({
+      where: { email },
       relations: {
         user: true,
         landlord: true,

@@ -23,6 +23,8 @@ import { ConfigService } from '@nestjs/config';
 import { addDays } from 'date-fns';
 import { generateRandomString } from 'src/utils/misc';
 import { QueryLeaseDto } from './dto/query-lease.dto';
+import { OnEvent } from '@nestjs/event-emitter';
+import { User } from 'src/user/entities/user.entity';
 
 @Injectable()
 export class TenantService {
@@ -83,6 +85,13 @@ export class TenantService {
     return await this.tenantRepository.save(tenant);
   }
 
+  @OnEvent('tenant.created')
+  async tenantUserCreated(user: User) {
+    const tenant = await this.findOneTenantByEmail(user.email);
+    tenant.user = user;
+    await this.tenantRepository.save(tenant);
+  }
+
   async findAll(queryPaginationDto: QueryPaginationDto) {
     const { limit = 10, cursor } = queryPaginationDto;
     const tenants = await this.tenantRepository.find({
@@ -98,6 +107,23 @@ export class TenantService {
   async findOne(id: string) {
     const tenant = await this.tenantRepository.findOne({
       where: { id },
+      relations: {
+        user: true,
+        leases: true,
+        currentUnit: true,
+      },
+    });
+    if (!tenant) {
+      throw new NotFoundException(`Tenant not found`);
+    }
+    return tenant;
+  }
+
+  async findOneTenantByEmail(email: string) {
+    const tenant = await this.tenantRepository.findOne({
+      where: {
+        email,
+      },
       relations: {
         user: true,
         leases: true,
@@ -232,6 +258,10 @@ export class TenantService {
     if (!invite || invite.expiresAt < new Date()) {
       throw new NotFoundException('Invite not found or expired');
     }
+    if (invite.status === INVITE_STATUS.ACCEPTED) {
+      const redirectUrl = `${this.configService.get('FRONTEND_URL')}/auth/signup?role=tenant&email=${encodeURIComponent(invite.email)}&fullName=${encodeURIComponent(invite.fullName)}`;
+      return redirectUrl;
+    }
     if (invite.status !== INVITE_STATUS.PENDING) {
       throw new NotFoundException('Invite already responded to');
     }
@@ -271,7 +301,7 @@ export class TenantService {
         this.tenantInviteRepository.save(invite),
       ]);
 
-      const redirectUrl = `${this.configService.get('FRONTEND_URL')}/auth/signup?role=tenant&tenant-id=${tenant.id}`;
+      const redirectUrl = `${this.configService.get('FRONTEND_URL')}/auth/signup?role=tenant&email=${encodeURIComponent(invite.email)}&fullName=${encodeURIComponent(invite.fullName)}`;
       return redirectUrl;
     }
     user.isEmailVerified = true;

@@ -41,9 +41,7 @@ export class S3Service {
         }),
       );
 
-      const url = encodeURI(
-        `${this.configService.get('AWS_CLOUDFRONT_URL')}/${key}`,
-      );
+      const url = `${this.configService.get('AWS_CLOUDFRONT_URL')}/${encodeURIComponent(key)}`;
 
       return {
         key,

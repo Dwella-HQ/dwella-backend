@@ -59,25 +59,13 @@ export class UserService {
         savedUser.isEmailVerified = true;
         await queryRunner.manager.save(savedUser);
       }
+      if (createUserDto.roleName === USER_ROLES.TENANT) {
+        this.eventEmitter.emit('tenant.created', user);
+      }
+      if (createUserDto.roleName === USER_ROLES.PROPERTY_MANAGER) {
+        this.eventEmitter.emit('propertyManager.created', user);
+      }
       await queryRunner.commitTransaction();
-      if (
-        createUserDto.roleName === USER_ROLES.PROPERTY_MANAGER &&
-        createUserDto.propertyManagerId
-      ) {
-        await this.userRepository.save({
-          id: savedUser.id,
-          propertyManager: { id: createUserDto.propertyManagerId },
-        });
-      }
-      if (
-        createUserDto.roleName === USER_ROLES.TENANT &&
-        createUserDto.tenantId
-      ) {
-        await this.userRepository.save({
-          id: savedUser.id,
-          tenant: { id: createUserDto.tenantId },
-        });
-      }
       return user;
     } catch (error: any) {
       console.log(error);
@@ -157,11 +145,9 @@ export class UserService {
     const token = this.jwtService.sign(payload, {
       expiresIn: '30m',
     });
-    const resetLink = encodeURI(
-      `${this.configService.get(
-        'FRONTEND_URL',
-      )}/auth/reset-password?token=${token}`,
-    );
+    const resetLink = `${this.configService.get(
+      'FRONTEND_URL',
+    )}/auth/reset-password?token=${encodeURIComponent(token)}`;
     await this.notificationService.sendNotificationToUser(user, {
       title: 'Password Reset Request',
       medium: [NotificationMediumEnum.EMAIL],

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { PropertyManagerService } from './property-manager.service';
 import { PropertyManagerController } from './property-manager.controller';
 import { PropertyManager } from './entities/property-manager.entity';
@@ -11,7 +11,7 @@ import { PropertyManagerInvite } from './entities/property-manager-invite.entity
 @Module({
   imports: [
     TypeOrmModule.forFeature([PropertyManager, PropertyManagerInvite]),
-    UserModule,
+    forwardRef(() => UserModule),
     LandlordModule,
     PropertyModule,
   ],

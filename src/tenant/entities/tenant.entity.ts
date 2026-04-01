@@ -20,6 +20,9 @@ export class Tenant {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column({ unique: true, nullable: true })
+  email: string;
+
   @JoinColumn()
   @OneToOne(() => User, (user) => user.tenant, { eager: true })
   user: Relation<User>;
@@ -28,6 +31,7 @@ export class Tenant {
   leases: Relation<Lease>[];
 
   @OneToOne(() => Unit, (unit) => unit.tenant, { nullable: false })
+  @JoinColumn()
   currentUnit: Relation<Unit>;
 
   @Column()

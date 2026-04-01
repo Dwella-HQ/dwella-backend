@@ -159,9 +159,15 @@ export class AuthController {
     @Req() request: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const token = request.headers['x-refresh-token'] as string;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    const token = request.cookies['x-refresh-token'] as string;
     const newTokens = await this.authService.refreshTokens(token);
-    res.setHeader('x-refresh-token', newTokens.refreshToken);
+    res.cookie('x-refresh-token', newTokens.refreshToken, {
+      httpOnly: true,
+      secure: this.configService.get('NODE_ENV') === 'production', // only over HTTPS
+      sameSite: 'none',
+      path: '/',
+    });
     return {
       success: true,
       message: 'Tokens refreshed successfully',
@@ -172,7 +178,11 @@ export class AuthController {
   }
 
   @Delete('logout/:userId')
-  async logoutUser(@Param('userId') userId: string, @Req() request: Request) {
+  async logoutUser(
+    @Param('userId') userId: string,
+    @Req() request: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const token = request.cookies['x-refresh-token'] as string;
     await this.authService.logout(userId, token || '');

@@ -6,7 +6,6 @@ import {
   IsPhoneNumber,
   IsString,
   IsStrongPassword,
-  IsUUID,
 } from 'class-validator';
 import { RegistrationTypeEnum, USER_ROLES } from 'src/utils/constants';
 
@@ -37,12 +36,4 @@ export class CreateUserDto {
   @IsEnum(RegistrationTypeEnum)
   @IsOptional()
   registrationType?: RegistrationTypeEnum;
-
-  @IsUUID()
-  @IsOptional()
-  propertyManagerId?: string;
-
-  @IsUUID()
-  @IsOptional()
-  tenantId?: string;
 }
