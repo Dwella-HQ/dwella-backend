@@ -185,6 +185,11 @@ export class AuthController {
   ) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const token = request.cookies['x-refresh-token'] as string;
+    res.clearCookie('x-refresh-token', {
+      httpOnly: true,
+      secure: this.configService.get('NODE_ENV') === 'production', // only over HTTPS
+      sameSite: 'none',
+    });
     await this.authService.logout(userId, token || '');
     return {
       success: true,
