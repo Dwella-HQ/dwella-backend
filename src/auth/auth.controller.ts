@@ -123,7 +123,7 @@ export class AuthController {
       res.redirect(
         `${this.configService.get('FRONTEND_URL')}/auth/verify-email?verified=true&email=${verifyEmailDto.email}`,
       );
-    } catch (error) {
+    } catch (error: any) {
       res.redirect(
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
         `${this.configService.get('FRONTEND_URL')}/auth/verify-email?verified=false&email=${verifyEmailDto.email}&reason=${encodeURIComponent(error?.message || 'Unknown error')}`,

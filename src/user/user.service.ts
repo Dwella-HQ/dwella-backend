@@ -12,7 +12,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { RbacService } from 'src/rbac/rbac.service';
-import { EmailService } from 'src/notification/email/email.service';
 import { ConfigService } from '@nestjs/config';
 import { EnvironmentVariables } from 'src/config/env.config';
 import { JwtService } from '@nestjs/jwt';
@@ -36,7 +35,6 @@ export class UserService {
     private dataSource: DataSource,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     private readonly rbacService: RbacService,
-    private readonly emailService: EmailService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
     private readonly configService: ConfigService<EnvironmentVariables>,
     private readonly jwtService: JwtService,
@@ -99,17 +97,6 @@ export class UserService {
         ms(this.configService.get('JWT_EXPIRES_IN') as ms.StringValue),
       ); // 30 minutes
     }
-
-    await this.emailService.sendMailToUser({
-      user,
-      subject: 'Verify your email address',
-      template: 'verify-email',
-      context: {
-        name: user.fullName,
-        verificationLink,
-        expirationTime: this.configService.get<string>('JWT_EXPIRES_IN'),
-      },
-    });
 
     await this.notificationService.sendNotificationToUser(user, {
       title: 'Verify your email address',
