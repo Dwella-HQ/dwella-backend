@@ -1,9 +1,11 @@
 import {
+  IsArray,
   IsBoolean,
   IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
+  IsUUID,
 } from 'class-validator';
 
 export class CreateUnitDto {
@@ -23,4 +25,8 @@ export class CreateUnitDto {
   @IsOptional()
   @IsBoolean()
   isAvailable?: boolean;
+
+  @IsUUID('all', { each: true })
+  @IsOptional()
+  imageIds?: string[];
 }

@@ -188,6 +188,12 @@ export class PropertyService {
       ...createUnitDto,
       property,
     });
+    if (createUnitDto.imageIds) {
+      const files = Promise.all(
+        createUnitDto.imageIds.map((id) => this.fileService.findFileById(id)),
+      );
+      unit.images = await files;
+    }
     property.numberOfUnits += 1;
     await this.propertyRepository.save(property);
     return await this.unitRepository.save(unit);

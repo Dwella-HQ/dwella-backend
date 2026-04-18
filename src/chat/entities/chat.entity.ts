@@ -17,6 +17,9 @@ export class Chat extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column({ nullable: true, unique: true })
+  ref: string;
+
   @OneToMany(() => ChatParticipant, (participant) => participant.chat)
   participants: Relation<ChatParticipant>[];
 

@@ -15,6 +15,7 @@ import { Property } from './property.entity';
 import { ColumnNumericTransformer } from 'src/utils/misc';
 import { Lease } from 'src/tenant/entities/lease.entity';
 import { Tenant } from 'src/tenant/entities/tenant.entity';
+import { File } from 'src/file/entities/file.entity';
 
 @Entity()
 export class Unit extends BaseEntity {
@@ -48,6 +49,12 @@ export class Unit extends BaseEntity {
     default: true,
   })
   isAvailable: boolean;
+
+  @OneToMany(() => File, (file) => file.unit, {
+    cascade: true,
+    eager: true,
+  })
+  images!: Relation<File[]>;
 
   @Column({ type: 'simple-array', nullable: true })
   amenities: string[];

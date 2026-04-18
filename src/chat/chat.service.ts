@@ -20,6 +20,7 @@ import { CreateChatMessageDto } from './dto/create-chat-message.dto';
 import { FileService } from 'src/file/file.service';
 import { ReadMessagesDto } from './dto/read-messages.dto';
 import { DeleteMessagesDto } from './dto/delete-messages.dto';
+import { base64Encode } from 'src/utils/misc';
 
 @Injectable()
 export class ChatService {
@@ -64,7 +65,21 @@ export class ChatService {
 
   async create(createChatDto: CreateChatDto) {
     const chat = this.chatRepository.create({});
+    const participantIds = createChatDto.participants
+      .map((p) => p.roleId)
+      .sort();
+    const ref = base64Encode(participantIds.join('_'));
     const participants: ChatParticipant[] = [];
+    // const existingChat = await this.chatRepository.findOne({
+    //   where: {
+    //     participants: {
+    //       roleId: In(createChatDto.participants.map((p) => p.roleId)),
+    //     },
+    //   },
+    //   relations: {
+    //     participants: true,
+    //   },
+    // });
     for (const participantDto of createChatDto.participants) {
       let participant: ChatParticipant | undefined;
       if (participantDto.role === USER_ROLES.TENANT) {

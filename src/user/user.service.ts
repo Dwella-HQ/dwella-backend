@@ -70,9 +70,11 @@ export class UserService {
 
       await queryRunner.rollbackTransaction();
       if (error?.code == '23505') {
-        throw new BadRequestException(error.detail);
+        throw new BadRequestException('A user with this email already exists');
       }
-      throw new InternalServerErrorException(error.detail);
+      throw new InternalServerErrorException(
+        error.detail || 'An error occurred while creating the user',
+      );
     } finally {
       await queryRunner.release();
     }
