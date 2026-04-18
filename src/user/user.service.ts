@@ -137,6 +137,7 @@ export class UserService {
     const resetLink = `${this.configService.get(
       'FRONTEND_URL',
     )}/auth/reset-password?token=${encodeURIComponent(token)}`;
+
     await this.notificationService.sendNotificationToUser(user, {
       title: 'Password Reset Request',
       medium: [NotificationMediumEnum.EMAIL],
