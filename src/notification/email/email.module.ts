@@ -4,7 +4,7 @@ import { EmailWorker } from './email.worker';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { EnvironmentVariables } from 'src/config/env.config';
-import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
+import { HandlebarsAdapter } from '@nestjs-modules/mailer/adapters/handlebars.adapter';
 import { join } from 'path';
 import { BullModule } from '@nestjs/bullmq';
 import { JOB_NAMES } from 'src/utils/constants';
