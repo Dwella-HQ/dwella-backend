@@ -13,7 +13,8 @@ async function bootstrap() {
     logger: new Logger(),
   });
   app.enableCors({
-    origin: '*',
+    origin: true,
+    credentials: true,
   });
   await configureSwagger(app, 'documentation');
   app.useGlobalPipes(
