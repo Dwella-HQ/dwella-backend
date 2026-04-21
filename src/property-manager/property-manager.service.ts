@@ -230,6 +230,7 @@ export class PropertyManagerService {
       .catch(() => null);
     if (!user) {
       const propertyManager = await this.propertyManagerRepository.save({
+        email: invite.email,
         landlord: invite.landlord,
         properties: invite.properties,
         permissions: invite.permissions,
