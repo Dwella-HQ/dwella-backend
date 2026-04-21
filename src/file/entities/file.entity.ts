@@ -3,7 +3,7 @@ import { Announcement } from 'src/announcement/entities/announcement.entity';
 import { ChatMessage } from 'src/chat/entities/chat-message.entity';
 import { MaintenanceRequest } from 'src/maintenance-request/entities/maintenance-request.entity';
 import { Property } from 'src/property/entities/property.entity';
-import { Unit } from 'src/property/entities/units.entity';
+import { Unit } from 'src/property/entities/unit.entity';
 import { User } from 'src/user/entities/user.entity';
 import { Verification } from 'src/verification/entities/verification.entity';
 import {

@@ -13,7 +13,7 @@ import { AddressService } from 'src/address/address.service';
 import { LandlordService } from 'src/landlord/landlord.service';
 import { QueryPropertyDto } from './dto/query-property.dto';
 import { CreateUnitDto } from './dto/create-unit.dto';
-import { Unit } from './entities/units.entity';
+import { Unit } from './entities/unit.entity';
 import { EmailService } from 'src/notification/email/email.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { FileService } from 'src/file/file.service';

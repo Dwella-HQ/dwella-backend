@@ -16,7 +16,7 @@ import {
   Relation,
   UpdateDateColumn,
 } from 'typeorm';
-import { Unit } from './units.entity';
+import { Unit } from './unit.entity';
 import { PropertyManager } from 'src/property-manager/entities/property-manager.entity';
 import { PropertySettings } from './property-settings.entity';
 

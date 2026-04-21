@@ -1,7 +1,7 @@
 import { File } from 'src/file/entities/file.entity';
 import { Landlord } from 'src/landlord/entities/landlord.entity';
 import { Property } from 'src/property/entities/property.entity';
-import { Unit } from 'src/property/entities/units.entity';
+import { Unit } from 'src/property/entities/unit.entity';
 import { AnnounementLevelEnum } from 'src/utils/constants';
 import {
   BaseEntity,

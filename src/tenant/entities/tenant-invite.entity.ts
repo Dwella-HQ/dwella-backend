@@ -1,4 +1,4 @@
-import { Unit } from 'src/property/entities/units.entity';
+import { Unit } from 'src/property/entities/unit.entity';
 import {
   INVITE_STATUS,
   RentFrequencyEnum,

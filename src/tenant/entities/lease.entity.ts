@@ -14,7 +14,7 @@ import {
   RentFrequencyEnum,
   ServiceChargeFrequencyEnum,
 } from 'src/utils/constants';
-import { Unit } from 'src/property/entities/units.entity';
+import { Unit } from 'src/property/entities/unit.entity';
 import { File } from 'src/file/entities/file.entity';
 import { Rent } from 'src/rent/entity/rent.entity';
 import { ColumnNumericTransformer } from 'src/utils/misc';

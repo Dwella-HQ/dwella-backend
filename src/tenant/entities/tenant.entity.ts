@@ -11,7 +11,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Lease } from './lease.entity';
-import { Unit } from 'src/property/entities/units.entity';
+import { Unit } from 'src/property/entities/unit.entity';
 import { File } from 'src/file/entities/file.entity';
 import { NextOfKinDetails } from 'src/utils/shared.dto';
 

@@ -1,6 +1,6 @@
 import { File } from 'src/file/entities/file.entity';
 import { Property } from 'src/property/entities/property.entity';
-import { Unit } from 'src/property/entities/units.entity';
+import { Unit } from 'src/property/entities/unit.entity';
 import { Tenant } from 'src/tenant/entities/tenant.entity';
 import {
   MaintenanceRequestLevel,
