@@ -271,6 +271,7 @@ export class TenantService {
       .catch(() => null);
     if (!user) {
       const tenant = await this.tenantRepository.save({
+        email: invite.email,
         currentUnit: invite.unit,
         idNumber: invite.idNumber,
         idType: invite.idType,
