@@ -23,6 +23,7 @@ import { Public } from 'src/auth/decorators/public.decorator';
 import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { EnvironmentVariables } from 'src/config/env.config';
+import { QueryInviteDto } from './dto/query-invite.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @ApiBearerAuth()
@@ -102,6 +103,16 @@ export class TenantController {
     return {
       success: true,
       message: 'Tenant invited successfully',
+      data,
+    };
+  }
+
+  @Get('invite/query')
+  async queryInvites(@Query() query: QueryInviteDto) {
+    const data = await this.tenantService.queryInvites(query);
+    return {
+      success: true,
+      message: 'Invites retrieved successfully',
       data,
     };
   }

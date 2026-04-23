@@ -25,6 +25,7 @@ import { generateRandomString } from 'src/utils/misc';
 import { QueryLeaseDto } from './dto/query-lease.dto';
 import { OnEvent } from '@nestjs/event-emitter';
 import { User } from 'src/user/entities/user.entity';
+import { QueryInviteDto } from './dto/query-invite.dto';
 
 @Injectable()
 export class TenantService {
@@ -356,6 +357,38 @@ export class TenantService {
     invite.status = INVITE_STATUS.REJECTED;
     await this.tenantInviteRepository.save(invite);
     return true;
+  }
+
+  async queryInvites(query: QueryInviteDto) {
+    const queryBuilder =
+      this.tenantInviteRepository.createQueryBuilder('invite');
+    queryBuilder.leftJoinAndSelect('invite.unit', 'unit');
+    queryBuilder.leftJoinAndSelect('unit.property', 'property');
+    if (query.unitId) {
+      queryBuilder.andWhere('invite.unitId = :unitId', {
+        unitId: query.unitId,
+      });
+    }
+    if (query.email) {
+      queryBuilder.andWhere('invite.email = :email', { email: query.email });
+    }
+    if (query.fullName) {
+      queryBuilder.andWhere('invite.fullName ILIKE :fullName', {
+        fullName: `%${query.fullName}%`,
+      });
+    }
+    if (query.search) {
+      queryBuilder.andWhere(
+        '(invite.fullName ILIKE :search OR invite.email ILIKE :search)',
+        { search: `%${query.search}%` },
+      );
+    }
+    if (query.status) {
+      queryBuilder.andWhere('invite.status = :status', {
+        status: query.status,
+      });
+    }
+    return queryBuilder.getMany();
   }
 
   async queryLease(queryLeaseDto: QueryLeaseDto) {
