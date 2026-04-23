@@ -23,6 +23,7 @@ import { RequireRoles } from 'src/rbac/decorators/role.decorator';
 import { QueryPropertyDto } from './dto/query-property.dto';
 import { UpdatePropertyGracePeriodDto } from './dto/update-property-grace-period.dto';
 import { UpdatePropertyLateFeeDto } from './dto/update-property-late-fee.dto';
+import { Public } from 'src/auth/decorators/public.decorator';
 
 @UseGuards(AuthGuard('jwt'), PermissionsGuard, RolesGuard)
 @ApiBearerAuth()
@@ -65,6 +66,7 @@ export class PropertyController {
   }
 
   // @RequirePermissions(PERMISSIONS.READ_PROPERTY)
+  @Public()
   @Get('query')
   async queryProperties(@Query() queryPropertyDto: QueryPropertyDto) {
     const data = await this.propertyService.query(queryPropertyDto);
