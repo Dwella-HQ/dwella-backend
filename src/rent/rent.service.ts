@@ -33,6 +33,19 @@ export class RentService {
     return rents;
   }
 
+  async getRentsByLeaseId(leaseId: string) {
+    const rents = await this.rentRepository.find({
+      where: {
+        leaseId,
+      },
+      relations: {
+        lease: true,
+        payments: true,
+      },
+    });
+    return rents;
+  }
+
   async handleRentPayment(id: string) {
     const rent = await this.findOne(id);
     rent.status = RentStatusEnum.PAID;

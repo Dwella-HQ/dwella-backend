@@ -291,7 +291,7 @@ export class PropertyService {
     return await this.propertySettingsRepository.save(propertySettings);
   }
 
-  async bulkUploadPropery(landlordId: string, file: Express.Multer.File) {
+  async bulkUploadPropery(landlordId: string, file: any) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -300,6 +300,7 @@ export class PropertyService {
 
       const workbook = new ExcelJS.Workbook();
       // Load file buffer
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
       await workbook.xlsx.load(file.buffer);
 
       const worksheet = workbook.worksheets[0]; // first sheet
