@@ -22,7 +22,7 @@ import { CreateUnitDto } from './dto/create-unit.dto';
 import { PermissionsGuard } from 'src/auth/guards/permission.guard';
 import { ApiBearerAuth, ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { RequirePermissions } from 'src/rbac/decorators/permission.decorator';
-import { AdminRoles, PERMISSIONS, USER_ROLES } from 'src/utils/constants';
+import { AdminRoles, PERMISSIONS } from 'src/utils/constants';
 import { RolesGuard } from 'src/auth/guards/role.guard';
 import { RequireRoles } from 'src/rbac/decorators/role.decorator';
 import { QueryPropertyDto } from './dto/query-property.dto';
@@ -35,7 +35,7 @@ import { join } from 'path';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard, RolesGuard)
 @ApiBearerAuth()
 @Controller('property')
 export class PropertyController {
