@@ -12,7 +12,6 @@ import {
 import { LandlordService } from './landlord.service';
 import { CreateLandlordDto } from './dto/create-landlord.dto';
 import { UpdateLandlordDto } from './dto/update-landlord.dto';
-import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { Request } from 'express';
 import { QueryLandlordDto } from './dto/query-landlord.dto';
@@ -26,8 +25,9 @@ import { UpdateLandlordPlatformPreferencesDto } from './dto/update-landlord-plat
 import { UploadLandlordNotificationPreferencesDto } from './dto/update-landlord-notification-preferences.dto';
 import { UpdateLandlordGracePeriodDto } from './dto/update-landlord-grace-period.dto';
 import { UpdateLandlordLateFeeDto } from './dto/update-landlord-late-fee.dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 
-@UseGuards(AuthGuard('jwt'), PermissionsGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard, RolesGuard)
 @ApiBearerAuth()
 @Controller('landlord')
 export class LandlordController {

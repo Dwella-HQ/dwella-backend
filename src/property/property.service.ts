@@ -2,13 +2,14 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Property } from './entities/property.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { AddressService } from 'src/address/address.service';
 import { LandlordService } from 'src/landlord/landlord.service';
 import { QueryPropertyDto } from './dto/query-property.dto';
@@ -20,6 +21,9 @@ import { FileService } from 'src/file/file.service';
 import { PropertySettings } from './entities/property-settings.entity';
 import { UpdatePropertyGracePeriodDto } from './dto/update-property-grace-period.dto';
 import { UpdatePropertyLateFeeDto } from './dto/update-property-late-fee.dto';
+import * as ExcelJS from 'exceljs';
+import { CreateAddressDto } from 'src/address/dto/create-address.dto';
+import { Address } from 'src/address/entities/address.entity';
 @Injectable()
 export class PropertyService {
   constructor(
@@ -34,6 +38,7 @@ export class PropertyService {
     private emailService: EmailService,
     private fileService: FileService,
     private readonly eventEmitter: EventEmitter2,
+    private dataSource: DataSource,
   ) {}
 
   async create(createPropertyDto: CreatePropertyDto) {
@@ -284,6 +289,132 @@ export class PropertyService {
         updateLateFeeDto.lateFeeType;
     }
     return await this.propertySettingsRepository.save(propertySettings);
+  }
+
+  async bulkUploadPropery(landlordId: string, file: Express.Multer.File) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const landlord = await this.landlordService.findOne(landlordId);
+
+      const workbook = new ExcelJS.Workbook();
+      // Load file buffer
+      await workbook.xlsx.load(file.buffer);
+
+      const worksheet = workbook.worksheets[0]; // first sheet
+
+      const data: Omit<CreatePropertyDto, 'landlordId'>[] = [];
+
+      worksheet.eachRow((row, rowNumber) => {
+        if (rowNumber === 1) return; // skip header row
+        const name = row.getCell(1).value as string;
+        const numberOfUnits = parseInt((row.getCell(3).value as string) || '0');
+        const parkingSpace = row.getCell(5).value == '1';
+        const description = row.getCell(4).value as string;
+        const yearBuilt = row.getCell(2).value as string;
+        // eslint-disable-next-line @typescript-eslint/no-base-to-string
+        const amenities = row
+          .getCell(7)
+          .value?.toString()
+          .split(',')
+          .map((t) => t.trim());
+        const address = {} as CreateAddressDto;
+        // eslint-disable-next-line @typescript-eslint/no-base-to-string
+        const addressText = row
+          .getCell(6)
+          .value?.toString()
+          .split(';')
+          .map((prop) => prop.trim())
+          .filter((prop) => prop.length > 0);
+
+        (addressText || []).forEach((prop) => {
+          // Remove optional '?' and split by ':' to get key and value
+          const cleanProp = prop.replace('?', ''); // Remove '?' if present
+          const [key, value] = cleanProp.split(':').map((s) => s.trim());
+
+          if (key && value) {
+            address[key] = value; // Assign key-value pair
+          }
+        });
+        if (
+          !name ||
+          !numberOfUnits ||
+          !yearBuilt ||
+          !address.address ||
+          !address.city ||
+          !address.country ||
+          !address.state
+        ) {
+          throw new BadRequestException(
+            ' The data could not be uploaded due to insufficient information',
+          );
+        }
+        data.push({
+          name,
+          address,
+          numberOfUnits,
+          parkingSpace,
+          yearBuilt,
+          amenities,
+          description,
+        });
+      });
+      // Bulk insert using transaction
+      const savedProperties: Property[] = [];
+      for (const item of data) {
+        // Create and save address
+        const addressEntity = queryRunner.manager.create(Address, {
+          ...item.address,
+          user: landlord.user, // Link to landlord's user
+        });
+        const savedAddress = await queryRunner.manager.save(
+          Address,
+          addressEntity,
+        );
+
+        // Create and save property
+        const propertyEntity = queryRunner.manager.create(Property, {
+          ...item,
+          landlord,
+          address: savedAddress,
+          amenities: item.amenities || [],
+        });
+        const savedProperty = await queryRunner.manager.save(
+          Property,
+          propertyEntity,
+        );
+
+        // Create and save property settings (copy from landlord defaults)
+        const landlordSettings = await this.landlordService.getLandlordSettings(
+          landlord.id,
+        );
+        const propertySettings = queryRunner.manager.create(PropertySettings, {
+          property: savedProperty,
+          gracePeriodPeriods: landlordSettings.gracePeriodPeriods,
+          lateFeeSettings: landlordSettings.lateFeeSettings,
+        });
+        await queryRunner.manager.save(PropertySettings, propertySettings);
+
+        savedProperties.push(savedProperty);
+      }
+
+      // Commit transaction
+      await queryRunner.commitTransaction();
+      for (const property of savedProperties) {
+        this.eventEmitter.emit('property.created', property.id);
+      }
+      return savedProperties;
+    } catch (error: any) {
+      console.error(error);
+      await queryRunner.rollbackTransaction();
+      throw new InternalServerErrorException(
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        error.detail || 'An error occurred while creating the user',
+      );
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async remove(id: string) {

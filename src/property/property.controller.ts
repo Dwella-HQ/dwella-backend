@@ -8,24 +8,34 @@ import {
   Delete,
   UseGuards,
   Query,
+  Res,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  HttpStatus,
+  FileTypeValidator,
 } from '@nestjs/common';
 import { PropertyService } from './property.service';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
 import { CreateUnitDto } from './dto/create-unit.dto';
-import { AuthGuard } from '@nestjs/passport';
 import { PermissionsGuard } from 'src/auth/guards/permission.guard';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { RequirePermissions } from 'src/rbac/decorators/permission.decorator';
-import { AdminRoles, PERMISSIONS } from 'src/utils/constants';
+import { AdminRoles, PERMISSIONS, USER_ROLES } from 'src/utils/constants';
 import { RolesGuard } from 'src/auth/guards/role.guard';
 import { RequireRoles } from 'src/rbac/decorators/role.decorator';
 import { QueryPropertyDto } from './dto/query-property.dto';
 import { UpdatePropertyGracePeriodDto } from './dto/update-property-grace-period.dto';
 import { UpdatePropertyLateFeeDto } from './dto/update-property-late-fee.dto';
 import { Public } from 'src/auth/decorators/public.decorator';
+import { Response } from 'express';
+import { createReadStream } from 'fs';
+import { join } from 'path';
+import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
+import { FileInterceptor } from '@nestjs/platform-express';
 
-@UseGuards(AuthGuard('jwt'), PermissionsGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 @ApiBearerAuth()
 @Controller('property')
 export class PropertyController {
@@ -54,18 +64,68 @@ export class PropertyController {
     };
   }
 
-  @RequirePermissions(PERMISSIONS.READ_PROPERTY)
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
-    const data = await this.propertyService.findOne(id);
+  @Public()
+  @Get('bulk-upload')
+  getBulkUpload(@Res() res: Response) {
+    const file = createReadStream(
+      join(
+        process.cwd(),
+        'src/public/assets/dwella-properties-bulk-upload.xlsx',
+      ),
+    );
+    // Set headers for download
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename="dwella-properties-bulk-upload.xlsx"',
+    );
+    file.pipe(res);
+  }
+
+  @RequireRoles(...AdminRoles)
+  @Post('bulk-upload/:landlordId')
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @UseInterceptors(FileInterceptor('file'))
+  async bulkUploadProperties(
+    @Param('landlordId') landlordId: string,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          // new MaxFileSizeValidator({ maxSize: 1e7 }),
+          new FileTypeValidator({
+            fileType:
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          }),
+        ],
+        errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+      }),
+    )
+    file: Express.Multer.File,
+  ) {
+    const data = await this.propertyService.bulkUploadPropery(landlordId, file);
+
     return {
       success: true,
-      message: 'Property retrieved successfully',
-      data: data,
+      message: 'Properties uploaded successfully',
+      data,
     };
   }
 
-  // @RequirePermissions(PERMISSIONS.READ_PROPERTY)
   @Public()
   @Get('query')
   async queryProperties(@Query() queryPropertyDto: QueryPropertyDto) {
@@ -73,6 +133,17 @@ export class PropertyController {
     return {
       success: true,
       message: 'Properties retrieved successfully',
+      data: data,
+    };
+  }
+
+  @RequirePermissions(PERMISSIONS.READ_PROPERTY)
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    const data = await this.propertyService.findOne(id);
+    return {
+      success: true,
+      message: 'Property retrieved successfully',
       data: data,
     };
   }

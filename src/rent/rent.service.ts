@@ -28,6 +28,11 @@ export class RentService {
     return rent;
   }
 
+  async findAll() {
+    const rents = await this.rentRepository.find();
+    return rents;
+  }
+
   async handleRentPayment(id: string) {
     const rent = await this.findOne(id);
     rent.status = RentStatusEnum.PAID;
