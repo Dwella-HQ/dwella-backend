@@ -1,15 +1,23 @@
-import { IsDate, IsUUID } from 'class-validator';
+import { IsDate, IsNumber, IsOptional, IsUUID, Min } from 'class-validator';
 
 export class CreateRentDto {
   @IsUUID()
-  leaseId: string;
+  leaseId!: string;
 
   @IsDate()
-  startDate: Date;
+  @IsOptional()
+  startDate?: Date;
 
   @IsDate()
-  endDate: Date;
+  @IsOptional()
+  endDate?: Date;
 
   @IsDate()
-  dueDate: Date;
+  @IsOptional()
+  dueDate?: Date;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  amount?: number;
 }

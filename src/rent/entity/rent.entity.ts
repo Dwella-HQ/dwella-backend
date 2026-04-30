@@ -59,7 +59,7 @@ export class Rent extends BaseEntity {
   @OneToMany(() => RentPayment, (rentPayment) => rentPayment.rent)
   payments: Relation<RentPayment[]>;
 
-  @Column()
+  @Column({ nullable: true })
   paymentDate: Date;
 
   @Column()
