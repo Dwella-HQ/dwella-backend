@@ -1,12 +1,21 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { RentService } from './rent.service';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { PermissionsGuard } from 'src/auth/guards/permission.guard';
 import { RolesGuard } from 'src/auth/guards/role.guard';
 import { CreateRentDto } from './dto/create-rent.dto';
-import { USER_ROLES } from 'src/utils/constants';
+import { PERMISSIONS, USER_ROLES } from 'src/utils/constants';
 import { RequireRoles } from 'src/rbac/decorators/role.decorator';
+import { RequirePermissions } from 'src/rbac/decorators/permission.decorator';
 
 @UseGuards(JwtAuthGuard, PermissionsGuard, RolesGuard)
 @ApiBearerAuth()
@@ -31,6 +40,17 @@ export class RentController {
     return {
       success: true,
       message: 'Rent created successfully',
+      data,
+    };
+  }
+
+  @RequirePermissions(PERMISSIONS.UPDATE_PAYMENT)
+  @Patch(':rentId/status/paid')
+  async markRentAsPaid(@Param('rentId') rentId: string) {
+    const data = await this.rentService.handleRentPayment(rentId);
+    return {
+      success: true,
+      message: 'Rent updated successfully',
       data,
     };
   }
