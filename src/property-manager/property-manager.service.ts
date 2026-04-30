@@ -145,6 +145,20 @@ export class PropertyManagerService {
     return propertyManagers;
   }
 
+  async getPropertyPropertyManagers(propertyId: string) {
+    const propertyManagers = await this.propertyManagerRepository.find({
+      where: {
+        properties: { id: propertyId },
+      },
+      relations: {
+        user: true,
+        landlord: true,
+        properties: true,
+      },
+    });
+    return propertyManagers;
+  }
+
   async update(id: string, updatePropertyManagerDto: UpdatePropertyManagerDto) {
     const propertyManager = await this.findOne(id);
     for (const key in updatePropertyManagerDto) {
@@ -236,7 +250,7 @@ export class PropertyManagerService {
         permissions: invite.permissions,
       });
       await this.propertyManagerInviteRepository.save(invite);
-      const redirectUrl = `${this.configService.get('FRONTEND_URL')}/auth/signup/manager?propertyManagerId=${propertyManager.id}`;
+      const redirectUrl = `${this.configService.get('FRONTEND_URL')}/auth/signup?role=propertyManager&email=${encodeURIComponent(invite.email)}&fullName=${encodeURIComponent(invite.fullName)}`;
       return redirectUrl;
     }
     user.isEmailVerified = true;

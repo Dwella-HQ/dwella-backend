@@ -92,6 +92,17 @@ export class PropertyManagerController {
     };
   }
 
+  @Get('property/:propertyId')
+  async getPropertyPropertyManagers(@Param('propertyId') propertyId: string) {
+    const data =
+      await this.propertyManagerService.getPropertyPropertyManagers(propertyId);
+    return {
+      success: true,
+      message: 'Property Managers retrieved successfully',
+      data,
+    };
+  }
+
   @RequirePermissions(PERMISSIONS.UPDATE_PROPERTY_MANAGER)
   @Patch(':id')
   async update(
