@@ -81,7 +81,7 @@ export class RentPayment extends BaseEntity {
   walletTransaction: Relation<WalletTransaction>;
 
   @Index()
-  @Column()
+  @Column({ nullable: true })
   walletTransactionId: string;
 
   @Index()
