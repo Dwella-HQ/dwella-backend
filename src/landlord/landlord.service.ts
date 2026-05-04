@@ -227,7 +227,6 @@ export class LandlordService {
     const landlord = await this.findOne(id);
     for (const key in updateLandlordDto) {
       if (landlord[key]) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         landlord[key] = updateLandlordDto[key];
       }
     }
@@ -265,7 +264,6 @@ export class LandlordService {
     const landlord = await this.findOne(landlordId);
     for (const key in updateLadlordProfileDto) {
       if (landlord[key]) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         landlord[key] = updateLadlordProfileDto[key];
       }
     }

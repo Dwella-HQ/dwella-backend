@@ -256,7 +256,6 @@ export class UserService {
     const user = await this.findOne(id);
     for (const key in updateUserDto) {
       if (updateUserDto[key] !== undefined) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         user[key] = updateUserDto[key];
       }
     }
