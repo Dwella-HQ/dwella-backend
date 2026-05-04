@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {
   BadRequestException,
@@ -70,7 +72,9 @@ export class UserService {
 
       await queryRunner.rollbackTransaction();
       if (error?.code == '23505') {
-        throw new BadRequestException('A user with this email already exists');
+        // throw new BadRequestException('A user with this email already exists');
+        const field = error.detail?.match(/Key \((.+?)\)/)?.[1] ?? 'field';
+        throw new BadRequestException(`${field} already exists`);
       }
       throw new InternalServerErrorException(
         error.detail || 'An error occurred while creating the user',

@@ -1,4 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateLandlordDto } from './dto/create-landlord.dto';
 import { UpdateLandlordDto } from './dto/update-landlord.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -35,55 +43,65 @@ export class LandlordService {
   async create(createLandlordDto: CreateLandlordDto) {
     const user = await this.userService.findOne(createLandlordDto.userId);
 
-    const landlord = this.landlordRepository.create({
-      user: user,
-      businessName: createLandlordDto.businessName || user.fullName,
-      businessEmail: createLandlordDto.businessEmail || user.email,
-    });
-    if (createLandlordDto.govermentIdDocumentId) {
-      const govermentIdDocument = await this.fileService.findFileById(
-        createLandlordDto.govermentIdDocumentId,
-      );
-      landlord.govermentIdDocument = govermentIdDocument;
-    }
-    if (createLandlordDto.landSurveyDocumentId) {
-      const landSurveyDocument = await this.fileService.findFileById(
-        createLandlordDto.landSurveyDocumentId,
-      );
-      landlord.landSurveyDocument = landSurveyDocument;
-    }
-    if (createLandlordDto.proofOfOwnershipDocumentId) {
-      const proofOfOwnershipDocument = await this.fileService.findFileById(
-        createLandlordDto.proofOfOwnershipDocumentId,
-      );
-      landlord.proofOfOwnershipDocument = proofOfOwnershipDocument;
-    }
-    if (createLandlordDto.taxIdentificationNumberDocumentId) {
-      const taxIdentificationNumberDocument =
-        await this.fileService.findFileById(
-          createLandlordDto.taxIdentificationNumberDocumentId,
+    try {
+      const landlord = this.landlordRepository.create({
+        user: user,
+        businessName: createLandlordDto.businessName || user.fullName,
+        businessEmail: createLandlordDto.businessEmail || user.email,
+      });
+      if (createLandlordDto.govermentIdDocumentId) {
+        const govermentIdDocument = await this.fileService.findFileById(
+          createLandlordDto.govermentIdDocumentId,
         );
-      landlord.taxIdentificationNumberDocument =
-        taxIdentificationNumberDocument;
-    }
-    if (createLandlordDto.profilePictureId) {
-      const profilePicture = await this.fileService.findFileById(
-        createLandlordDto.profilePictureId,
+        landlord.govermentIdDocument = govermentIdDocument;
+      }
+      if (createLandlordDto.landSurveyDocumentId) {
+        const landSurveyDocument = await this.fileService.findFileById(
+          createLandlordDto.landSurveyDocumentId,
+        );
+        landlord.landSurveyDocument = landSurveyDocument;
+      }
+      if (createLandlordDto.proofOfOwnershipDocumentId) {
+        const proofOfOwnershipDocument = await this.fileService.findFileById(
+          createLandlordDto.proofOfOwnershipDocumentId,
+        );
+        landlord.proofOfOwnershipDocument = proofOfOwnershipDocument;
+      }
+      if (createLandlordDto.taxIdentificationNumberDocumentId) {
+        const taxIdentificationNumberDocument =
+          await this.fileService.findFileById(
+            createLandlordDto.taxIdentificationNumberDocumentId,
+          );
+        landlord.taxIdentificationNumberDocument =
+          taxIdentificationNumberDocument;
+      }
+      if (createLandlordDto.profilePictureId) {
+        const profilePicture = await this.fileService.findFileById(
+          createLandlordDto.profilePictureId,
+        );
+        landlord.profilePicture = profilePicture;
+      }
+      const address = await this.addressService.create(
+        user.id,
+        createLandlordDto.address,
       );
-      landlord.profilePicture = profilePicture;
+      landlord.address = address;
+      const savedLandlord = await this.landlordRepository.save(landlord);
+      const landlordSettings = this.landlordSettingsRepository.create({
+        landlord: savedLandlord,
+      });
+      await this.landlordSettingsRepository.save(landlordSettings);
+      this.eventEmitter.emit('landlord.created', savedLandlord.id);
+      return savedLandlord;
+    } catch (error: any) {
+      if (error?.code == '23505') {
+        // throw new BadRequestException('A user with this email already exists');
+        const field = error.detail?.match(/Key \((.+?)\)/)?.[1] ?? 'field';
+        throw new BadRequestException(`${field} already exists`);
+      }
+      console.log(error);
+      throw new InternalServerErrorException('An error occured');
     }
-    const address = await this.addressService.create(
-      user.id,
-      createLandlordDto.address,
-    );
-    landlord.address = address;
-    const savedLandlord = await this.landlordRepository.save(landlord);
-    const landlordSettings = this.landlordSettingsRepository.create({
-      landlord: savedLandlord,
-    });
-    await this.landlordSettingsRepository.save(landlordSettings);
-    this.eventEmitter.emit('landlord.created', savedLandlord.id);
-    return savedLandlord;
   }
 
   async approveLandlord(id: string) {
