@@ -101,4 +101,4 @@ export function camelCaseToSpaced(str: string) {
     .replace(/([a-z\d])([A-Z])/g, '$1 $2') // handle standard camel: helloWorld → hello World
     .replace(/^./, (match) => match.toUpperCase()) // capitalize first letter
     .trim();
-};
+}
