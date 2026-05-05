@@ -94,3 +94,11 @@ export function formatHbsText(
 
   return template(context);
 }
+
+export function camelCaseToSpaced(str: string) {
+  return str
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2') // handle consecutive caps: XMLParser → XML Parser
+    .replace(/([a-z\d])([A-Z])/g, '$1 $2') // handle standard camel: helloWorld → hello World
+    .replace(/^./, (match) => match.toUpperCase()) // capitalize first letter
+    .trim();
+};

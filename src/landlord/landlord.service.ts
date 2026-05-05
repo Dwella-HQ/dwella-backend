@@ -25,6 +25,7 @@ import { LandlordSettings } from './entities/landlord-settings.entity';
 import { UpdateLandlordPlatformPreferencesDto } from './dto/update-landlord-platform-preferences.dto';
 import { UpdateLandlordGracePeriodDto } from './dto/update-landlord-grace-period.dto';
 import { UpdateLandlordLateFeeDto } from './dto/update-landlord-late-fee.dto';
+import { camelCaseToSpaced } from 'src/utils/misc';
 
 @Injectable()
 export class LandlordService {
@@ -97,7 +98,9 @@ export class LandlordService {
       if (error?.code == '23505') {
         // throw new BadRequestException('A user with this email already exists');
         const field = error.detail?.match(/Key \((.+?)\)/)?.[1] ?? 'field';
-        throw new BadRequestException(`${field} already exists`);
+        throw new BadRequestException(
+          `${camelCaseToSpaced(field)} already exists`,
+        );
       }
       console.log(error);
       throw new InternalServerErrorException('An error occured');
