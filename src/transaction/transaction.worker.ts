@@ -63,6 +63,13 @@ export class TransactionWorker extends WorkerHost {
           );
           return deposit;
         }
+        if (transaction?.action === TransactionActionEnum.RENT_PAYMENT) {
+          const rentPayment = await this.rentPaymentService.confirmRentPayment(
+            transaction.id,
+            transaction,
+          );
+          return rentPayment;
+        }
         return;
       }
       case 'handle_vba_transaction_credit_success': {
@@ -117,13 +124,6 @@ export class TransactionWorker extends WorkerHost {
             transaction,
           );
           return withdrawal;
-        }
-        if (transaction?.action === TransactionActionEnum.RENT_PAYMENT) {
-          const rentPayment = await this.rentPaymentService.confirmRentPayment(
-            transaction.id,
-            transaction,
-          );
-          return rentPayment;
         }
         return;
       }
