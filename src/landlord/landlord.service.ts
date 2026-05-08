@@ -233,7 +233,42 @@ export class LandlordService {
         landlord[key] = updateLandlordDto[key];
       }
     }
-    const updatedLandlord = this.landlordRepository.save(landlord);
+    if (updateLandlordDto.govermentIdDocumentId) {
+      const govermentIdDocument = await this.fileService.findFileById(
+        updateLandlordDto.govermentIdDocumentId,
+      );
+      landlord.govermentIdDocument = govermentIdDocument;
+    }
+    if (updateLandlordDto.landSurveyDocumentId) {
+      const landSurveyDocument = await this.fileService.findFileById(
+        updateLandlordDto.landSurveyDocumentId,
+      );
+      landlord.landSurveyDocument = landSurveyDocument;
+    }
+    if (updateLandlordDto.proofOfOwnershipDocumentId) {
+      const proofOfOwnershipDocument = await this.fileService.findFileById(
+        updateLandlordDto.proofOfOwnershipDocumentId,
+      );
+      landlord.proofOfOwnershipDocument = proofOfOwnershipDocument;
+    }
+    if (updateLandlordDto.taxIdentificationNumberDocumentId) {
+      const taxIdentificationNumberDocument =
+        await this.fileService.findFileById(
+          updateLandlordDto.taxIdentificationNumberDocumentId,
+        );
+      landlord.taxIdentificationNumberDocument =
+        taxIdentificationNumberDocument;
+    }
+    if (updateLandlordDto.profilePictureId) {
+      const profilePicture = await this.fileService.findFileById(
+        updateLandlordDto.profilePictureId,
+      );
+      landlord.profilePicture = profilePicture;
+    }
+    const updatedLandlord = await this.landlordRepository.save(landlord);
+    if (updatedLandlord.isApproved !== true) {
+      this.eventEmitter.emit('landlord.created', updatedLandlord.id);
+    }
     return updatedLandlord;
   }
 

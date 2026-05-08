@@ -32,6 +32,9 @@ export class VerificationService {
   @OnEvent('landlord.created')
   async startLandlordVerification(landlordId: string) {
     const landlord = await this.landlordService.findOne(landlordId);
+    if (landlord.isApproved) {
+      return;
+    }
     const verification = this.verificationRepository.create({
       type: VerificationTypeEnum.LANDLORD_VERIFICATION,
       landlord: landlord,
@@ -168,7 +171,7 @@ export class VerificationService {
     }
 
     if (verification.status === VerificationStatusEnum.VERIFIED) {
-      await this.landlordService.approveLandlord(verification.landlord.id);
+      await this.landlordService.approveLandlord(verification.landlord!.id);
     }
     const updatedVerification =
       await this.verificationRepository.save(verification);
@@ -198,7 +201,7 @@ export class VerificationService {
     }
 
     if (verification.status === VerificationStatusEnum.VERIFIED) {
-      await this.propertyService.approveProperty(verification.property.id);
+      await this.propertyService.approveProperty(verification.property!.id);
     }
     const updatedVerification =
       await this.verificationRepository.save(verification);

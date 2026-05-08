@@ -14,7 +14,6 @@ import {
   JoinColumn,
   ManyToOne,
   OneToMany,
-  OneToOne,
   PrimaryGeneratedColumn,
   Relation,
   UpdateDateColumn,
@@ -23,45 +22,45 @@ import {
 @Entity()
 export class Verification extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column({
     type: 'varchar',
   })
-  type: VerificationTypeEnum;
+  type!: VerificationTypeEnum;
 
   @Column({ nullable: true })
-  verifiedAt: Date;
+  verifiedAt!: Date;
 
   @Column({
     type: 'varchar',
     default: VerificationStatusEnum.PENDING,
   })
-  status: VerificationStatusEnum;
+  status!: VerificationStatusEnum;
 
   @Column({ nullable: true })
   reason?: string;
 
   @ManyToOne(() => User)
-  verifiedBy: Relation<User>;
+  verifiedBy!: Relation<User>;
 
   @JoinColumn()
-  @OneToOne(() => Landlord)
-  landlord: Relation<Landlord>;
+  @ManyToOne(() => Landlord)
+  landlord?: Relation<Landlord>;
 
   @JoinColumn()
-  @OneToOne(() => Property)
-  property: Relation<Property>;
+  @ManyToOne(() => Property)
+  property?: Relation<Property>;
 
   @OneToMany(() => File, (file) => file.verification, {
     eager: true,
     cascade: true,
   })
-  supportingDocuments: Relation<File[]>;
+  supportingDocuments!: Relation<File[]>;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
 }
