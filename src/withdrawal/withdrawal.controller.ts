@@ -8,6 +8,7 @@ import {
   Delete,
   Headers,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { WithdrawalService } from './withdrawal.service';
 import { CreateWithdrawalDto } from './dto/create-withdrawal.dto';
@@ -17,6 +18,8 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { PermissionsGuard } from 'src/auth/guards/permission.guard';
 import { RolesGuard } from 'src/auth/guards/role.guard';
 import { ResolveAccountDto } from './dto/resolve-account.dto';
+import { Public } from 'src/auth/decorators/public.decorator';
+import { CurrenciesEnum } from 'src/utils/constants';
 
 @UseGuards(JwtAuthGuard, PermissionsGuard, RolesGuard)
 @ApiBearerAuth()
@@ -46,8 +49,8 @@ export class WithdrawalController {
   }
 
   @Get('banks/:walletId')
-  async getBanks(@Param('walletId') walletId: string) {
-    const data = await this.withdrawalService.getBanks(walletId);
+  async getBanksByWallet(@Param('walletId') walletId: string) {
+    const data = await this.withdrawalService.getBanksByWallet(walletId);
     return {
       success: true,
       message: 'Banks retrieved successfully',
@@ -55,6 +58,17 @@ export class WithdrawalController {
     };
   }
 
+  @Get('banks')
+  async getBanks(@Query('currency') currency: CurrenciesEnum) {
+    const data = await this.withdrawalService.getBanks(currency);
+    return {
+      success: true,
+      message: 'Banks retrieved successfully',
+      data: data,
+    };
+  }
+
+  @Public()
   @Post('resolve-account')
   async resolveAccount(@Body() resolveAccountDto: ResolveAccountDto) {
     const data = await this.withdrawalService.resolveAccount(resolveAccountDto);

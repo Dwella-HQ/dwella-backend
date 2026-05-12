@@ -14,6 +14,7 @@ import { WalletService } from 'src/wallet/wallet.service';
 import ms from 'ms';
 import { SettingsService } from 'src/settings/settings.service';
 import {
+  CurrenciesEnum,
   JOB_NAMES,
   PaymentProviderEnum,
   TransactionActionEnum,
@@ -87,7 +88,7 @@ export class WithdrawalService {
     return `This action removes a #${id} withdrawal`;
   }
 
-  async getBanks(walletId: string) {
+  async getBanksByWallet(walletId: string) {
     const provider = (await this.settingsService.getSetting(
       'preferredPaymentProvider',
     )) as PaymentProviderEnum;
@@ -103,6 +104,26 @@ export class WithdrawalService {
       const paystackBanks = await this.paystackService.listBanks(
         wallet.currency,
       );
+      for (const bank of paystackBanks) {
+        banks.push({ name: bank.name, bankCode: bank.code });
+      }
+    }
+    await this.cacheManager.set(key, banks, ms('1h') / 1000);
+    return banks;
+  }
+
+  async getBanks(currency: CurrenciesEnum = CurrenciesEnum.NGN) {
+    const provider = (await this.settingsService.getSetting(
+      'preferredPaymentProvider',
+    )) as PaymentProviderEnum;
+    const key = `bank:${currency}`;
+    const cachedBanks = await this.cacheManager.get(key);
+    if (cachedBanks) {
+      return cachedBanks;
+    }
+    const banks: { name: string; bankCode: string }[] = [];
+    if (provider === PaymentProviderEnum.PAYSTACK) {
+      const paystackBanks = await this.paystackService.listBanks(currency);
       for (const bank of paystackBanks) {
         banks.push({ name: bank.name, bankCode: bank.code });
       }
