@@ -82,7 +82,9 @@ export class LandlordSettings extends BaseEntity {
     lateFeeType: LateFeeTypeEnum;
   };
 
-  @Column('simple-json')
+  @Column('simple-json', {
+    default: {},
+  })
   bankAccount!: {
     accountName: string;
     accountCode: string;
