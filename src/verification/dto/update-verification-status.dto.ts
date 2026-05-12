@@ -9,12 +9,11 @@ import { VerificationStatusEnum } from 'src/utils/constants';
 
 export class UpdateVerificationStatusDto {
   @IsEnum(VerificationStatusEnum)
-  status: VerificationStatusEnum;
+  status!: VerificationStatusEnum;
 
   @IsString()
   @IsNotEmpty()
-  @IsOptional()
-  reason?: string;
+  reason!: string;
 
   @IsUUID('all', { each: true })
   @IsOptional()

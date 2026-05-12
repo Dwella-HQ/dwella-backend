@@ -18,9 +18,10 @@ import { PermissionsGuard } from 'src/auth/guards/permission.guard';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { RequirePermissions } from 'src/rbac/decorators/permission.decorator';
-import { PERMISSIONS } from 'src/utils/constants';
+import { AdminRoles, PERMISSIONS } from 'src/utils/constants';
 import { UpdateMaintenanceRequestStatusDto } from './dto/update-maintenance-request-status.dto';
 import { QueryMaintenanceRequestsDto } from './dto/query-maintenance-requests.dto';
+import { RequireRoles } from 'src/rbac/decorators/role.decorator';
 
 @UseGuards(JwtAuthGuard, PermissionsGuard, RolesGuard)
 @ApiBearerAuth()
@@ -45,6 +46,7 @@ export class MaintenanceRequestController {
     };
   }
 
+  @RequireRoles(...AdminRoles)
   @Get()
   async findAll(@Query() queryDto: QueryPaginationDto) {
     const data = await this.maintenanceRequestService.findAll(queryDto);
