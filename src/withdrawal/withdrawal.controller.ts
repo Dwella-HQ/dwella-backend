@@ -59,8 +59,10 @@ export class WithdrawalController {
   }
 
   @Get('banks')
-  async getBanks(@Query('currency') currency: CurrenciesEnum) {
-    const data = await this.withdrawalService.getBanks(currency);
+  async getBanks(@Query('currency') currency: string) {
+    const data = await this.withdrawalService.getBanks(
+      currency as CurrenciesEnum,
+    );
     return {
       success: true,
       message: 'Banks retrieved successfully',
