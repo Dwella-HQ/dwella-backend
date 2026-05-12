@@ -279,7 +279,7 @@ export class LandlordService {
       this.landlordRepository.save(landlord),
       landlordSettings.save(),
     ]);
-    
+
     if (updatedLandlord.isApproved !== true) {
       this.eventEmitter.emit('landlord.created', updatedLandlord.id);
     }
