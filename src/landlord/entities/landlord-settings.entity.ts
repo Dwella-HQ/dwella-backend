@@ -22,10 +22,10 @@ import {
 @Entity()
 export class LandlordSettings extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @OneToOne(() => Landlord, (landlord) => landlord.settings)
-  landlord: Relation<Landlord>;
+  landlord?: Relation<Landlord>;
 
   @Column('simple-json', {
     default: {
@@ -37,7 +37,7 @@ export class LandlordSettings extends BaseEntity {
       weeklyReportsNotifications: [NotificationChannelEnum.EMAIL_NOTIFICATION],
     },
   })
-  notificationPreferences: {
+  notificationPreferences!: {
     paymentNotifications: NotificationChannelEnum[];
     maintenanceRequestNotifications: NotificationChannelEnum[];
     overDueNotifications: NotificationChannelEnum[];
@@ -51,7 +51,7 @@ export class LandlordSettings extends BaseEntity {
       language: LanguagesEnum.ENGLISH,
     },
   })
-  platformPreferences: {
+  platformPreferences!: {
     defaultCurrency: CurrenciesEnum;
     defaultLateFeeAmount: number;
     language: LanguagesEnum;
@@ -65,7 +65,7 @@ export class LandlordSettings extends BaseEntity {
       yearlyRentDueDateGracePeriod: YearlyRentGracePeriodEnum.NO_GRACE_PERIOD,
     },
   })
-  gracePeriodPeriods: {
+  gracePeriodPeriods!: {
     monthlyRentDueDateGracePeriod: MonthlyRentGracePeriodEnum;
     quarterlyRentDueDateGracePeriod: QuarterlyRentGracePeriodEnum;
     yearlyRentDueDateGracePeriod: YearlyRentGracePeriodEnum;
@@ -77,14 +77,22 @@ export class LandlordSettings extends BaseEntity {
       lateFeeType: LateFeeTypeEnum.FIXED,
     },
   })
-  lateFeeSettings: {
+  lateFeeSettings!: {
     lateFeeAmount: number;
     lateFeeType: LateFeeTypeEnum;
   };
 
+  @Column('simple-json')
+  bankAccount!: {
+    accountName: string;
+    accountCode: string;
+    bankName: string;
+    bvn: string;
+  };
+
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
 }

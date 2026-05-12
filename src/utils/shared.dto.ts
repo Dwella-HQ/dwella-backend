@@ -64,3 +64,23 @@ export class SendUserNotificationDto {
   @IsObject()
   context?: Record<string, any>;
 }
+
+export class BankAccountDto {
+  @IsString()
+  @IsNotEmpty()
+  @Length(10, 10)
+  accountName!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  accountCode!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  bankName!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @Length(11, 11)
+  bvn!: string;
+}

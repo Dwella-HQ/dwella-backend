@@ -84,12 +84,13 @@ export class LandlordService {
       }
       const address = await this.addressService.create(
         user.id,
-        createLandlordDto.address,
+        createLandlordDto.address!,
       );
       landlord.address = address;
       const savedLandlord = await this.landlordRepository.save(landlord);
       const landlordSettings = this.landlordSettingsRepository.create({
         landlord: savedLandlord,
+        bankAccount: createLandlordDto.bankAccount,
       });
       await this.landlordSettingsRepository.save(landlordSettings);
       this.eventEmitter.emit('landlord.created', savedLandlord.id);
@@ -228,6 +229,14 @@ export class LandlordService {
 
   async update(id: string, updateLandlordDto: UpdateLandlordDto) {
     const landlord = await this.findOne(id);
+    const landlordSettings = await this.landlordSettingsRepository.findOne({
+      where: {
+        landlord: { id: landlord.id },
+      },
+    });
+    if (!landlordSettings) {
+      throw new NotFoundException('Landlord Settings not found');
+    }
     for (const key in updateLandlordDto) {
       if (landlord[key]) {
         landlord[key] = updateLandlordDto[key];
@@ -265,7 +274,12 @@ export class LandlordService {
       );
       landlord.profilePicture = profilePicture;
     }
-    const updatedLandlord = await this.landlordRepository.save(landlord);
+    landlordSettings.bankAccount = updateLandlordDto.bankAccount!;
+    const [updatedLandlord] = await Promise.all([
+      this.landlordRepository.save(landlord),
+      landlordSettings.save(),
+    ]);
+    
     if (updatedLandlord.isApproved !== true) {
       this.eventEmitter.emit('landlord.created', updatedLandlord.id);
     }
