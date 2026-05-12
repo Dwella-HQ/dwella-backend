@@ -83,7 +83,7 @@ export class LandlordSettings extends BaseEntity {
   };
 
   @Column('simple-json', {
-    default: {},
+    nullable: true,
   })
   bankAccount!: {
     accountName: string;
