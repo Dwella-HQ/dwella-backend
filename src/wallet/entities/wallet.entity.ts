@@ -16,21 +16,22 @@ import { VBA } from '../vba/entity/vba.entity';
 import { Exclude, instanceToPlain } from 'class-transformer';
 import { WalletTransaction } from './wallet-transaction.entity';
 import { ColumnNumericTransformer } from 'src/utils/misc';
+import { TransferUserDetails } from 'src/utils/shared.dto';
 
 @Entity()
 @Index(['landlord', 'currency'], { unique: true })
 export class Wallet extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column({
     type: 'text',
     default: CurrenciesEnum.NGN,
   })
-  currency: CurrenciesEnum;
+  currency!: CurrenciesEnum;
 
   @ManyToOne(() => Landlord)
-  landlord: Relation<Landlord>;
+  landlord!: Relation<Landlord>;
 
   @Column('decimal', {
     precision: 15,
@@ -38,7 +39,7 @@ export class Wallet extends BaseEntity {
     default: 0,
     transformer: new ColumnNumericTransformer(),
   })
-  balance: number;
+  balance!: number;
 
   @Column('decimal', {
     precision: 15,
@@ -46,33 +47,39 @@ export class Wallet extends BaseEntity {
     default: 0,
     transformer: new ColumnNumericTransformer(),
   })
-  escrowBalance: number;
+  escrowBalance!: number;
 
   @OneToMany(() => WalletTransaction, (transaction) => transaction.wallet)
-  transactions: Relation<WalletTransaction[]>;
+  transactions!: Relation<WalletTransaction[]>;
 
   @OneToMany(() => VBA, (vba) => vba.wallet)
   vbas?: Relation<VBA[]>;
 
   @Column({ nullable: true })
-  bvn: string;
+  bvn!: string;
 
   @Column({
     type: 'simple-json',
     nullable: true,
   })
-  metadata: Record<string, any>;
+  metadata!: Record<string, any>;
+
+  @Column({
+    type: 'simple-json',
+    default: {},
+  })
+  withdrawalDetails!: TransferUserDetails;
 
   vba?: VBA;
 
   @Column({ default: true })
-  isActive: boolean;
+  isActive!: boolean;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
 
   toJSON() {
     return instanceToPlain(this);

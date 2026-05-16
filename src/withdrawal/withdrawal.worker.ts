@@ -34,13 +34,13 @@ export class WithdrawalWorker extends WorkerHost {
           amount: createWithdrawalDto.amount,
           currency: wallet.currency,
           narration: createWithdrawalDto.narration,
-          recipientDetails: createWithdrawalDto.recipientDetails,
+          recipientDetails: wallet.withdrawalDetails,
         });
         const transaction = await this.transactionService.createDebit({
           action: TransactionActionEnum.WITHDRAWAL,
           amount: createWithdrawalDto.amount,
           currency: wallet.currency,
-          receiverDetails: createWithdrawalDto.recipientDetails,
+          receiverDetails: wallet.withdrawalDetails,
           walletId: createWithdrawalDto.walletId,
           narration: createWithdrawalDto.narration,
         });

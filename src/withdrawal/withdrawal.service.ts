@@ -60,12 +60,6 @@ export class WithdrawalService {
     if (wallet.balance < createWithdrawalDto.amount) {
       throw new BadRequestException('Insufficient balance');
     }
-    if (
-      !createWithdrawalDto.recipientDetails.bankCode ||
-      !createWithdrawalDto.recipientDetails.accountNumber
-    ) {
-      throw new BadRequestException('Recipient bank details are required');
-    }
     await this.withdrawalQueue.add('process-withdrawal', createWithdrawalDto, {
       jobId: idempotencyKey,
     });

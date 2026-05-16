@@ -43,6 +43,9 @@ export class WalletService {
     const landlord = await this.landlordService.findOne(
       createWalletDto.landlordId,
     );
+    const landlordSettings = await this.landlordService.getLandlordSettings(
+      landlord.id,
+    );
     const activeWallet = await this.walletRepository.findOne({
       where: {
         landlord: { id: createWalletDto.landlordId },
@@ -55,6 +58,13 @@ export class WalletService {
     const wallet = this.walletRepository.create({
       landlord: landlord,
       currency: createWalletDto.currency,
+      bvn: landlordSettings.bankAccount.bvn,
+      withdrawalDetails: {
+        accountNumber: landlordSettings.bankAccount.accountNumber,
+        bankCode: landlordSettings.bankAccount.bankCode,
+        bankName: landlordSettings.bankAccount.bankName,
+        fullName: landlordSettings.bankAccount.accountName,
+      },
     });
     const savedWallet = await this.walletRepository.save(wallet);
     return savedWallet;

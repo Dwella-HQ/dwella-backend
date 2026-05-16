@@ -18,7 +18,6 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { PermissionsGuard } from 'src/auth/guards/permission.guard';
 import { RolesGuard } from 'src/auth/guards/role.guard';
 import { ResolveAccountDto } from './dto/resolve-account.dto';
-import { Public } from 'src/auth/decorators/public.decorator';
 import { CurrenciesEnum } from 'src/utils/constants';
 
 @UseGuards(JwtAuthGuard, PermissionsGuard, RolesGuard)
@@ -70,7 +69,6 @@ export class WithdrawalController {
     };
   }
 
-  @Public()
   @Post('resolve-account')
   async resolveAccount(@Body() resolveAccountDto: ResolveAccountDto) {
     const data = await this.withdrawalService.resolveAccount(resolveAccountDto);

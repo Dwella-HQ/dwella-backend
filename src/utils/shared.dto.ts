@@ -68,16 +68,20 @@ export class SendUserNotificationDto {
 export class BankAccountDto {
   @IsString()
   @IsNotEmpty()
-  @Length(10, 10)
   accountName!: string;
 
   @IsString()
   @IsNotEmpty()
-  accountCode!: string;
+  @Length(10, 10)
+  accountNumber!: string;
 
   @IsString()
   @IsNotEmpty()
   bankName!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  bankCode!: string;
 
   @IsString()
   @IsNotEmpty()

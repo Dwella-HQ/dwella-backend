@@ -1,27 +1,14 @@
-import { Type } from 'class-transformer';
-import {
-  IsNumber,
-  IsOptional,
-  IsString,
-  IsUUID,
-  Min,
-  ValidateNested,
-} from 'class-validator';
-import { TransferUserDetails } from 'src/utils/shared.dto';
+import { IsNumber, IsOptional, IsString, IsUUID, Min } from 'class-validator';
 
 export class CreateWithdrawalDto {
   @IsUUID()
-  walletId: string;
+  walletId!: string;
 
   @IsNumber()
   @Min(0.01)
-  amount: number;
+  amount!: number;
 
   @IsString()
   @IsOptional()
   narration?: string;
-
-  @Type(() => TransferUserDetails)
-  @ValidateNested()
-  recipientDetails: TransferUserDetails;
 }

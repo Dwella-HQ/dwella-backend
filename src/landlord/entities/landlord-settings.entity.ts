@@ -87,7 +87,8 @@ export class LandlordSettings extends BaseEntity {
   })
   bankAccount!: {
     accountName: string;
-    accountCode: string;
+    accountNumber: string;
+    bankCode: string;
     bankName: string;
     bvn: string;
   };
