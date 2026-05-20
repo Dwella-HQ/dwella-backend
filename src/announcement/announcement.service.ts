@@ -217,7 +217,7 @@ export class AnnouncementService {
     });
 
     this.server
-      .to(`announcements:landlord:${propertyManager.landlord.id}`)
+      ?.to(`announcements:landlord:${propertyManager.landlord.id}`)
       .emit('load:announcements', landlordAnnouncements);
 
     for (const property of propertyManager.properties) {
@@ -233,7 +233,7 @@ export class AnnouncementService {
       });
 
       this.server
-        .to(`announcements:property:${property.id}`)
+        ?.to(`announcements:property:${property.id}`)
         .emit('load:announcements', propertyAnnouncements);
     }
   }
