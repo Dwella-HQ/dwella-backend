@@ -7,10 +7,12 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { AnnouncementService } from './announcement.service';
 import { CreateAnnouncementDto } from './dto/create-announcement.dto';
 import { UpdateAnnouncementDto } from './dto/update-announcement.dto';
+import { QueryAnnouncementDto } from './dto/query-announcement.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { PermissionsGuard } from 'src/auth/guards/permission.guard';
@@ -61,6 +63,16 @@ export class AnnouncementController {
   @Get()
   findAll() {
     return this.announcementService.findAll();
+  }
+
+  @Get('query')
+  async query(@Query() query: QueryAnnouncementDto) {
+    const data = await this.announcementService.query(query);
+    return {
+      success: true,
+      message: 'Announcements retrieved successfully',
+      data,
+    };
   }
 
   @Get(':id')
