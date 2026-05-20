@@ -17,7 +17,7 @@ import { QueryAnnouncementDto } from './dto/query-announcement.dto';
 
 @Injectable()
 export class AnnouncementService {
-  private server: Server;
+  private server?: Server;
 
   constructor(
     @InjectRepository(Announcement)
@@ -195,10 +195,10 @@ export class AnnouncementService {
     });
 
     this.server
-      .to(`announcements:landlord:${property.landlord.id}`)
+      ?.to(`announcements:landlord:${property.landlord.id}`)
       .emit('load:announcements', landlordAnnouncements);
     this.server
-      .to(`announcements:property:${property.id}`)
+      ?.to(`announcements:property:${property.id}`)
       .emit('load:announcements', propertyAnnouncements);
   }
 
