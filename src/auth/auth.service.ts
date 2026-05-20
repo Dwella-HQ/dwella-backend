@@ -164,7 +164,9 @@ export class AuthService {
   }
 
   async getAuthenticatedUser(email: string, password: string) {
-    const user = await this.userService.findOneByEmail(email);
+    const user = await this.userService.findOneByEmail(email).catch(() => {
+      throw new BadRequestException('Wrong details provided');
+    });
     if (user.registrationType !== RegistrationTypeEnum.EMAIL) {
       throw new BadRequestException(`Wrong Registration type`);
     }

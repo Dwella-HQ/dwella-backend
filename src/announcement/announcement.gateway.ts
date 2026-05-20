@@ -35,7 +35,7 @@ export class AnnouncementGateway
   ) {}
 
   @WebSocketServer()
-  server: Server;
+  server!: Server;
 
   afterInit() {
     this.announcementService.bindServer(this.server);
