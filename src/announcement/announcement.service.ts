@@ -300,6 +300,15 @@ export class AnnouncementService {
           await this.getPropertyAnnouncements(property.id);
         }
       }
+    } else if (user.role.name === USER_ROLES.LANDLORD) {
+      const landlord = await this.landlordService.findByUserId(user.id);
+      const properties = await this.propertyService.getLandlordProperties(
+        landlord.id,
+      );
+      for (const property of properties) {
+        await client.join(`announcements:property:${property.id}`);
+        await this.getPropertyAnnouncements(property.id);
+      }
     }
   }
 }
