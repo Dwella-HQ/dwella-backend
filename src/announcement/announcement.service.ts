@@ -5,7 +5,7 @@ import { User } from 'src/user/entities/user.entity';
 import { AnnounementLevelEnum, USER_ROLES } from 'src/utils/constants';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Announcement } from './entities/announcement.entity';
-import { Repository } from 'typeorm';
+import { LessThan, Repository } from 'typeorm';
 import { TenantService } from 'src/tenant/tenant.service';
 import { Server, Socket } from 'socket.io';
 import { PropertyService } from 'src/property/property.service';
@@ -14,6 +14,8 @@ import { LandlordService } from 'src/landlord/landlord.service';
 import { FileService } from 'src/file/file.service';
 import { File } from 'src/file/entities/file.entity';
 import { QueryAnnouncementDto } from './dto/query-announcement.dto';
+import { Property } from 'src/property/entities/property.entity';
+import { QueryPaginationDto } from 'src/utils/query-pagination.dto';
 
 @Injectable()
 export class AnnouncementService {
@@ -38,11 +40,22 @@ export class AnnouncementService {
     createAnnouncementDto: CreateAnnouncementDto,
   ) {
     const landlord = await this.landlordService.findOne(landlordId);
+    let properties: Property[] = [];
+    if (createAnnouncementDto.propertyIds) {
+      properties = await this.propertyService.findMultiplePropertiesById(
+        createAnnouncementDto.propertyIds,
+      );
+    } else {
+      properties = await this.propertyService.getLandlordProperties(
+        landlord.id,
+      );
+    }
     const announcement = this.announcementRepository.create({
       landlord,
       content: createAnnouncementDto.content,
       title: createAnnouncementDto.title,
       level: AnnounementLevelEnum.LANDLORD,
+      properties: properties,
     });
 
     if (
@@ -56,7 +69,11 @@ export class AnnouncementService {
       }
       announcement.files = announcementFiles;
     }
-    await this.announcementRepository.save(announcement);
+    const savedAnnouncement =
+      await this.announcementRepository.save(announcement);
+    for (const property of savedAnnouncement.properties || []) {
+      await this.getPropertyAnnouncements(property.id);
+    }
   }
 
   async createPropertyAnnouncement(
@@ -65,7 +82,7 @@ export class AnnouncementService {
   ) {
     const property = await this.propertyService.findOne(propertyId);
     const announcement = this.announcementRepository.create({
-      property,
+      properties: [property],
       content: createAnnouncementDto.content,
       title: createAnnouncementDto.title,
       level: AnnounementLevelEnum.PROPERTY,
@@ -82,7 +99,10 @@ export class AnnouncementService {
       }
       announcement.files = announcementFiles;
     }
-    await this.announcementRepository.save(announcement);
+    const savedAnnouncement =
+      await this.announcementRepository.save(announcement);
+    await this.getPropertyAnnouncements(property.id);
+    return savedAnnouncement;
   }
 
   findAll() {
@@ -93,7 +113,7 @@ export class AnnouncementService {
     const announcement = await this.announcementRepository.findOne({
       where: { id },
       relations: {
-        property: true,
+        properties: true,
         landlord: true,
       },
     });
@@ -167,95 +187,117 @@ export class AnnouncementService {
     return announcements;
   }
 
-  async getTenantsAnnouncements(tenantId: string) {
-    const tenant = await this.tenantService.findOne(tenantId);
-    const unit = await this.propertyService.getUnit(tenant.currentUnit.id);
-    const property = await this.propertyService.findOne(unit.property.id);
+  // async getTenantsAnnouncements(tenantId: string) {
+  //   const tenant = await this.tenantService.findOne(tenantId);
+  //   const unit = await this.propertyService.getUnit(tenant.currentUnit.id);
+  //   const property = await this.propertyService.findOne(unit.property.id);
 
-    const landlordAnnouncements = await this.announcementRepository.find({
-      where: {
-        landlord: {
-          id: property.landlord.id,
-        },
-      },
-      relations: {
-        files: true,
-      },
-    });
+  //   const landlordAnnouncements = await this.announcementRepository.find({
+  //     where: {
+  //       landlord: {
+  //         id: property.landlord.id,
+  //       },
+  //     },
+  //     relations: {
+  //       files: true,
+  //     },
+  //   });
 
-    const propertyAnnouncements = await this.announcementRepository.find({
+  //   const propertyAnnouncements = await this.announcementRepository.find({
+  //     where: {
+  //       properties: {
+  //         id: property.id,
+  //       },
+  //     },
+  //     relations: {
+  //       files: true,
+  //     },
+  //   });
+
+  //   this.server
+  //     ?.to(`announcements:landlord:${property.landlord.id}`)
+  //     .emit('load:announcements', landlordAnnouncements);
+  //   this.server
+  //     ?.to(`announcements:property:${property.id}`)
+  //     .emit('load:announcements', propertyAnnouncements);
+  // }
+
+  // async getPropertyManagerAnnouncements(propertyManagerId: string) {
+  //   const propertyManager =
+  //     await this.propertyManagerService.findOne(propertyManagerId);
+  //   const landlordAnnouncements = await this.announcementRepository.find({
+  //     where: {
+  //       landlord: {
+  //         id: propertyManager.landlord.id,
+  //       },
+  //     },
+  //     relations: {
+  //       files: true,
+  //     },
+  //   });
+
+  //   this.server
+  //     ?.to(`announcements:landlord:${propertyManager.landlord.id}`)
+  //     .emit('load:announcements', landlordAnnouncements);
+
+  //   for (const property of propertyManager.properties) {
+  //     const propertyAnnouncements = await this.announcementRepository.find({
+  //       where: {
+  //         properties: {
+  //           id: property.id,
+  //         },
+  //       },
+  //       relations: {
+  //         files: true,
+  //       },
+  //     });
+
+  //     this.server
+  //       ?.to(`announcements:property:${property.id}`)
+  //       .emit('load:announcements', propertyAnnouncements);
+  //   }
+  // }
+
+  async getPropertyAnnouncements(
+    propertyId: string,
+    queryPaginationDto?: QueryPaginationDto,
+  ) {
+    const anncouncements = await this.announcementRepository.find({
       where: {
-        property: {
-          id: property.id,
-        },
+        properties: { id: propertyId },
+        createdAt:
+          queryPaginationDto?.cursor && LessThan(queryPaginationDto?.cursor),
       },
-      relations: {
-        files: true,
+      order: {
+        createdAt: 'DESC',
       },
+      take: queryPaginationDto?.limit || 50,
     });
 
     this.server
-      ?.to(`announcements:landlord:${property.landlord.id}`)
-      .emit('load:announcements', landlordAnnouncements);
-    this.server
-      ?.to(`announcements:property:${property.id}`)
-      .emit('load:announcements', propertyAnnouncements);
-  }
-
-  async getPropertyAnnouncements(propertyManagerId: string) {
-    const propertyManager =
-      await this.propertyManagerService.findOne(propertyManagerId);
-    const landlordAnnouncements = await this.announcementRepository.find({
-      where: {
-        landlord: {
-          id: propertyManager.landlord.id,
-        },
-      },
-      relations: {
-        files: true,
-      },
-    });
-
-    this.server
-      ?.to(`announcements:landlord:${propertyManager.landlord.id}`)
-      .emit('load:announcements', landlordAnnouncements);
-
-    for (const property of propertyManager.properties) {
-      const propertyAnnouncements = await this.announcementRepository.find({
-        where: {
-          property: {
-            id: property.id,
-          },
-        },
-        relations: {
-          files: true,
-        },
-      });
-
-      this.server
-        ?.to(`announcements:property:${property.id}`)
-        .emit('load:announcements', propertyAnnouncements);
-    }
+      ?.to(`announcements:property:${propertyId}`)
+      .emit('announcements:load', anncouncements);
+    return anncouncements;
   }
 
   async joinRoom(client: Socket, user: User) {
     if (user.role.name === USER_ROLES.TENANT) {
       const tenant = await this.tenantService.getTenantByUserId(user.id);
       const unit = await this.propertyService.getUnit(tenant.currentUnit.id);
-      const property = await this.propertyService.findOne(unit.property.id);
+      // const property = await this.propertyService.findOne(unit.property.id);
 
       await client.join('announcements');
-      await client.join(`announcements:landlord:${property.landlord.id}`);
-      await client.join(`announcements:property:${property.id}`);
-      await this.getTenantsAnnouncements(tenant.id);
+      // await client.join(`announcements:landlord:${property.landlord.id}`);
+      await client.join(`announcements:property:${unit.property.id}`);
+      await this.getPropertyAnnouncements(unit.property.id);
     } else if (user.role.name === USER_ROLES.PROPERTY_MANAGER) {
       const propertyManagers =
         await this.propertyManagerService.getUserPropertyManagers(user.id);
       for (const pm of propertyManagers) {
-        await client.join(`announcements:landlord:${pm.landlord.id}`);
+        // await client.join(`announcements:landlord:${pm.landlord.id}`);
         for (const property of pm.properties) {
           await client.join(`announcements:property:${property.id}`);
-          await this.getPropertyAnnouncements(pm.id);
+          await this.getPropertyAnnouncements(property.id);
         }
       }
     }

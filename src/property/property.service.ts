@@ -9,7 +9,7 @@ import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Property } from './entities/property.entity';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { AddressService } from 'src/address/address.service';
 import { LandlordService } from 'src/landlord/landlord.service';
 import { QueryPropertyDto } from './dto/query-property.dto';
@@ -88,6 +88,17 @@ export class PropertyService {
 
   async findAll() {
     const properties = await this.propertyRepository.find();
+    return properties;
+  }
+
+  async findMultiplePropertiesById(propertiesIds: string[]) {
+    const properties = await this.propertyRepository.find({
+      where: { id: In(propertiesIds) },
+      relations: {
+        address: true,
+        landlord: true,
+      },
+    });
     return properties;
   }
 

@@ -8,6 +8,8 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinTable,
+  ManyToMany,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -18,35 +20,34 @@ import {
 @Entity()
 export class Announcement extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column()
-  title: string;
+  title!: string;
 
   @Column('text')
-  content: string;
+  content!: string;
 
-  @ManyToOne(() => Landlord)
-  landlord: Relation<Landlord>;
+  @Column({ type: 'text' })
+  level!: AnnounementLevelEnum;
 
-  @ManyToOne(() => Property)
-  property: Relation<Property>;
+  @ManyToOne(() => Landlord, { nullable: false })
+  landlord!: Relation<Landlord>;
+
+  @JoinTable()
+  @ManyToMany(() => Property)
+  properties?: Relation<Property>[];
 
   @OneToMany(() => File, (file) => file.announcement, { eager: true })
-  files: Relation<File[]>;
+  files?: Relation<File[]>;
 
-  @ManyToOne(() => Unit)
-  unit: Relation<Unit>;
-
-  @Column({
-    type: 'text',
-    default: AnnounementLevelEnum.PROPERTY,
-  })
-  level: AnnounementLevelEnum;
+  @JoinTable()
+  @ManyToMany(() => Unit)
+  units?: Relation<Unit>[];
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
 }

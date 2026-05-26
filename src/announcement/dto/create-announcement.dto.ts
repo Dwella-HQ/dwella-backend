@@ -1,14 +1,18 @@
-import { IsNotEmpty, IsString, IsUUID } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class CreateAnnouncementDto {
   @IsString()
   @IsNotEmpty()
-  title: string;
+  title!: string;
 
   @IsString()
   @IsNotEmpty()
-  content: string;
+  content!: string;
 
   @IsUUID('all', { each: true })
-  fileIds: string[];
+  fileIds!: string[];
+
+  @IsUUID('all', { each: true })
+  @IsOptional()
+  propertyIds!: string[];
 }
