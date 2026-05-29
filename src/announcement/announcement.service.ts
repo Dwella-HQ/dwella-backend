@@ -86,6 +86,7 @@ export class AnnouncementService {
       content: createAnnouncementDto.content,
       title: createAnnouncementDto.title,
       level: AnnounementLevelEnum.PROPERTY,
+      landlord: property.landlord,
     });
 
     if (
