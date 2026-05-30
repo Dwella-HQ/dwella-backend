@@ -24,7 +24,7 @@ import { base64Encode } from 'src/utils/misc';
 
 @Injectable()
 export class ChatService {
-  private server: Server;
+  private server!: Server;
 
   constructor(
     private readonly userService: UserService,
