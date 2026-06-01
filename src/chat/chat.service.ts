@@ -85,33 +85,30 @@ export class ChatService {
       let participant: ChatParticipant | undefined;
       if (participantDto.role === USER_ROLES.TENANT) {
         const tenant = await this.tenantService.findOne(participantDto.roleId);
-        participant = this.chatParticipantRepository.create({
+        participant = await this.chatParticipantRepository.save({
           user: tenant.user,
           role: participantDto.role,
           roleId: participantDto.roleId,
-          chat,
         });
       }
       if (participantDto.role === USER_ROLES.PROPERTY_MANAGER) {
         const manager = await this.propertyManagerService.findOne(
           participantDto.roleId,
         );
-        participant = this.chatParticipantRepository.create({
+        participant = await this.chatParticipantRepository.save({
           user: manager.user,
           role: participantDto.role,
           roleId: participantDto.roleId,
-          chat,
         });
       }
       if (participantDto.role === USER_ROLES.LANDLORD) {
         const landlord = await this.landlordService.findOne(
           participantDto.roleId,
         );
-        participant = this.chatParticipantRepository.create({
+        participant = await this.chatParticipantRepository.save({
           user: landlord.user,
           role: participantDto.role,
           roleId: participantDto.roleId,
-          chat,
         });
       }
       if (!participant) {
