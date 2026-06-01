@@ -74,6 +74,36 @@ export class TenantController {
     };
   }
 
+  @Get('unit/:unitId')
+  async findTenantsByUnitId(@Param('unitId') unitId: string) {
+    const data = await this.tenantService.findTenantsByUnitId(unitId);
+    return {
+      success: true,
+      message: 'Tenants retrieved successfully',
+      data,
+    };
+  }
+
+  @Get('property/:propertyId')
+  async findTenantsByPropertyId(@Param('propertyId') propertyId: string) {
+    const data = await this.tenantService.findTenantsByPropertyId(propertyId);
+    return {
+      success: true,
+      message: 'Tenants retrieved successfully',
+      data,
+    };
+  }
+
+  @Get('landlord/:landlordId')
+  async findTenantsByLandlordId(@Param('landlordId') landlordId: string) {
+    const data = await this.tenantService.findTenantsByLandlordId(landlordId);
+    return {
+      success: true,
+      message: 'Tenants retrieved successfully',
+      data,
+    };
+  }
+
   @Patch(':id')
   async update(
     @Param('id') id: string,

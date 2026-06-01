@@ -152,6 +152,42 @@ export class TenantService {
     return tenant;
   }
 
+  async findTenantsByUnitId(unitId: string) {
+    const tenants = await this.tenantRepository.find({
+      where: { currentUnit: { id: unitId } },
+      relations: {
+        user: true,
+        leases: true,
+        currentUnit: true,
+      },
+    });
+    return tenants;
+  }
+
+  async findTenantsByPropertyId(propertyId: string) {
+    const tenants = await this.tenantRepository.find({
+      where: { currentUnit: { property: { id: propertyId } } },
+      relations: {
+        user: true,
+        leases: true,
+        currentUnit: true,
+      },
+    });
+    return tenants;
+  }
+
+  async findTenantsByLandlordId(landlordId: string) {
+    const tenants = await this.tenantRepository.find({
+      where: { currentUnit: { property: { landlord: { id: landlordId } } } },
+      relations: {
+        user: true,
+        leases: true,
+        currentUnit: true,
+      },
+    });
+    return tenants;
+  }
+
   update(id: string, updateTenantDto: UpdateTenantDto) {
     return `This action updates a #${id} tenant`;
   }
