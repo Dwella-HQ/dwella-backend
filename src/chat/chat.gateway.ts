@@ -10,7 +10,6 @@ import {
 } from '@nestjs/websockets';
 import { ChatService } from './chat.service';
 import { CreateChatDto } from './dto/create-chat.dto';
-import { UpdateChatDto } from './dto/update-chat.dto';
 import { Inject, Logger, UseGuards } from '@nestjs/common';
 import { WsAuthGuard } from 'src/auth/guards/ws.guard';
 import { Server, Socket } from 'socket.io';
@@ -92,47 +91,39 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('createChat')
-  create(@MessageBody() createChatDto: CreateChatDto) {
-    return this.chatService.create(createChatDto);
-  }
-
-  @SubscribeMessage('findAllChat')
-  findAll() {
-    return this.chatService.findAll();
+  async create(@MessageBody() createChatDto: CreateChatDto) {
+    return await this.chatService.create(createChatDto);
   }
 
   @SubscribeMessage('findOneChat')
-  findOne(@MessageBody() id: string) {
-    return this.chatService.findOne(id);
+  async findOne(@MessageBody() id: string) {
+    return await this.chatService.findOne(id);
   }
 
   @SubscribeMessage('addChatMessage')
-  addChatMessage(@MessageBody() createChatMessageDto: CreateChatMessageDto) {
-    return this.chatService.addChatMessage(createChatMessageDto);
+  async addChatMessage(
+    @MessageBody() createChatMessageDto: CreateChatMessageDto,
+  ) {
+    return await this.chatService.addChatMessage(createChatMessageDto);
   }
 
   @SubscribeMessage('getChatMessages')
-  getMessages(@MessageBody() getChatMessagesDto: GetChatMessagesDto) {
-    return this.chatService.getChatMessages(getChatMessagesDto);
+  async getMessages(@MessageBody() getChatMessagesDto: GetChatMessagesDto) {
+    return await this.chatService.getChatMessages(getChatMessagesDto);
   }
 
   @SubscribeMessage('readChatMessages')
-  readMessages(@MessageBody() readMessagesDto: ReadMessagesDto) {
-    return this.chatService.readMessages(readMessagesDto);
+  async readMessages(@MessageBody() readMessagesDto: ReadMessagesDto) {
+    return await this.chatService.readMessages(readMessagesDto);
   }
 
   @SubscribeMessage('deleteChatMessages')
-  deleteMessages(@MessageBody() deleteMessagesDto: DeleteMessagesDto) {
-    return this.chatService.deleteMessages(deleteMessagesDto);
-  }
-
-  @SubscribeMessage('updateChat')
-  update(@MessageBody() updateChatDto: UpdateChatDto) {
-    return this.chatService.update(updateChatDto.id, updateChatDto);
+  async deleteMessages(@MessageBody() deleteMessagesDto: DeleteMessagesDto) {
+    return await this.chatService.deleteMessages(deleteMessagesDto);
   }
 
   @SubscribeMessage('removeChat')
-  remove(@MessageBody() id: string) {
-    return this.chatService.remove(id);
+  async remove(@MessageBody() id: string) {
+    return await this.chatService.remove(id);
   }
 }
