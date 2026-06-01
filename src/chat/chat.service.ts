@@ -64,22 +64,23 @@ export class ChatService {
   }
 
   async create(createChatDto: CreateChatDto) {
-    const chat = this.chatRepository.create({});
     const participantIds = createChatDto.participants
       .map((p) => p.roleId)
       .sort();
-    const ref = base64Encode(participantIds.join('_'));
+    const ref = base64Encode(participantIds.sort().join('_'));
+
+    const existingChat = await this.chatRepository.findOne({
+      where: {
+        ref,
+      },
+    });
+    if (existingChat) {
+      return existingChat;
+    }
+    const chat = this.chatRepository.create({
+      ref: ref,
+    });
     const participants: ChatParticipant[] = [];
-    // const existingChat = await this.chatRepository.findOne({
-    //   where: {
-    //     participants: {
-    //       roleId: In(createChatDto.participants.map((p) => p.roleId)),
-    //     },
-    //   },
-    //   relations: {
-    //     participants: true,
-    //   },
-    // });
     for (const participantDto of createChatDto.participants) {
       let participant: ChatParticipant | undefined;
       if (participantDto.role === USER_ROLES.TENANT) {
