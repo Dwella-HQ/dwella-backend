@@ -121,6 +121,9 @@ export class ChatService {
     for (const participant of participants) {
       await this.cacheManager.del(`user:${participant.roleId}:chatIds`);
     }
+    for (const participant of participants) {
+      await this.getUserChats(participant.roleId);
+    }
     return savedChat;
   }
 
