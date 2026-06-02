@@ -26,7 +26,7 @@ export class Chat extends BaseEntity {
   @Column('simple-json', { nullable: true })
   lastMessage: Relation<Partial<ChatMessage>>;
 
-  @Column()
+  @Column({ nullable: true })
   lastMessageDate: Date;
 
   @DeleteDateColumn()
