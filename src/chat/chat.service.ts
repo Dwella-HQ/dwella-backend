@@ -85,7 +85,7 @@ export class ChatService {
       let participant: ChatParticipant | undefined;
       if (participantDto.role === USER_ROLES.TENANT) {
         const tenant = await this.tenantService.findOne(participantDto.roleId);
-        participant = await this.chatParticipantRepository.save({
+        participant = this.chatParticipantRepository.create({
           user: tenant.user,
           role: participantDto.role,
           roleId: participantDto.roleId,
@@ -95,7 +95,7 @@ export class ChatService {
         const manager = await this.propertyManagerService.findOne(
           participantDto.roleId,
         );
-        participant = await this.chatParticipantRepository.save({
+        participant = this.chatParticipantRepository.create({
           user: manager.user,
           role: participantDto.role,
           roleId: participantDto.roleId,
@@ -105,7 +105,7 @@ export class ChatService {
         const landlord = await this.landlordService.findOne(
           participantDto.roleId,
         );
-        participant = await this.chatParticipantRepository.save({
+        participant = this.chatParticipantRepository.create({
           user: landlord.user,
           role: participantDto.role,
           roleId: participantDto.roleId,
@@ -116,12 +116,13 @@ export class ChatService {
       }
       participants.push(participant);
     }
-    chat.participants = participants;
     const savedChat = await this.chatRepository.save(chat);
     for (const participant of participants) {
       await this.cacheManager.del(`user:${participant.roleId}:chatIds`);
     }
     for (const participant of participants) {
+      participant.chat = savedChat;
+      await this.chatParticipantRepository.save(participant);
       await this.getUserChats(participant.roleId);
     }
     return savedChat;
