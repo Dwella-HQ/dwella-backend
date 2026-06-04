@@ -2,7 +2,7 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
-import { Server } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import { UserService } from 'src/user/user.service';
 import { TenantService } from 'src/tenant/tenant.service';
 import { PropertyManagerService } from 'src/property-manager/property-manager.service';
@@ -21,6 +21,7 @@ import { FileService } from 'src/file/file.service';
 import { ReadMessagesDto } from './dto/read-messages.dto';
 import { DeleteMessagesDto } from './dto/delete-messages.dto';
 import { base64Encode } from 'src/utils/misc';
+import { User } from 'src/user/entities/user.entity';
 
 @Injectable()
 export class ChatService {
@@ -42,6 +43,25 @@ export class ChatService {
 
   bindServer(server: Server) {
     this.server = server;
+  }
+
+  async joinChat(user: User, client: Socket) {
+    if (user.role.name === USER_ROLES.TENANT) {
+      const tenant = await this.tenantService.getTenantByUserId(user.id);
+      await client.join(`user:${tenant.id}`);
+    }
+    if (user.role.name === USER_ROLES.PROPERTY_MANAGER) {
+      const manager = await this.propertyManagerService.getUserPropertyManagers(
+        user.id,
+      );
+      for (const m of manager) {
+        await client.join(`user:${m.id}`);
+      }
+    }
+    if (user.role.name === USER_ROLES.LANDLORD) {
+      const landlord = await this.landlordService.findByUserId(user.id);
+      await client.join(`user:${landlord.id}`);
+    }
   }
 
   async getUserChatIds(roleId: string) {
