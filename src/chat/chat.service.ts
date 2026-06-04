@@ -49,6 +49,7 @@ export class ChatService {
     if (user.role.name === USER_ROLES.TENANT) {
       const tenant = await this.tenantService.getTenantByUserId(user.id);
       await client.join(`user:${tenant.id}`);
+      await this.getUserChatIds(tenant.id);
     }
     if (user.role.name === USER_ROLES.PROPERTY_MANAGER) {
       const manager = await this.propertyManagerService.getUserPropertyManagers(
@@ -56,11 +57,13 @@ export class ChatService {
       );
       for (const m of manager) {
         await client.join(`user:${m.id}`);
+        await this.getUserChatIds(m.id);
       }
     }
     if (user.role.name === USER_ROLES.LANDLORD) {
       const landlord = await this.landlordService.findByUserId(user.id);
       await client.join(`user:${landlord.id}`);
+      await this.getUserChatIds(landlord.id);
     }
   }
 
