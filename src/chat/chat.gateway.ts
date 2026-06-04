@@ -87,7 +87,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     for (const chat of chats) {
       void client.join(chat.id);
     }
-    return { message: `Joined ${chats.length} chat rooms` };
+    return chats;
   }
 
   @SubscribeMessage('createChat')
