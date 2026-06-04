@@ -6,7 +6,6 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
   WebSocketServer,
-  ConnectedSocket,
 } from '@nestjs/websockets';
 import { ChatService } from './chat.service';
 import { CreateChatDto } from './dto/create-chat.dto';
@@ -66,6 +65,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
       const user = await this.authService.getUser(sub);
       // await this.chatService.joinRoom(client, user);
+      await this.chatService.joinChat(user, client);
       (client as any).data.user = user;
     } catch {
       client.emit('error', { message: 'Authentication failed: Invalid token' });
@@ -78,15 +78,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // cleanup if needed
   }
 
-  @SubscribeMessage('chat')
-  async joinChat(
-    @MessageBody() roleId: string,
-    @ConnectedSocket() client: Socket,
-  ) {
+  @SubscribeMessage('findChats')
+  async joinChat(@MessageBody() roleId: string) {
     const chats = await this.chatService.getUserChats(roleId);
-    for (const chat of chats) {
-      void client.join(chat.id);
-    }
     return chats;
   }
 
