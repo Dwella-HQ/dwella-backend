@@ -68,6 +68,15 @@ export class VerificationService {
     const queryBuilder =
       this.verificationRepository.createQueryBuilder('verification');
 
+    queryBuilder
+      .leftJoinAndSelect('verification.landlord', 'landlord')
+      .leftJoinAndSelect('verification.property', 'property')
+      .leftJoinAndSelect('verification.verifiedBy', 'verifiedBy')
+      .leftJoinAndSelect(
+        'verification.supportingDocuments',
+        'supportingDocuments',
+      );
+
     if (queryVerificationDto.status) {
       queryBuilder.andWhere('verification.status = :status', {
         status: queryVerificationDto.status,
@@ -81,27 +90,21 @@ export class VerificationService {
     }
 
     if (queryVerificationDto.landlordId) {
-      queryBuilder
-        .leftJoin('verification.landlord', 'landlord')
-        .andWhere('landlord.id = :landlordId', {
-          landlordId: queryVerificationDto.landlordId,
-        });
+      queryBuilder.andWhere('landlord.id = :landlordId', {
+        landlordId: queryVerificationDto.landlordId,
+      });
     }
 
     if (queryVerificationDto.propertyId) {
-      queryBuilder
-        .leftJoin('verification.property', 'property')
-        .andWhere('property.id = :propertyId', {
-          propertyId: queryVerificationDto.propertyId,
-        });
+      queryBuilder.andWhere('property.id = :propertyId', {
+        propertyId: queryVerificationDto.propertyId,
+      });
     }
 
     if (queryVerificationDto.verifiedById) {
-      queryBuilder
-        .leftJoin('verification.verifiedBy', 'user')
-        .andWhere('user.id = :verifiedById', {
-          verifiedById: queryVerificationDto.verifiedById,
-        });
+      queryBuilder.andWhere('verifiedBy.id = :verifiedById', {
+        verifiedById: queryVerificationDto.verifiedById,
+      });
     }
 
     if (queryVerificationDto.minDateVerifiedAt) {
@@ -120,14 +123,7 @@ export class VerificationService {
       const skip = (queryVerificationDto.page - 1) * queryVerificationDto.limit;
       queryBuilder.skip(skip).take(queryVerificationDto.limit);
     }
-    queryBuilder
-      .leftJoinAndSelect('verification.landlord', 'landlord')
-      .leftJoinAndSelect('verification.property', 'property')
-      .leftJoinAndSelect('verification.verifiedBy', 'verifiedBy')
-      .leftJoinAndSelect(
-        'verification.supportingDocuments',
-        'supportingDocuments',
-      );
+
     const verifications = await queryBuilder.getMany();
     return verifications;
   }
