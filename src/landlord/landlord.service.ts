@@ -26,6 +26,12 @@ import { UpdateLandlordPlatformPreferencesDto } from './dto/update-landlord-plat
 import { UpdateLandlordGracePeriodDto } from './dto/update-landlord-grace-period.dto';
 import { UpdateLandlordLateFeeDto } from './dto/update-landlord-late-fee.dto';
 import { camelCaseToSpaced } from 'src/utils/misc';
+import {
+  ApprovalStatusEnum,
+  NotificationMediumEnum,
+  NotificationTypeEnum,
+} from 'src/utils/constants';
+import { NotificationService } from 'src/notification/notification.service';
 
 @Injectable()
 export class LandlordService {
@@ -37,6 +43,7 @@ export class LandlordService {
     private readonly userService: UserService,
     private readonly fileService: FileService,
     private readonly emailService: EmailService,
+    private readonly notificationService: NotificationService,
     private readonly addressService: AddressService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
@@ -111,15 +118,36 @@ export class LandlordService {
   async approveLandlord(id: string) {
     const landlord = await this.findOne(id);
     landlord.isApproved = true;
+    landlord.approvalStatus = ApprovalStatusEnum.APPROVED;
     const updatedLandlord = await this.landlordRepository.save(landlord);
-    await this.emailService.sendMailToUser({
+    await this.notificationService.sendNotificationToUser(landlord.user, {
+      title: 'Your Landlord Application is Approved',
+      templateName: 'landlord-approved',
+      medium: [NotificationMediumEnum.EMAIL],
+      notificationType: NotificationTypeEnum.INFO,
       context: {
         name: landlord.user.fullName,
         dashboardLink: `${process.env.FRONTEND_URL}/landlord/dashboard`,
       },
-      subject: 'Your Landlord Application is Approved',
-      template: 'landlord-approved',
-      user: landlord.user,
+    });
+    return updatedLandlord;
+  }
+
+  async rejectLandlord(id: string, reason: string) {
+    const landlord = await this.findOne(id);
+    landlord.isApproved = true;
+    landlord.approvalStatus = ApprovalStatusEnum.REJECTED;
+    const updatedLandlord = await this.landlordRepository.save(landlord);
+    await this.notificationService.sendNotificationToUser(landlord.user, {
+      title: 'Your Landlord Application has been Rejected',
+      templateName: 'landlord-rejected',
+      medium: [NotificationMediumEnum.EMAIL],
+      notificationType: NotificationTypeEnum.INFO,
+      context: {
+        name: landlord.user.fullName,
+        reason,
+        dashboardLink: `${process.env.FRONTEND_URL}/landlord/dashboard`,
+      },
     });
     return updatedLandlord;
   }

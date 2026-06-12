@@ -452,6 +452,12 @@ export enum AnnounementLevelEnum {
   LANDLORD = 'LANDLORD',
 }
 
+export enum ApprovalStatusEnum {
+  APPROVED = 'Approved',
+  REJECTED = 'Rejected',
+  PENDING = 'Pending',
+}
+
 export enum LateFeeTypeEnum {
   FIXED = 'fixed',
   PERCENTAGE = 'percentage',

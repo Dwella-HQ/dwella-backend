@@ -16,72 +16,76 @@ import {
 } from 'typeorm';
 import { LandlordSettings } from './landlord-settings.entity';
 import { Property } from 'src/property/entities/property.entity';
+import { ApprovalStatusEnum } from 'src/utils/constants';
 
 @Entity()
 export class Landlord extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @JoinColumn()
   @OneToOne(() => User, (user) => user.landlord, { eager: true })
-  user: Relation<User>;
+  user!: Relation<User>;
 
   @OneToOne(() => Address, { eager: true })
   @JoinColumn()
-  address: Relation<Address>;
+  address!: Relation<Address>;
 
   @Column({ unique: true })
-  businessName: string;
+  businessName!: string;
 
   @Column({ unique: true })
-  businessEmail: string;
+  businessEmail!: string;
 
   @Column({ nullable: true })
-  businessPhoneNumber: string;
+  businessPhoneNumber?: string;
 
   @JoinColumn()
   @OneToOne(() => File, { nullable: true, eager: true })
-  profilePicture: Relation<File>;
+  profilePicture!: Relation<File>;
 
   // documents ----
   @JoinColumn()
   @OneToOne(() => File, { nullable: true, eager: true })
-  govermentIdDocument: Relation<File>;
+  govermentIdDocument!: Relation<File>;
 
   @JoinColumn()
   @OneToOne(() => File, { nullable: true, eager: true })
-  landSurveyDocument: Relation<File>;
+  landSurveyDocument!: Relation<File>;
 
   @JoinColumn()
   @OneToOne(() => File, { nullable: true, eager: true })
-  proofOfOwnershipDocument: Relation<File>;
+  proofOfOwnershipDocument!: Relation<File>;
 
   @JoinColumn()
   @OneToOne(() => File, { nullable: true, eager: true })
-  taxIdentificationNumberDocument: Relation<File>;
+  taxIdentificationNumberDocument!: Relation<File>;
 
   @OneToMany(
     () => PropertyManager,
     (propertyManager) => propertyManager.landlord,
   )
-  propertyManagers: Relation<PropertyManager[]>;
+  propertyManagers!: Relation<PropertyManager[]>;
 
   @JoinColumn()
   @OneToOne(() => LandlordSettings, (settings) => settings.landlord)
-  settings: Relation<LandlordSettings>;
+  settings!: Relation<LandlordSettings>;
 
   @Column({ default: true })
-  isActive: boolean;
+  isActive!: boolean;
 
   @Column({ default: false })
-  isApproved: boolean;
+  isApproved!: boolean;
+
+  @Column({ default: ApprovalStatusEnum.PENDING, type: 'text' })
+  approvalStatus!: ApprovalStatusEnum;
 
   @OneToMany(() => Property, (property) => property.landlord)
-  properties: Relation<Property[]>;
+  properties!: Relation<Property[]>;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
 }
