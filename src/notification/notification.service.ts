@@ -38,7 +38,7 @@ export class NotificationService {
       await this.emailService.sendMailToUser({
         user,
         subject: title,
-        template: templateName,
+        template: templateName.replace(/\./g, '/'),
         context,
       });
     }

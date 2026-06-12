@@ -85,7 +85,7 @@ export function formatHbsText(
   const filePath = path.join(
     process.cwd(),
     'src/templates/text',
-    `${templateName}.hbs`,
+    `${templateName.replace(/\./g, '/')}.hbs`,
   );
 
   const source = fs.readFileSync(filePath, 'utf-8');

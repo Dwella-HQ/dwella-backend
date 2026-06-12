@@ -107,7 +107,7 @@ export class UserService {
     await this.notificationService.sendNotificationToUser(user, {
       title: 'Verify your email address',
       medium: [NotificationMediumEnum.EMAIL],
-      templateName: 'verify-email',
+      templateName: 'auth.verify-otp',
       context: {
         name: user.fullName,
         verificationLink,
@@ -145,7 +145,7 @@ export class UserService {
     await this.notificationService.sendNotificationToUser(user, {
       title: 'Password Reset Request',
       medium: [NotificationMediumEnum.EMAIL],
-      templateName: 'reset-password',
+      templateName: 'auth.forgot-password',
       context: {
         fullName: user.fullName,
         resetLink,
@@ -287,7 +287,7 @@ export class UserService {
     await this.notificationService.sendNotificationToUser(user, {
       title: 'Password Changed',
       medium: [NotificationMediumEnum.EMAIL],
-      templateName: 'notify-password-change',
+      templateName: 'auth.notify-password-change',
       context: {
         fullName: user.fullName,
         currentDevice,

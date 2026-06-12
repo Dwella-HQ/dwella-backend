@@ -122,7 +122,7 @@ export class LandlordService {
     const updatedLandlord = await this.landlordRepository.save(landlord);
     await this.notificationService.sendNotificationToUser(landlord.user, {
       title: 'Your Landlord Application is Approved',
-      templateName: 'landlord-approved',
+      templateName: 'onboarding.landlord-verification-approved',
       medium: [NotificationMediumEnum.EMAIL],
       notificationType: NotificationTypeEnum.INFO,
       context: {
@@ -140,7 +140,7 @@ export class LandlordService {
     const updatedLandlord = await this.landlordRepository.save(landlord);
     await this.notificationService.sendNotificationToUser(landlord.user, {
       title: 'Your Landlord Application has been Rejected',
-      templateName: 'landlord-rejected',
+      templateName: 'onboarding.landlord-verification-rejected',
       medium: [NotificationMediumEnum.EMAIL],
       notificationType: NotificationTypeEnum.INFO,
       context: {
