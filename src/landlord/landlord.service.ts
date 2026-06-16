@@ -308,7 +308,7 @@ export class LandlordService {
       landlordSettings.save(),
     ]);
 
-    if (updatedLandlord.isApproved !== true) {
+    if (updatedLandlord.approvalStatus !== ApprovalStatusEnum.APPROVED) {
       this.eventEmitter.emit('landlord.created', updatedLandlord.id);
     }
     return updatedLandlord;
