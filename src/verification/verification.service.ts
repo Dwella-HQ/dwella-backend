@@ -169,6 +169,12 @@ export class VerificationService {
     if (verification.status === VerificationStatusEnum.VERIFIED) {
       await this.landlordService.approveLandlord(verification.landlord!.id);
     }
+    if (verification.status === VerificationStatusEnum.REJECTED) {
+      await this.landlordService.rejectLandlord(
+        verification.landlord!.id,
+        verification.reason,
+      );
+    }
     const updatedVerification =
       await this.verificationRepository.save(verification);
     return updatedVerification;
