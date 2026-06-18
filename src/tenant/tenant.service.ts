@@ -202,6 +202,11 @@ export class TenantService {
 
   async inviteTenant(inviteTenantDto: InviteTenantDto) {
     const unit = await this.propertyService.getUnit(inviteTenantDto.unitId);
+    if (unit.property.isApproved === false) {
+      throw new BadRequestException(
+        'Cannot invite tenant to a unit in a property that is not approved',
+      );
+    }
     if (unit.tenant) {
       throw new BadRequestException('Unit is already occupied by a tenant');
     }
