@@ -9,6 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Verification } from './entities/verification.entity';
 import { Repository } from 'typeorm';
 import {
+  ApprovalStatusEnum,
   VerificationStatusEnum,
   VerificationTypeEnum,
 } from 'src/utils/constants';
@@ -30,9 +31,10 @@ export class VerificationService {
   ) {}
 
   @OnEvent('landlord.created')
+  @OnEvent('landlord.updated')
   async startLandlordVerification(landlordId: string) {
     const landlord = await this.landlordService.findOne(landlordId);
-    if (landlord.isApproved) {
+    if (landlord.approvalStatus === ApprovalStatusEnum.APPROVED) {
       return;
     }
     const verification = this.verificationRepository.create({

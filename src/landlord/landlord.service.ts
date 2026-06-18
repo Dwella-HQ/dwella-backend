@@ -309,7 +309,7 @@ export class LandlordService {
     ]);
 
     if (updatedLandlord.approvalStatus !== ApprovalStatusEnum.APPROVED) {
-      this.eventEmitter.emit('landlord.created', updatedLandlord.id);
+      this.eventEmitter.emit('landlord.updated', updatedLandlord.id);
     }
     return updatedLandlord;
   }
