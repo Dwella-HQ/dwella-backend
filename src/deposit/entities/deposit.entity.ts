@@ -25,61 +25,61 @@ import {
 @Entity()
 export class Deposit extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column('decimal', {
     precision: 15,
     scale: 2,
     transformer: new ColumnNumericTransformer(),
   })
-  amount: number;
+  amount!: number;
 
   @Column({
     type: 'text',
   })
-  currency: CurrenciesEnum;
+  currency!: CurrenciesEnum;
 
   @Column({ default: '' })
-  narration: string;
+  narration!: string;
 
   @JoinColumn()
   @OneToOne(() => Transaction, { nullable: true })
-  transaction: Relation<Transaction>;
+  transaction!: Relation<Transaction>;
 
   @ManyToOne(() => Wallet)
-  wallet: Relation<Wallet>;
+  wallet!: Relation<Wallet>;
 
   @JoinColumn({ name: 'walletTransactionId' })
   @OneToOne(() => WalletTransaction)
-  walletTransaction: Relation<WalletTransaction>;
+  walletTransaction!: Relation<WalletTransaction>;
+
+  @Index()
+  @Column({ nullable: true, unique: true })
+  walletTransactionId?: string;
 
   @Index()
   @Column()
-  walletTransactionId: string;
-
-  @Index()
-  @Column()
-  reference: string;
+  reference!: string;
 
   @Index()
   // TODO - remove nullable
   @Column({ nullable: true, unique: true })
-  indempotencyKey: string;
+  indempotencyKey?: string;
 
   @Column('text', {
     default: TransactionStatusEnum.PENDING,
   })
-  status: TransactionStatusEnum;
+  status!: TransactionStatusEnum;
 
   @Column('json', { nullable: true })
-  senderDetails: TransferUserDetails;
+  senderDetails?: TransferUserDetails;
 
   @Column('text', { nullable: true })
-  paymentMethod: PaymentMethodEnum;
+  paymentMethod?: PaymentMethodEnum;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
 }

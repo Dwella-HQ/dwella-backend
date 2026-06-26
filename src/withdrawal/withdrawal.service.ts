@@ -27,6 +27,7 @@ import { DataSource, Repository } from 'typeorm';
 import { Withdrawal } from './entities/withdrawal.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Transaction } from 'src/transaction/entities/transaction.entity';
+import { FlutterwaveService } from 'src/services/flutterwave/flutterwave.service';
 
 @Injectable()
 export class WithdrawalService {
@@ -35,6 +36,7 @@ export class WithdrawalService {
     private readonly withdrawalRepository: Repository<Withdrawal>,
     private readonly walletService: WalletService,
     private readonly paystackService: PaystackService,
+    private readonly flutterwaveService: FlutterwaveService,
     private readonly settingsService: SettingsService,
     @InjectQueue(JOB_NAMES.WITHDRAWAL_TRANSFER_JOB)
     private readonly withdrawalQueue: Queue,
@@ -119,6 +121,12 @@ export class WithdrawalService {
     if (provider === PaymentProviderEnum.PAYSTACK) {
       const paystackBanks = await this.paystackService.listBanks(currency);
       for (const bank of paystackBanks) {
+        banks.push({ name: bank.name, bankCode: bank.code });
+      }
+    }
+    if (provider === PaymentProviderEnum.FLUTTERWAVE) {
+      const flutterwaveBanks = await this.flutterwaveService.getBanks(currency);
+      for (const bank of flutterwaveBanks.data) {
         banks.push({ name: bank.name, bankCode: bank.code });
       }
     }

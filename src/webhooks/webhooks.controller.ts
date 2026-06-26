@@ -52,10 +52,10 @@ export class WebhooksController {
   @HttpCode(200)
   @Post('flutterwave')
   handleFlutterwaveWebhook(
-    @Body() payload: { event: string; data: FlutterwaveChargeCompletedPayload },
+    @Body() payload: { 'event.type': string; payload: any },
   ) {
     console.log({ payload });
-    const eventType = payload.event;
+    const eventType = payload['event.type'];
     switch (eventType) {
       case 'charge.completed':
         break;

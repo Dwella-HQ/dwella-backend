@@ -3,6 +3,8 @@ import { FlutterwaveService } from './flutterwave.service';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { EnvironmentVariables } from 'src/config/env.config';
+import { BullModule } from '@nestjs/bullmq';
+import { JOB_NAMES } from 'src/utils/constants';
 
 @Module({
   imports: [
@@ -18,6 +20,9 @@ import { EnvironmentVariables } from 'src/config/env.config';
           'Content-Type': 'application/json',
         },
       }),
+    }),
+    BullModule.registerQueue({
+      name: JOB_NAMES.HANDLE_TRANSACTION_JOB,
     }),
   ],
   providers: [FlutterwaveService],
