@@ -99,7 +99,7 @@ export class PaystackService {
           amount: transaction.amount * 100,
           reference: transaction.id,
           currency: transaction.currency,
-          // redirect_url: `${this.configService.get<string>('BACKEND_URL')}/transaction/success`,
+          redirect_url: `${this.configService.get<string>('FRONTEND_URL')}/dashboard/finance/deposit-callback`,
           channels: paymentMethods.flatMap((method) =>
             method === PaymentMethodEnum.BANK_TRANSFER
               ? ['bank']

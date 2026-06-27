@@ -173,7 +173,8 @@ export class FlutterwaveService {
         amount: transaction.amount,
         tx_ref: transaction.id,
         currency: transaction.currency,
-        redirect_url: `${this.configService.get<string>('BACKEND_URL')}/transaction/success`,
+        redirect_url: `${this.configService.get<string>('FRONTEND_URL')}/dashboard/finance/deposit-callback
+`,
         customer: {
           email: transaction.senderDetails.email,
           name: transaction.senderDetails.fullName,
