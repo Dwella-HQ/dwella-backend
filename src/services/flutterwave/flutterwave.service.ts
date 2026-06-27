@@ -300,10 +300,13 @@ export class FlutterwaveService {
   async resolveAccount(accountNumber: string, bankCode: string) {
     // Implement account resolution logic here
     const response = await lastValueFrom(
-      this.httpService.post<FlutterwaveResolveAccountResponse>(`payments`, {
-        account_number: accountNumber,
-        account_bank: bankCode,
-      }),
+      this.httpService.post<FlutterwaveResolveAccountResponse>(
+        `accounts/resolve`,
+        {
+          account_number: accountNumber,
+          account_bank: bankCode,
+        },
+      ),
     ).catch((err) => {
       console.error('Error resolving account via Flutterwave:', err);
       throw err;
