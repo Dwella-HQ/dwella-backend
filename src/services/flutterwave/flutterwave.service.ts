@@ -8,12 +8,11 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { EnvironmentVariables } from 'src/config/env.config';
 import type {
-  FlutterwaveChargeCompletedPayload,
   FlutterwaveCreatePaymentLinkPayload,
   FlutterwaveCreateStaticVirtualAccountPayload,
   FlutterwaveCreateVirtualAccountResponse,
   FlutterwaveGetBanksResponse,
-  FlutterwaveTransferCompletedPayload,
+  FullterwaveTransactionWebhookPayload,
 } from './flutterwave';
 import { lastValueFrom } from 'rxjs';
 import { Cache } from 'cache-manager';
@@ -230,50 +229,53 @@ export class FlutterwaveService {
   //   return response.data;
   // }
 
-  async handleChargeSuccess(payload: FlutterwaveChargeCompletedPayload) {
-    if (payload.event !== 'charge.completed') {
+  async handleChargeSuccess(payload: FullterwaveTransactionWebhookPayload) {
+    if (
+      !['CARD_TRANSACTION', 'BANK_TRANSFER_TRANSACTION'].includes(
+        payload['event.type'],
+      )
+    ) {
       throw new Error('Invalid event type');
     }
-    const response = await lastValueFrom(
-      this.httpService.get<{
-        status: string;
-        message: string;
-        data: FlutterwaveChargeCompletedPayload['data'];
-      }>(
-        `/transactions/verify_by_reference?tx_ref=${encodeURIComponent(payload.data.tx_ref)}`,
-      ),
-    ).catch((err) => {
-      console.error('Error validating transaction via Flutterwave:', err);
-      throw new InternalServerErrorException('Failed to validate transaction');
-    });
-    if (
-      response.data.status !== 'success' ||
-      response.data.data.amount !== payload.data.amount ||
-      response.data.data.currency !== payload.data.currency
-    ) {
-      throw new InternalServerErrorException('Transaction validation failed');
-    }
+    // const response = await lastValueFrom(
+    //   this.httpService.get<{
+    //     status: string;
+    //     message: string;
+    //     data: FlutterwaveChargeCompletedPayload['data'];
+    //   }>(
+    //     `/transactions/verify_by_reference?tx_ref=${encodeURIComponent(payload.data.tx_ref)}`,
+    //   ),
+    // ).catch((err) => {
+    //   console.error('Error validating transaction via Flutterwave:', err);
+    //   throw new InternalServerErrorException('Failed to validate transaction');
+    // });
+    // if (
+    //   response.data.status !== 'success' ||
+    //   response.data.data.amount !== payload.data.amount ||
+    //   response.data.data.currency !== payload.data.currency
+    // ) {
+    //   throw new InternalServerErrorException('Transaction validation failed');
+    // }
     const paymentMethod =
-      payload.data.payment_type === 'card'
+      payload['event.type'] === 'CARD_TRANSACTION'
         ? PaymentMethodEnum.CARD
-        : payload.data.payment_type === 'ussd' ||
-            payload.data.payment_type === 'bank_transfer'
+        : payload['event.type'] === 'BANK_TRANSFER_TRANSACTION'
           ? PaymentMethodEnum.BANK_TRANSFER
           : undefined;
     await this.transactionQueue.add(
       'handle_transaction_credit_success',
       {
-        transactionId: payload.data.tx_ref,
+        transactionId: payload.txRef,
         paymentMethod: paymentMethod,
-        metadata: payload.data,
+        metadata: payload,
       } as {
         transactionId: string;
         paymentMethod: PaymentMethodEnum;
         metadata?: Record<string, any>;
       },
-      { jobId: `transaction_success_${payload.data.tx_ref}` },
+      { jobId: `transaction_success_${payload.txRef}` },
     );
-    return response.data;
+    return payload;
   }
 
   async getBanks(currency: string) {

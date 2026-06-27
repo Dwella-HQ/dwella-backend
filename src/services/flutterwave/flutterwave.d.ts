@@ -120,3 +120,41 @@ export interface FlutterwaveGetBanksResponse {
     name: string;
   }[];
 }
+
+export interface FullterwaveTransactionWebhookPayload {
+  id: string;
+  txRef: string;
+  flwRef: string;
+  orderRef: string;
+  paymentPlan: null;
+  paymentPage: null;
+  createdAt: string;
+  amount: number;
+  charged_amount: number;
+  status: 'successful';
+  IP: string;
+  currency: string;
+  appfee: number;
+  merchantfee: number;
+  merchantbearsfee: number;
+  charge_type: 'normal';
+  customer: {
+    id: number;
+    phone: string | null;
+    fullName: string;
+    customertoken: string | null;
+    email: string;
+    createdAt: string;
+    updatedAt: string;
+    deletedAt: string | null;
+    AccountId: number;
+  };
+  entity: {
+    card6: string;
+    card_last4: string;
+    card_country_iso: string;
+    createdAt: string;
+    card_type: string | null;
+  };
+  'event.type': string;
+}

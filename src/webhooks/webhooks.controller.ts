@@ -10,7 +10,10 @@ import {
   InternalServerErrorException,
   Post,
 } from '@nestjs/common';
-import { FlutterwaveChargeCompletedPayload } from 'src/services/flutterwave/flutterwave';
+import {
+  FlutterwaveChargeCompletedPayload,
+  FullterwaveTransactionWebhookPayload,
+} from 'src/services/flutterwave/flutterwave';
 import { FlutterwaveService } from 'src/services/flutterwave/flutterwave.service';
 import { MonnifyService } from 'src/services/monnify/monnify.service';
 import { PaystackService } from 'src/services/paystack/paystack.service';
@@ -52,12 +55,18 @@ export class WebhooksController {
   @HttpCode(200)
   @Post('flutterwave')
   handleFlutterwaveWebhook(
-    @Body() payload: { 'event.type': string; payload: any },
+    @Body() payload: { 'event.type': string; [key: string]: any },
   ) {
-    console.log({ payload });
+    // console.log(payload);
     const eventType = payload['event.type'];
     switch (eventType) {
-      case 'charge.completed':
+      case 'BANK_TRANSFER_TRANSACTION':
+      case 'CARD_TRANSACTION':
+        void this.flutterwaveService.handleChargeSuccess(
+          payload as FullterwaveTransactionWebhookPayload,
+        );
+        // case 'BANK_TRANSFER_TRANSACTION':
+        // case 'BANK_TRANSFER_TRANSACTION':
         break;
       // case 'transfer.completed':
       //   await this.transactionService.

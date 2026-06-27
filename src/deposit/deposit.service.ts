@@ -187,7 +187,7 @@ export class DepositService {
         deposit.wallet.id,
         {
           amount: deposit.amount,
-          description: `Deposit of ${deposit.amount} from ${deposit.senderDetails.fullName}`,
+          description: `Deposit of ${deposit.amount} from ${deposit.senderDetails?.fullName}`,
           reference: deposit.reference,
           action: TransactionActionEnum.DEPOSIT,
         },

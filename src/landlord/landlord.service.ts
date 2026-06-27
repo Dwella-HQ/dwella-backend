@@ -6,6 +6,7 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  OnApplicationBootstrap,
 } from '@nestjs/common';
 import { CreateLandlordDto } from './dto/create-landlord.dto';
 import { UpdateLandlordDto } from './dto/update-landlord.dto';
@@ -34,7 +35,7 @@ import {
 import { NotificationService } from 'src/notification/notification.service';
 
 @Injectable()
-export class LandlordService {
+export class LandlordService implements OnApplicationBootstrap {
   constructor(
     @InjectRepository(Landlord)
     private readonly landlordRepository: Repository<Landlord>,
@@ -47,6 +48,16 @@ export class LandlordService {
     private readonly addressService: AddressService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
+
+  async onApplicationBootstrap() {
+    const landlordsToApprove = await this.landlordRepository.find({
+      where: { isApproved: true, approvalStatus: ApprovalStatusEnum.PENDING },
+    });
+    for (const landlord of landlordsToApprove) {
+      landlord.approvalStatus = ApprovalStatusEnum.APPROVED;
+      await this.landlordRepository.save(landlord);
+    }
+  }
 
   async create(createLandlordDto: CreateLandlordDto) {
     const user = await this.userService.findOne(createLandlordDto.userId);
