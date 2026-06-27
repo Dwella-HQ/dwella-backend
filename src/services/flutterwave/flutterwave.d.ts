@@ -158,3 +158,12 @@ export interface FullterwaveTransactionWebhookPayload {
   };
   'event.type': string;
 }
+
+export interface FlutterwaveResolveAccountResponse {
+  status: string;
+  message: string;
+  data: {
+    account_number: string;
+    account_name: string;
+  };
+}

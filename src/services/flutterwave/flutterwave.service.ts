@@ -12,6 +12,7 @@ import type {
   FlutterwaveCreateStaticVirtualAccountPayload,
   FlutterwaveCreateVirtualAccountResponse,
   FlutterwaveGetBanksResponse,
+  FlutterwaveResolveAccountResponse,
   FullterwaveTransactionWebhookPayload,
 } from './flutterwave';
 import { lastValueFrom } from 'rxjs';
@@ -294,5 +295,19 @@ export class FlutterwaveService {
       throw new InternalServerErrorException('Failed to fetch banks');
     });
     return response.data;
+  }
+
+  async resolveAccount(accountNumber: string, bankCode: string) {
+    // Implement account resolution logic here
+    const response = await lastValueFrom(
+      this.httpService.post<FlutterwaveResolveAccountResponse>(`payments`, {
+        account_number: accountNumber,
+        account_bank: bankCode,
+      }),
+    ).catch((err) => {
+      console.error('Error resolving account via Flutterwave:', err);
+      throw err;
+    });
+    return response.data.data.account_name;
   }
 }

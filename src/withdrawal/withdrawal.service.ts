@@ -146,6 +146,13 @@ export class WithdrawalService {
       );
       return accountName;
     }
+    if (provider === PaymentProviderEnum.FLUTTERWAVE) {
+      const accountName = await this.flutterwaveService.resolveAccount(
+        resolveAccountDto.accountNumber,
+        resolveAccountDto.bankCode,
+      );
+      return accountName;
+    }
     throw new InternalServerErrorException('No payment provider configured');
   }
 
