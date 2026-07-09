@@ -16,7 +16,7 @@ async function bootstrap() {
     origin: true,
     credentials: true,
   });
-  await configureSwagger(app, 'documentation');
+  await configureSwagger(app, '/documentation');
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
