@@ -38,6 +38,7 @@ import { DepositModule } from './deposit/deposit.module';
 import { WithdrawalModule } from './withdrawal/withdrawal.module';
 import { RentPaymentModule } from './rent-payment/rent-payment.module';
 import { AnnouncementModule } from './announcement/announcement.module';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
@@ -120,6 +121,7 @@ import { AnnouncementModule } from './announcement/announcement.module';
       wildcard: true,
       delimiter: '.',
     }),
+    ThrottlerModule.forRoot(),
     UserModule,
     AuthModule,
     RbacModule,
