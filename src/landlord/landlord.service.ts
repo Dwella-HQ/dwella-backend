@@ -26,6 +26,7 @@ import { UpdateLandlordLateFeeDto } from './dto/update-landlord-late-fee.dto';
 import { camelCaseToSpaced } from 'src/utils/misc';
 import {
   ApprovalStatusEnum,
+  LandlordTypeEnum,
   NotificationMediumEnum,
   NotificationTypeEnum,
 } from 'src/utils/constants';
@@ -75,7 +76,8 @@ export class LandlordService {
       console.log(error);
       if (error?.code == '23505') {
         // throw new BadRequestException('A user with this email already exists');
-        const field = error.detail?.match(/Key \((.+?)\)/)?.[1] ?? 'field';
+        const field: string =
+          error.detail?.match(/Key \((.+?)\)/)?.[1] ?? 'field';
         throw new BadRequestException(
           `${camelCaseToSpaced(field)} already exists`,
         );
@@ -462,6 +464,10 @@ export class LandlordService {
     }
     landlord.name = createLandlordKybDto.businessName;
     landlord.email = createLandlordKybDto.businessEmail;
+    landlord.phoneNumber = createLandlordKybDto.businessPhoneNumber;
+    landlord.address = createLandlordKybDto.businessAddress;
+    landlord.profilePicture = businessLogo;
+    landlord.landlordType = LandlordTypeEnum.BUSINESS;
 
     const [savedKyb] = await Promise.all([
       this.landlordKybRepository.save(kyb),
