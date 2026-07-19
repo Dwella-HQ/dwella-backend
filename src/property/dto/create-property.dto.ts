@@ -8,29 +8,29 @@ import {
   IsUUID,
   Length,
 } from 'class-validator';
-import { CreateAddressDto } from 'src/address/dto/create-address.dto';
+import { CreateAddressDto } from 'src/utils/shared.dto';
 
 export class CreatePropertyDto {
   @IsUUID('all')
-  landlordId: string;
+  landlordId!: string;
 
   @IsString()
   @IsNotEmpty()
-  name: string;
+  name!: string;
 
   @IsString()
   @Length(4, 4)
-  yearBuilt: string;
+  yearBuilt!: string;
 
   @IsNumber()
-  numberOfUnits: number;
+  numberOfUnits!: number;
 
   @IsString()
   @IsOptional()
   description?: string;
 
   @IsBoolean()
-  parkingSpace: boolean;
+  parkingSpace!: boolean;
 
   @IsOptional()
   @IsUUID('all', { each: true })
@@ -42,7 +42,7 @@ export class CreatePropertyDto {
 
   @Type(() => CreateAddressDto)
   @IsNotEmpty()
-  address: CreateAddressDto;
+  address!: CreateAddressDto;
 
   @IsString({ each: true })
   @IsOptional()

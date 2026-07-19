@@ -19,7 +19,7 @@ import { PermissionsGuard } from 'src/auth/guards/permission.guard';
 import { RolesGuard } from 'src/auth/guards/role.guard';
 import { RequirePermissions } from 'src/rbac/decorators/permission.decorator';
 import { PERMISSIONS } from 'src/utils/constants';
-import { UpdateLadlordProfileDto } from './dto/update-landlord-profile.dto';
+import { UpdateLandlordProfileDto } from './dto/update-landlord-profile.dto';
 import { UploadLandlordDocumentsDto } from './dto/upload-landlord-documents.dto';
 import { UpdateLandlordPlatformPreferencesDto } from './dto/update-landlord-platform-preferences.dto';
 import { UploadLandlordNotificationPreferencesDto } from './dto/update-landlord-notification-preferences.dto';
@@ -138,11 +138,11 @@ export class LandlordController {
   @Patch(':id/profile')
   async updateProfile(
     @Param('id') id: string,
-    @Body() updateLadlordProfileDto: UpdateLadlordProfileDto,
+    @Body() updateLandlordProfileDto: UpdateLandlordProfileDto,
   ) {
     const data = await this.landlordService.updateProfile(
       id,
-      updateLadlordProfileDto,
+      updateLandlordProfileDto,
     );
     return {
       message: 'Landlord profile updated successfully',

@@ -9,7 +9,6 @@ import {
   Entity,
   Index,
   ManyToOne,
-  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   Relation,
@@ -17,63 +16,62 @@ import {
 } from 'typeorm';
 import bcrypt from 'bcrypt';
 import { Exclude, instanceToPlain } from 'class-transformer';
-import { RegistrationTypeEnum } from 'src/utils/constants';
+import { Address, RegistrationTypeEnum } from 'src/utils/constants';
 import { Landlord } from 'src/landlord/entities/landlord.entity';
-import { Address } from 'src/address/entities/address.entity';
 import { PropertyManager } from 'src/property-manager/entities/property-manager.entity';
 import { Tenant } from 'src/tenant/entities/tenant.entity';
 
 @Entity()
 export class User extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Index()
   @Column({ unique: true })
-  email: string;
+  email!: string;
 
   @Column({ type: 'text', default: RegistrationTypeEnum.EMAIL })
-  registrationType: RegistrationTypeEnum;
+  registrationType!: RegistrationTypeEnum;
 
   @Exclude()
   @Column()
-  password: string;
+  password!: string;
 
   @Column()
-  fullName: string;
+  fullName!: string;
 
   @Column({ nullable: true })
-  phoneNumber: string;
+  phoneNumber?: string;
 
   @Column({ default: false })
-  isEmailVerified: boolean;
+  isEmailVerified!: boolean;
 
   @Column({ default: true })
-  isActive: boolean;
+  isActive!: boolean;
 
   @Column({ default: false })
-  forceChangePassword: boolean;
+  forceChangePassword!: boolean;
 
   @ManyToOne(() => Role, (role) => role.users, { eager: true })
-  role: Relation<Role>;
+  role!: Relation<Role>;
 
   @OneToOne(() => Landlord, (landlord) => landlord.user)
-  landlord: Relation<Landlord>;
+  landlord!: Relation<Landlord>;
 
   @OneToOne(() => PropertyManager, (propertyManager) => propertyManager.user)
-  propertyManager: Relation<PropertyManager>;
+  propertyManager!: Relation<PropertyManager>;
 
   @OneToOne(() => Tenant, (tenant) => tenant.user)
-  tenant: Relation<Tenant>;
+  tenant!: Relation<Tenant>;
 
-  @OneToMany(() => Address, (address) => address.user)
-  addresses: Relation<Address>[];
+  @Column({ nullable: true, type: 'json' })
+  address!: Address;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
 
   @BeforeInsert()
   @BeforeUpdate()

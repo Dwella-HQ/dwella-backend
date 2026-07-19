@@ -38,13 +38,13 @@ export class TransferUserDetails {
 export class NextOfKinDetails {
   @IsString()
   @IsNotEmpty()
-  fullName: string;
+  fullName!: string;
 
   @IsEnum(NextOfKinRelationshipEnum)
-  relationship: NextOfKinRelationshipEnum;
+  relationship!: NextOfKinRelationshipEnum;
 
   @IsPhoneNumber()
-  contactNumber: string;
+  contactNumber!: string;
 
   @IsEmail()
   @IsOptional()
@@ -54,11 +54,11 @@ export class NextOfKinDetails {
 export class SendUserNotificationDto {
   @IsString()
   @IsNotEmpty()
-  title: string;
+  title!: string;
 
   @IsString()
   @IsNotEmpty()
-  templateName: string;
+  templateName!: string;
 
   @IsOptional()
   @IsObject()
@@ -87,4 +87,27 @@ export class BankAccountDto {
   @IsNotEmpty()
   @Length(11, 11)
   bvn!: string;
+}
+
+export class CreateAddressDto {
+  @IsString()
+  @IsNotEmpty()
+  address!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  city!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  state!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
+  postalCode?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  country!: string;
 }

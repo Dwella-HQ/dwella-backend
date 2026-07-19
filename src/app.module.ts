@@ -15,7 +15,6 @@ import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { RbacModule } from './rbac/rbac.module';
 import { SeederModule } from './seeder/seeder.module';
-import { AddressModule } from './address/address.module';
 import { LandlordModule } from './landlord/landlord.module';
 import { PropertyManagerModule } from './property-manager/property-manager.module';
 import { AgentModule } from './agent/agent.module';
@@ -126,7 +125,6 @@ import { ThrottlerModule } from '@nestjs/throttler';
     AuthModule,
     RbacModule,
     SeederModule,
-    AddressModule,
     LandlordModule,
     PropertyManagerModule,
     AgentModule,

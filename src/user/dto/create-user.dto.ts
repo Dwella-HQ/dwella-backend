@@ -1,3 +1,4 @@
+import { Type } from 'class-transformer';
 import {
   IsEmail,
   IsEnum,
@@ -8,10 +9,11 @@ import {
   IsStrongPassword,
 } from 'class-validator';
 import { RegistrationTypeEnum, USER_ROLES } from 'src/utils/constants';
+import { CreateAddressDto } from 'src/utils/shared.dto';
 
 export class CreateUserDto {
   @IsEmail()
-  email: string;
+  email!: string;
 
   @IsStrongPassword({
     minLength: 8,
@@ -20,14 +22,15 @@ export class CreateUserDto {
     minNumbers: 1,
     minSymbols: 1,
   })
-  password: string;
+  password!: string;
 
   @IsEnum(USER_ROLES)
-  roleName: USER_ROLES;
+  @IsOptional()
+  roleName?: USER_ROLES;
 
   @IsString()
   @IsNotEmpty()
-  fullName: string;
+  fullName!: string;
 
   @IsOptional()
   @IsPhoneNumber()
@@ -36,4 +39,8 @@ export class CreateUserDto {
   @IsEnum(RegistrationTypeEnum)
   @IsOptional()
   registrationType?: RegistrationTypeEnum;
+
+  @Type(() => CreateAddressDto)
+  @IsOptional()
+  address?: CreateAddressDto;
 }

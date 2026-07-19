@@ -49,7 +49,9 @@ export class UserService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      const role = await this.rbacService.getRoleByName(createUserDto.roleName);
+      const role = await this.rbacService.getRoleByName(
+        createUserDto.roleName || USER_ROLES.USER,
+      );
       const user = this.userRepository.create(createUserDto);
       user.role = role;
       const savedUser = await queryRunner.manager.save(user);

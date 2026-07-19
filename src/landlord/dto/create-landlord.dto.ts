@@ -1,7 +1,6 @@
 import { Type } from 'class-transformer';
 import { IsOptional, IsString, IsUUID, ValidateNested } from 'class-validator';
-import { CreateAddressDto } from 'src/address/dto/create-address.dto';
-import { BankAccountDto } from 'src/utils/shared.dto';
+import { BankAccountDto, CreateAddressDto } from 'src/utils/shared.dto';
 
 export class CreateLandlordDto {
   @IsUUID('all')

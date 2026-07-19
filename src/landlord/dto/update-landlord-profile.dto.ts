@@ -7,23 +7,24 @@ import {
   IsUUID,
   ValidateNested,
 } from 'class-validator';
-import { CreateAddressDto } from 'src/address/dto/create-address.dto';
+import { CreateAddressDto } from 'src/utils/shared.dto';
 
 export class UpdateLandlordProfilePictureDto {
   @IsUUID()
-  profilePictureId: string;
+  @IsNotEmpty()
+  profilePictureId!: string;
 }
 
-export class UpdateLadlordProfileDto {
+export class UpdateLandlordProfileDto {
   @IsString()
   @IsNotEmpty()
   @IsOptional()
-  businessName: string;
+  businessName?: string;
 
   @IsString()
   @IsNotEmpty()
   @IsOptional()
-  businessEmail: string;
+  businessEmail?: string;
 
   @IsPhoneNumber()
   @IsOptional()
@@ -32,5 +33,5 @@ export class UpdateLadlordProfileDto {
   @ValidateNested()
   @IsOptional()
   @Type(() => CreateAddressDto)
-  address: CreateAddressDto;
+  address?: CreateAddressDto;
 }

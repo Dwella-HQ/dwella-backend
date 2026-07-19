@@ -11,7 +11,6 @@ import { PropertyManager } from './entities/property-manager.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserService } from 'src/user/user.service';
-import { AddressService } from 'src/address/address.service';
 import { LandlordService } from 'src/landlord/landlord.service';
 import { AddLandlordDto } from './dto/add-landlord.dto';
 import { RemoveLandlordDto } from './dto/remove-landlord.dto';
@@ -40,7 +39,6 @@ export class PropertyManagerService {
     @InjectRepository(PropertyManagerInvite)
     private propertyManagerInviteRepository: Repository<PropertyManagerInvite>,
     private userService: UserService,
-    private addressService: AddressService,
     private landlordService: LandlordService,
     private propertyService: PropertyService,
     private readonly emailService: EmailService,

@@ -481,3 +481,11 @@ type UniqueArray<T extends readonly any[], Seen = never> = T extends readonly [
 export type UniqueNotificationMediumArray<
   T extends readonly NotificationMediumEnum[],
 > = UniqueArray<T>;
+
+export interface Address {
+  address: string;
+  city: string;
+  state: string;
+  postalCode?: string;
+  country: string;
+}

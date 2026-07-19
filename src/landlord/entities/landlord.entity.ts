@@ -1,4 +1,3 @@
-import { Address } from 'src/address/entities/address.entity';
 import { File } from 'src/file/entities/file.entity';
 import { PropertyManager } from 'src/property-manager/entities/property-manager.entity';
 import { User } from 'src/user/entities/user.entity';
@@ -16,7 +15,7 @@ import {
 } from 'typeorm';
 import { LandlordSettings } from './landlord-settings.entity';
 import { Property } from 'src/property/entities/property.entity';
-import { ApprovalStatusEnum } from 'src/utils/constants';
+import { Address, ApprovalStatusEnum } from 'src/utils/constants';
 
 @Entity()
 export class Landlord extends BaseEntity {
@@ -27,9 +26,8 @@ export class Landlord extends BaseEntity {
   @OneToOne(() => User, (user) => user.landlord, { eager: true })
   user!: Relation<User>;
 
-  @OneToOne(() => Address, { eager: true })
-  @JoinColumn()
-  address!: Relation<Address>;
+  @Column({ nullable: true, type: 'json' })
+  address?: Address;
 
   @Column({ unique: true })
   businessName!: string;

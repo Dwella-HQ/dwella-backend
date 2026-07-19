@@ -10,7 +10,6 @@ import { UpdatePropertyDto } from './dto/update-property.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Property } from './entities/property.entity';
 import { DataSource, In, Repository } from 'typeorm';
-import { AddressService } from 'src/address/address.service';
 import { LandlordService } from 'src/landlord/landlord.service';
 import { QueryPropertyDto } from './dto/query-property.dto';
 import { CreateUnitDto } from './dto/create-unit.dto';
@@ -22,8 +21,8 @@ import { PropertySettings } from './entities/property-settings.entity';
 import { UpdatePropertyGracePeriodDto } from './dto/update-property-grace-period.dto';
 import { UpdatePropertyLateFeeDto } from './dto/update-property-late-fee.dto';
 import * as ExcelJS from 'exceljs';
-import { CreateAddressDto } from 'src/address/dto/create-address.dto';
-import { Address } from 'src/address/entities/address.entity';
+import { CreateAddressDto } from 'src/utils/shared.dto';
+
 @Injectable()
 export class PropertyService {
   constructor(
@@ -33,7 +32,6 @@ export class PropertyService {
     private propertySettingsRepository: Repository<PropertySettings>,
     @InjectRepository(Unit)
     private unitRepository: Repository<Unit>,
-    private addressService: AddressService,
     private landlordService: LandlordService,
     private emailService: EmailService,
     private fileService: FileService,
@@ -48,14 +46,11 @@ export class PropertyService {
     if (landlord.isApproved === false) {
       throw new BadRequestException('Landlord is not approved yet');
     }
-    const address = await this.addressService.create(
-      landlord.user.id,
-      createPropertyDto.address,
-    );
+
     const property = this.propertyRepository.create({
       ...createPropertyDto,
       landlord,
-      address,
+      address: createPropertyDto.address,
       amenities: createPropertyDto.amenities || [],
     });
     for (const photoId of createPropertyDto.photoIds || []) {
@@ -376,20 +371,11 @@ export class PropertyService {
       const savedProperties: Property[] = [];
       for (const item of data) {
         // Create and save address
-        const addressEntity = queryRunner.manager.create(Address, {
-          ...item.address,
-          user: landlord.user, // Link to landlord's user
-        });
-        const savedAddress = await queryRunner.manager.save(
-          Address,
-          addressEntity,
-        );
-
         // Create and save property
         const propertyEntity = queryRunner.manager.create(Property, {
           ...item,
           landlord,
-          address: savedAddress,
+          address: item.address,
           amenities: item.amenities || [],
         });
         const savedProperty = await queryRunner.manager.save(

@@ -17,9 +17,8 @@ import { UserService } from 'src/user/user.service';
 import { FileService } from 'src/file/file.service';
 import { EmailService } from 'src/notification/email/email.service';
 import { QueryLandlordDto } from './dto/query-landlord.dto';
-import { AddressService } from 'src/address/address.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { UpdateLadlordProfileDto } from './dto/update-landlord-profile.dto';
+import { UpdateLandlordProfileDto } from './dto/update-landlord-profile.dto';
 import { UploadLandlordDocumentsDto } from './dto/upload-landlord-documents.dto';
 import { UploadLandlordNotificationPreferencesDto } from './dto/update-landlord-notification-preferences.dto';
 import { LandlordSettings } from './entities/landlord-settings.entity';
@@ -45,7 +44,6 @@ export class LandlordService implements OnApplicationBootstrap {
     private readonly fileService: FileService,
     private readonly emailService: EmailService,
     private readonly notificationService: NotificationService,
-    private readonly addressService: AddressService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
@@ -100,11 +98,8 @@ export class LandlordService implements OnApplicationBootstrap {
         );
         landlord.profilePicture = profilePicture;
       }
-      const address = await this.addressService.create(
-        user.id,
-        createLandlordDto.address!,
-      );
-      landlord.address = address;
+
+      landlord.address = createLandlordDto.address;
       const savedLandlord = await this.landlordRepository.save(landlord);
       const landlordSettings = this.landlordSettingsRepository.create({
         landlord: savedLandlord,
@@ -341,7 +336,7 @@ export class LandlordService implements OnApplicationBootstrap {
     return landlord.softRemove();
   }
 
-  async updateProfilePicure(landlordId: string, profilePictureId: string) {
+  async updateProfilePicture(landlordId: string, profilePictureId: string) {
     const landlord = await this.findOne(landlordId);
     const file = await this.fileService.findFileById(profilePictureId);
     landlord.profilePicture = file;
@@ -350,19 +345,16 @@ export class LandlordService implements OnApplicationBootstrap {
 
   async updateProfile(
     landlordId: string,
-    updateLadlordProfileDto: UpdateLadlordProfileDto,
+    updateLandlordProfileDto: UpdateLandlordProfileDto,
   ) {
     const landlord = await this.findOne(landlordId);
-    for (const key in updateLadlordProfileDto) {
+    for (const key in updateLandlordProfileDto) {
       if (landlord[key]) {
-        landlord[key] = updateLadlordProfileDto[key];
+        landlord[key] = updateLandlordProfileDto[key];
       }
     }
-    if (updateLadlordProfileDto.address) {
-      await this.addressService.update(
-        landlord.address.id,
-        updateLadlordProfileDto.address,
-      );
+    if (updateLandlordProfileDto.address) {
+      landlord.address = updateLandlordProfileDto.address;
     }
     return this.landlordRepository.save(landlord);
   }
