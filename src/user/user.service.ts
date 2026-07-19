@@ -30,18 +30,24 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { NotificationService } from 'src/notification/notification.service';
 import { CurrentDeviceInfo } from 'src/auth/decorators/current-device.decorator';
+import { CreateClientKycDto } from './dto/create-client-kyc.dto';
+import { KYC } from './entities/kyc.entity';
+import { FileService } from 'src/file/file.service';
+import { UpdateClientKycDto } from './dto/update-client-kyc.dto';
 
 @Injectable()
 export class UserService {
   constructor(
     private dataSource: DataSource,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
+    @InjectRepository(KYC) private readonly kycRepository: Repository<KYC>,
     private readonly rbacService: RbacService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
     private readonly configService: ConfigService<EnvironmentVariables>,
     private readonly jwtService: JwtService,
     private readonly eventEmitter: EventEmitter2,
     private readonly notificationService: NotificationService,
+    private readonly fileService: FileService,
   ) {}
 
   async create(createUserDto: CreateUserDto) {
@@ -264,15 +270,6 @@ export class UserService {
     return user.save();
   }
 
-  async remove(id: string) {
-    //TODO run the extra delete logic like removing related data in a background job
-    const result = await this.userRepository.softDelete({ id });
-    if (result.affected === 0) {
-      throw new NotFoundException('User not found');
-    }
-    return true;
-  }
-
   async updatePassword(
     userId: string,
     changePasswordDto: ChangePasswordDto,
@@ -296,5 +293,87 @@ export class UserService {
       },
     });
     return await user.save();
+  }
+
+  async createKyc(userId: string, createClientKycDto: CreateClientKycDto) {
+    const user = await this.findOne(userId);
+    const kyc = this.kycRepository.create({
+      idType: createClientKycDto.idType,
+      idNumber: createClientKycDto.idNumber,
+      tinNumber: createClientKycDto.tinNumber,
+    });
+    if (createClientKycDto.idDocumentId) {
+      const idDocument = await this.fileService.findFileById(
+        createClientKycDto.idDocumentId,
+      );
+      kyc.idDocument = idDocument;
+    }
+    if (createClientKycDto.proofOfAddressDocumentId) {
+      const proofOfAddressDocument = await this.fileService.findFileById(
+        createClientKycDto.proofOfAddressDocumentId,
+      );
+      kyc.proofOfAddressDocument = proofOfAddressDocument;
+    }
+    if (createClientKycDto.tinDocumentId) {
+      const tinDocument = await this.fileService.findFileById(
+        createClientKycDto.tinDocumentId,
+      );
+      kyc.tinDocument = tinDocument;
+    }
+    kyc.user = user;
+    return await this.kycRepository.save(kyc);
+  }
+
+  async getKycByUserId(userId: string) {
+    const kyc = await this.kycRepository.findOne({
+      where: { user: { id: userId } },
+      relations: [
+        'user',
+        'idDocument',
+        'proofOfAddressDocument',
+        'tinDocument',
+      ],
+    });
+    if (!kyc) {
+      throw new NotFoundException('KYC not found for this user');
+    }
+    return kyc;
+  }
+
+  async updateKyc(userId: string, updateClientKycDto: UpdateClientKycDto) {
+    const kyc = await this.getKycByUserId(userId);
+    for (const key in updateClientKycDto) {
+      if (updateClientKycDto[key] !== undefined) {
+        kyc[key] = updateClientKycDto[key];
+      }
+    }
+    if (updateClientKycDto.idDocumentId) {
+      const idDocument = await this.fileService.findFileById(
+        updateClientKycDto.idDocumentId,
+      );
+      kyc.idDocument = idDocument;
+    }
+    if (updateClientKycDto.proofOfAddressDocumentId) {
+      const proofOfAddressDocument = await this.fileService.findFileById(
+        updateClientKycDto.proofOfAddressDocumentId,
+      );
+      kyc.proofOfAddressDocument = proofOfAddressDocument;
+    }
+    if (updateClientKycDto.tinDocumentId) {
+      const tinDocument = await this.fileService.findFileById(
+        updateClientKycDto.tinDocumentId,
+      );
+      kyc.tinDocument = tinDocument;
+    }
+    return await this.kycRepository.save(kyc);
+  }
+
+  async remove(id: string) {
+    //TODO run the extra delete logic like removing related data in a background job
+    const result = await this.userRepository.softDelete({ id });
+    if (result.affected === 0) {
+      throw new NotFoundException('User not found');
+    }
+    return true;
   }
 }

@@ -20,12 +20,14 @@ import { RolesGuard } from 'src/auth/guards/role.guard';
 import { RequirePermissions } from 'src/rbac/decorators/permission.decorator';
 import { PERMISSIONS } from 'src/utils/constants';
 import { UpdateLandlordProfileDto } from './dto/update-landlord-profile.dto';
-import { UploadLandlordDocumentsDto } from './dto/upload-landlord-documents.dto';
 import { UpdateLandlordPlatformPreferencesDto } from './dto/update-landlord-platform-preferences.dto';
-import { UploadLandlordNotificationPreferencesDto } from './dto/update-landlord-notification-preferences.dto';
+import { UpdateLandlordNotificationPreferencesDto } from './dto/update-landlord-notification-preferences.dto';
 import { UpdateLandlordGracePeriodDto } from './dto/update-landlord-grace-period.dto';
 import { UpdateLandlordLateFeeDto } from './dto/update-landlord-late-fee.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
+import { CreateLandlordKybDto } from './dto/create-landlord-kyb.dto';
+import { UpdateLandlordKybDto } from './dto/update-landlord-kyb.dto';
+import { UpdateLandlordBankAccountDetailsDto } from './dto/update-landlord-bank-account-details.dto';
 
 @UseGuards(JwtAuthGuard, PermissionsGuard, RolesGuard)
 @ApiBearerAuth()
@@ -100,18 +102,61 @@ export class LandlordController {
     };
   }
 
-  // @RequirePermissions(PERMISSIONS.APPROVE_LANDLORD)
-  // @Post(':id/approve')
-  // async approve(@Param('id') id: string, @Req() req: Request) {
-  //   const user = (req as any).user;
+  @RequirePermissions(PERMISSIONS.UPDATE_LANDLORD)
+  @Post(':id/kyb')
+  async createKyb(
+    @Param('id') id: string,
+    @Body() createLandlordKybDto: CreateLandlordKybDto,
+  ) {
+    const data = await this.landlordService.createLandlordKyb(
+      id,
+      createLandlordKybDto,
+    );
+    return {
+      message: 'Landlord KYB created successfully',
+      data,
+      success: true,
+    };
+  }
 
-  //   const data = await this.landlordService.approveLandlord(id, user);
-  //   return {
-  //     message: 'Landlord approved successfully',
-  //     data,
-  //     success: true,
-  //   };
-  // }
+  @RequirePermissions(PERMISSIONS.READ_LANDLORD)
+  @Get(':id/kyb')
+  async getKyb(@Param('id') id: string) {
+    const data = await this.landlordService.getLandlordKybByLandlordId(id);
+    return {
+      message: 'Landlord KYB fetched successfully',
+      data,
+      success: true,
+    };
+  }
+
+  @RequirePermissions(PERMISSIONS.UPDATE_LANDLORD)
+  @Patch(':id/kyb')
+  async updateKyb(
+    @Param('id') id: string,
+    @Body() updateLandlordKybDto: UpdateLandlordKybDto,
+  ) {
+    const data = await this.landlordService.updateLandlordKyb(
+      id,
+      updateLandlordKybDto,
+    );
+    return {
+      message: 'Landlord KYB updated successfully',
+      data,
+      success: true,
+    };
+  }
+
+  @Post(':id/verify')
+  async initiateLandlordVerification(@Param('id') id: string) {
+    const data =
+      await this.landlordService.createNewLandlordVerificationRequest(id);
+    return {
+      message: 'Landlord verification request created successfully',
+      data,
+      success: true,
+    };
+  }
 
   @Delete(':id')
   async remove(@Param('id') id: string) {
@@ -152,23 +197,6 @@ export class LandlordController {
   }
 
   @RequirePermissions(PERMISSIONS.UPDATE_LANDLORD)
-  @Patch(':id/documents')
-  async updateDocuments(
-    @Param('id') id: string,
-    @Body() updateLandlordDocumentsDto: UploadLandlordDocumentsDto,
-  ) {
-    const data = await this.landlordService.updateDocuments(
-      id,
-      updateLandlordDocumentsDto,
-    );
-    return {
-      message: 'Landlord documents updated successfully',
-      data,
-      success: true,
-    };
-  }
-
-  @RequirePermissions(PERMISSIONS.UPDATE_LANDLORD)
   @Patch(':id/settings/platform-preferences')
   async updatePlatformPreferences(
     @Param('id') id: string,
@@ -190,7 +218,7 @@ export class LandlordController {
   async updateNotificationPreferences(
     @Param('id') id: string,
     @Body()
-    updateLandlordNotificationPreferencesDto: UploadLandlordNotificationPreferencesDto,
+    updateLandlordNotificationPreferencesDto: UpdateLandlordNotificationPreferencesDto,
   ) {
     const data =
       await this.landlordService.updateLandlordNotificationPreferences(
@@ -233,6 +261,24 @@ export class LandlordController {
     );
     return {
       message: 'Landlord late fee settings updated successfully',
+      data,
+      success: true,
+    };
+  }
+
+  @RequirePermissions(PERMISSIONS.UPDATE_LANDLORD)
+  @Patch(':id/settings/bank-account')
+  async updateBankAccountDetails(
+    @Param('id') id: string,
+    @Body()
+    updateLandlordBankAccountDetailsDto: UpdateLandlordBankAccountDetailsDto,
+  ) {
+    const data = await this.landlordService.updateLandlordBankAccountDetails(
+      id,
+      updateLandlordBankAccountDetailsDto,
+    );
+    return {
+      message: 'Landlord bank account details updated successfully',
       data,
       success: true,
     };

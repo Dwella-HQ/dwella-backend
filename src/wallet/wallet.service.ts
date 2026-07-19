@@ -43,17 +43,25 @@ export class WalletService {
     const landlord = await this.landlordService.findOne(
       createWalletDto.landlordId,
     );
-    const landlordSettings = await this.landlordService.getLandlordSettings(
-      landlord.id,
-    );
+
     const activeWallet = await this.walletRepository.findOne({
       where: {
-        landlord: { id: createWalletDto.landlordId },
+        landlord: { id: landlord.id },
         isActive: true,
       },
     });
     if (activeWallet) {
       throw new BadRequestException('Landlord already has a wallet');
+    }
+
+    const landlordSettings = await this.landlordService.getLandlordSettings(
+      landlord.id,
+    );
+
+    if (!landlordSettings.bankAccount) {
+      throw new BadRequestException(
+        'Please set up bank account details in landlord settings before creating a wallet',
+      );
     }
     const wallet = this.walletRepository.create({
       landlord: landlord,

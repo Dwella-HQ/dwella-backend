@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { UpdateVerificationStatusDto } from './dto/update-verification-status.dto';
@@ -22,6 +23,7 @@ import { PropertyService } from 'src/property/property.service';
 
 @Injectable()
 export class VerificationService {
+  private loggerService = new Logger(VerificationService.name);
   constructor(
     @InjectRepository(Verification)
     private verificationRepository: Repository<Verification>,
@@ -30,11 +32,14 @@ export class VerificationService {
     private readonly fileService: FileService,
   ) {}
 
-  @OnEvent('landlord.created')
-  @OnEvent('landlord.updated')
+  @OnEvent('landlord.verify')
   async startLandlordVerification(landlordId: string) {
-    const landlord = await this.landlordService.findOne(landlordId);
-    if (landlord.approvalStatus === ApprovalStatusEnum.APPROVED) {
+    const landlord =
+      await this.landlordService.getLandlordDetailsForVerification(landlordId);
+    if (landlord.approvalStatus !== ApprovalStatusEnum.PENDING) {
+      this.loggerService.log(
+        `Landlord with ID ${landlordId} is already verified or rejected. Skipping verification process.`,
+      );
       return;
     }
     const verification = this.verificationRepository.create({

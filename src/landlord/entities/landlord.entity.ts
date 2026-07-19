@@ -15,7 +15,12 @@ import {
 } from 'typeorm';
 import { LandlordSettings } from './landlord-settings.entity';
 import { Property } from 'src/property/entities/property.entity';
-import { Address, ApprovalStatusEnum } from 'src/utils/constants';
+import {
+  Address,
+  ApprovalStatusEnum,
+  LandlordTypeEnum,
+} from 'src/utils/constants';
+import { LandlordKYB } from './landlord-kyb.entity';
 
 @Entity()
 export class Landlord extends BaseEntity {
@@ -30,34 +35,25 @@ export class Landlord extends BaseEntity {
   address?: Address;
 
   @Column({ unique: true })
-  businessName!: string;
+  name!: string;
 
   @Column({ unique: true })
-  businessEmail!: string;
+  email!: string;
 
   @Column({ nullable: true })
-  businessPhoneNumber?: string;
+  phoneNumber?: string;
 
   @JoinColumn()
   @OneToOne(() => File, { nullable: true, eager: true })
   profilePicture!: Relation<File>;
 
+  @OneToOne(() => LandlordKYB, (kyb) => kyb.landlord, { cascade: true })
+  kyb!: Relation<LandlordKYB>;
+
+  @Column({ type: 'text', default: LandlordTypeEnum.PERSONAL })
+  landlordType!: LandlordTypeEnum;
+
   // documents ----
-  @JoinColumn()
-  @OneToOne(() => File, { nullable: true, eager: true })
-  govermentIdDocument!: Relation<File>;
-
-  @JoinColumn()
-  @OneToOne(() => File, { nullable: true, eager: true })
-  landSurveyDocument!: Relation<File>;
-
-  @JoinColumn()
-  @OneToOne(() => File, { nullable: true, eager: true })
-  proofOfOwnershipDocument!: Relation<File>;
-
-  @JoinColumn()
-  @OneToOne(() => File, { nullable: true, eager: true })
-  taxIdentificationNumberDocument!: Relation<File>;
 
   @OneToMany(
     () => PropertyManager,

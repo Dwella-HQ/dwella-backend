@@ -1,20 +1,20 @@
 import { IsEnum, IsOptional } from 'class-validator';
 import { NotificationChannelEnum } from 'src/utils/constants';
 
-export class UploadLandlordNotificationPreferencesDto {
+export class UpdateLandlordNotificationPreferencesDto {
   @IsEnum(NotificationChannelEnum, { each: true })
   @IsOptional()
-  paymentNotifications: NotificationChannelEnum[];
+  paymentNotifications?: NotificationChannelEnum[];
 
   @IsEnum(NotificationChannelEnum, { each: true })
   @IsOptional()
-  maintenanceRequestNotifications: NotificationChannelEnum[];
+  maintenanceRequestNotifications?: NotificationChannelEnum[];
 
   @IsEnum(NotificationChannelEnum, { each: true })
   @IsOptional()
-  overDueNotifications: NotificationChannelEnum[];
+  overDueNotifications?: NotificationChannelEnum[];
 
   @IsEnum(NotificationChannelEnum, { each: true })
   @IsOptional()
-  weeklyReportsNotifications: NotificationChannelEnum[];
+  weeklyReportsNotifications?: NotificationChannelEnum[];
 }

@@ -3,27 +3,27 @@ import { CurrenciesEnum } from 'src/utils/constants';
 
 export class CreateLandlordWalletDto {
   @IsUUID()
-  landlordId: string;
+  landlordId!: string;
 
   @IsEnum(CurrenciesEnum)
   @IsOptional()
-  currency: CurrenciesEnum;
+  currency?: CurrenciesEnum;
 }
 
 export class CreateAgentWalletDto {
   @IsUUID()
-  agentId: string;
+  agentId!: string;
 
   @IsEnum(CurrenciesEnum)
   @IsOptional()
-  currency: CurrenciesEnum;
+  currency?: CurrenciesEnum;
 }
 
 export class CreateTenantWalletDto {
   @IsUUID()
-  tenantId: string;
+  tenantId!: string;
 
   @IsEnum(CurrenciesEnum)
   @IsOptional()
-  currency: CurrenciesEnum;
+  currency?: CurrenciesEnum;
 }

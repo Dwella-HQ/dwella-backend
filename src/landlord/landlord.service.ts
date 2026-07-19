@@ -6,7 +6,6 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
-  OnApplicationBootstrap,
 } from '@nestjs/common';
 import { CreateLandlordDto } from './dto/create-landlord.dto';
 import { UpdateLandlordDto } from './dto/update-landlord.dto';
@@ -19,8 +18,7 @@ import { EmailService } from 'src/notification/email/email.service';
 import { QueryLandlordDto } from './dto/query-landlord.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UpdateLandlordProfileDto } from './dto/update-landlord-profile.dto';
-import { UploadLandlordDocumentsDto } from './dto/upload-landlord-documents.dto';
-import { UploadLandlordNotificationPreferencesDto } from './dto/update-landlord-notification-preferences.dto';
+import { UpdateLandlordNotificationPreferencesDto } from './dto/update-landlord-notification-preferences.dto';
 import { LandlordSettings } from './entities/landlord-settings.entity';
 import { UpdateLandlordPlatformPreferencesDto } from './dto/update-landlord-platform-preferences.dto';
 import { UpdateLandlordGracePeriodDto } from './dto/update-landlord-grace-period.dto';
@@ -32,14 +30,20 @@ import {
   NotificationTypeEnum,
 } from 'src/utils/constants';
 import { NotificationService } from 'src/notification/notification.service';
+import { LandlordKYB } from './entities/landlord-kyb.entity';
+import { CreateLandlordKybDto } from './dto/create-landlord-kyb.dto';
+import { UpdateLandlordKybDto } from './dto/update-landlord-kyb.dto';
+import { UpdateLandlordBankAccountDetailsDto } from './dto/update-landlord-bank-account-details.dto';
 
 @Injectable()
-export class LandlordService implements OnApplicationBootstrap {
+export class LandlordService {
   constructor(
     @InjectRepository(Landlord)
     private readonly landlordRepository: Repository<Landlord>,
     @InjectRepository(LandlordSettings)
     private readonly landlordSettingsRepository: Repository<LandlordSettings>,
+    @InjectRepository(LandlordKYB)
+    private readonly landlordKybRepository: Repository<LandlordKYB>,
     private readonly userService: UserService,
     private readonly fileService: FileService,
     private readonly emailService: EmailService,
@@ -47,68 +51,28 @@ export class LandlordService implements OnApplicationBootstrap {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  async onApplicationBootstrap() {
-    const landlordsToApprove = await this.landlordRepository.find({
-      where: { isApproved: true, approvalStatus: ApprovalStatusEnum.PENDING },
-    });
-    for (const landlord of landlordsToApprove) {
-      landlord.approvalStatus = ApprovalStatusEnum.APPROVED;
-      await this.landlordRepository.save(landlord);
-    }
-  }
-
   async create(createLandlordDto: CreateLandlordDto) {
     const user = await this.userService.findOne(createLandlordDto.userId);
 
     try {
       const landlord = this.landlordRepository.create({
         user: user,
-        businessName: createLandlordDto.businessName || user.fullName,
-        businessEmail: createLandlordDto.businessEmail || user.email,
+        name: user.fullName,
+        email: user.email,
       });
-      if (createLandlordDto.govermentIdDocumentId) {
-        const govermentIdDocument = await this.fileService.findFileById(
-          createLandlordDto.govermentIdDocumentId,
-        );
-        landlord.govermentIdDocument = govermentIdDocument;
-      }
-      if (createLandlordDto.landSurveyDocumentId) {
-        const landSurveyDocument = await this.fileService.findFileById(
-          createLandlordDto.landSurveyDocumentId,
-        );
-        landlord.landSurveyDocument = landSurveyDocument;
-      }
-      if (createLandlordDto.proofOfOwnershipDocumentId) {
-        const proofOfOwnershipDocument = await this.fileService.findFileById(
-          createLandlordDto.proofOfOwnershipDocumentId,
-        );
-        landlord.proofOfOwnershipDocument = proofOfOwnershipDocument;
-      }
-      if (createLandlordDto.taxIdentificationNumberDocumentId) {
-        const taxIdentificationNumberDocument =
-          await this.fileService.findFileById(
-            createLandlordDto.taxIdentificationNumberDocumentId,
-          );
-        landlord.taxIdentificationNumberDocument =
-          taxIdentificationNumberDocument;
-      }
-      if (createLandlordDto.profilePictureId) {
-        const profilePicture = await this.fileService.findFileById(
-          createLandlordDto.profilePictureId,
-        );
-        landlord.profilePicture = profilePicture;
-      }
 
-      landlord.address = createLandlordDto.address;
+      landlord.address = user.address;
+      landlord.phoneNumber = user.phoneNumber;
+      landlord.profilePicture = user.profilePicture;
       const savedLandlord = await this.landlordRepository.save(landlord);
       const landlordSettings = this.landlordSettingsRepository.create({
         landlord: savedLandlord,
-        bankAccount: createLandlordDto.bankAccount,
       });
       await this.landlordSettingsRepository.save(landlordSettings);
-      this.eventEmitter.emit('landlord.created', savedLandlord.id);
+      this.eventEmitter.emit('landlord.verify', savedLandlord.id);
       return savedLandlord;
     } catch (error: any) {
+      console.log(error);
       if (error?.code == '23505') {
         // throw new BadRequestException('A user with this email already exists');
         const field = error.detail?.match(/Key \((.+?)\)/)?.[1] ?? 'field';
@@ -116,9 +80,31 @@ export class LandlordService implements OnApplicationBootstrap {
           `${camelCaseToSpaced(field)} already exists`,
         );
       }
-      console.log(error);
       throw new InternalServerErrorException('An error occured');
     }
+  }
+
+  async createNewLandlordVerificationRequest(landlordId: string) {
+    const landlord = await this.findOne(landlordId);
+    if (landlord.approvalStatus === ApprovalStatusEnum.PENDING) {
+      throw new BadRequestException(
+        'Landlord verification request is already pending',
+      );
+    }
+    landlord.approvalStatus = ApprovalStatusEnum.PENDING;
+    const updatedLandlord = await this.landlordRepository.save(landlord);
+    await this.notificationService.sendNotificationToUser(landlord.user, {
+      title: 'Your Landlord Application is Under Review',
+      templateName: 'onboarding.landlord-verification-pending',
+      medium: [NotificationMediumEnum.EMAIL],
+      notificationType: NotificationTypeEnum.INFO,
+      context: {
+        name: landlord.user.fullName,
+        dashboardLink: `${process.env.FRONTEND_URL}/landlord/dashboard`,
+      },
+    });
+    this.eventEmitter.emit('landlord.verify', updatedLandlord.id);
+    return updatedLandlord;
   }
 
   async approveLandlord(id: string) {
@@ -161,10 +147,6 @@ export class LandlordService implements OnApplicationBootstrap {
   findAll() {
     const landlords = this.landlordRepository.find({
       relations: {
-        govermentIdDocument: true,
-        landSurveyDocument: true,
-        proofOfOwnershipDocument: true,
-        taxIdentificationNumberDocument: true,
         user: true,
       },
     });
@@ -230,13 +212,38 @@ export class LandlordService implements OnApplicationBootstrap {
     const landlord = await this.landlordRepository.findOne({
       where: { id: id },
       relations: {
-        govermentIdDocument: true,
-        landSurveyDocument: true,
-        proofOfOwnershipDocument: true,
-        taxIdentificationNumberDocument: true,
         user: true,
       },
       relationLoadStrategy: 'query',
+    });
+    if (!landlord) {
+      throw new NotFoundException('Landlord not found');
+    }
+    return landlord;
+  }
+
+  async getLandlordDetailsForVerification(id: string) {
+    const landlord = await this.landlordRepository.findOne({
+      where: { id: id },
+      relations: {
+        user: {
+          profilePicture: true,
+          kyc: {
+            idDocument: true,
+            proofOfAddressDocument: true,
+            tinDocument: true,
+          },
+        },
+        kyb: {
+          businessAddress: true,
+          businessCACCertificate: true,
+          businessLogo: true,
+          businessProofOfAddressDocument: true,
+          businessTINCertificate: true,
+        },
+        profilePicture: true,
+        settings: true,
+      },
     });
     if (!landlord) {
       throw new NotFoundException('Landlord not found');
@@ -248,10 +255,6 @@ export class LandlordService implements OnApplicationBootstrap {
     const landlord = await this.landlordRepository.findOne({
       where: { user: { id: userId } },
       relations: {
-        govermentIdDocument: true,
-        landSurveyDocument: true,
-        proofOfOwnershipDocument: true,
-        taxIdentificationNumberDocument: true,
         user: true,
       },
     });
@@ -276,47 +279,10 @@ export class LandlordService implements OnApplicationBootstrap {
         landlord[key] = updateLandlordDto[key];
       }
     }
-    if (updateLandlordDto.govermentIdDocumentId) {
-      const govermentIdDocument = await this.fileService.findFileById(
-        updateLandlordDto.govermentIdDocumentId,
-      );
-      landlord.govermentIdDocument = govermentIdDocument;
-    }
-    if (updateLandlordDto.landSurveyDocumentId) {
-      const landSurveyDocument = await this.fileService.findFileById(
-        updateLandlordDto.landSurveyDocumentId,
-      );
-      landlord.landSurveyDocument = landSurveyDocument;
-    }
-    if (updateLandlordDto.proofOfOwnershipDocumentId) {
-      const proofOfOwnershipDocument = await this.fileService.findFileById(
-        updateLandlordDto.proofOfOwnershipDocumentId,
-      );
-      landlord.proofOfOwnershipDocument = proofOfOwnershipDocument;
-    }
-    if (updateLandlordDto.taxIdentificationNumberDocumentId) {
-      const taxIdentificationNumberDocument =
-        await this.fileService.findFileById(
-          updateLandlordDto.taxIdentificationNumberDocumentId,
-        );
-      landlord.taxIdentificationNumberDocument =
-        taxIdentificationNumberDocument;
-    }
-    if (updateLandlordDto.profilePictureId) {
-      const profilePicture = await this.fileService.findFileById(
-        updateLandlordDto.profilePictureId,
-      );
-      landlord.profilePicture = profilePicture;
-    }
-    landlordSettings.bankAccount = updateLandlordDto.bankAccount!;
     const [updatedLandlord] = await Promise.all([
       this.landlordRepository.save(landlord),
       landlordSettings.save(),
     ]);
-
-    if (updatedLandlord.approvalStatus !== ApprovalStatusEnum.APPROVED) {
-      this.eventEmitter.emit('landlord.updated', updatedLandlord.id);
-    }
     return updatedLandlord;
   }
 
@@ -359,43 +325,9 @@ export class LandlordService implements OnApplicationBootstrap {
     return this.landlordRepository.save(landlord);
   }
 
-  async updateDocuments(
-    lanlordId: string,
-    updateLandlordDocumentsDto: UploadLandlordDocumentsDto,
-  ) {
-    const landlord = await this.findOne(lanlordId);
-    if (updateLandlordDocumentsDto.govermentIdDocumentId) {
-      const govermentIdDocument = await this.fileService.findFileById(
-        updateLandlordDocumentsDto.govermentIdDocumentId,
-      );
-      landlord.govermentIdDocument = govermentIdDocument;
-    }
-    if (updateLandlordDocumentsDto.landSurveyDocumentId) {
-      const landSurveyDocument = await this.fileService.findFileById(
-        updateLandlordDocumentsDto.landSurveyDocumentId,
-      );
-      landlord.landSurveyDocument = landSurveyDocument;
-    }
-    if (updateLandlordDocumentsDto.proofOfOwnershipDocumentId) {
-      const proofOfOwnershipDocument = await this.fileService.findFileById(
-        updateLandlordDocumentsDto.proofOfOwnershipDocumentId,
-      );
-      landlord.proofOfOwnershipDocument = proofOfOwnershipDocument;
-    }
-    if (updateLandlordDocumentsDto.taxIdentificationNumberDocumentId) {
-      const taxIdentificationNumberDocument =
-        await this.fileService.findFileById(
-          updateLandlordDocumentsDto.taxIdentificationNumberDocumentId,
-        );
-      landlord.taxIdentificationNumberDocument =
-        taxIdentificationNumberDocument;
-    }
-    return this.landlordRepository.save(landlord);
-  }
-
   async updateLandlordNotificationPreferences(
     landlordId: string,
-    uploadLandlordNotificationPreferencesDto: UploadLandlordNotificationPreferencesDto,
+    uploadLandlordNotificationPreferencesDto: UpdateLandlordNotificationPreferencesDto,
   ) {
     const landlordSettings = await this.getLandlordSettings(landlordId);
     if (uploadLandlordNotificationPreferencesDto.paymentNotifications) {
@@ -473,5 +405,131 @@ export class LandlordService implements OnApplicationBootstrap {
         updateLandlordLateFeeDto.lateFeeType;
     }
     return this.landlordSettingsRepository.save(landlordSettings);
+  }
+
+  async updateLandlordBankAccountDetails(
+    landlordId: string,
+    bankAccountDetails: UpdateLandlordBankAccountDetailsDto,
+  ) {
+    const landlordSettings = await this.getLandlordSettings(landlordId);
+    landlordSettings.bankAccount = bankAccountDetails;
+    return this.landlordSettingsRepository.save(landlordSettings);
+  }
+
+  async createLandlordKyb(
+    landlordId: string,
+    createLandlordKybDto: CreateLandlordKybDto,
+  ) {
+    const landlord = await this.findOne(landlordId);
+    const existingKyb = await this.landlordKybRepository.findOne({
+      where: { landlord: { id: landlord.id } },
+    });
+    if (existingKyb) {
+      throw new BadRequestException('Landlord KYB already exists');
+    }
+
+    const kyb = this.landlordKybRepository.create({
+      landlord,
+      businessName: createLandlordKybDto.businessName,
+      businessEmail: createLandlordKybDto.businessEmail,
+      businessPhoneNumber: createLandlordKybDto.businessPhoneNumber,
+      businessAddress: createLandlordKybDto.businessAddress,
+      businessTINNumber: createLandlordKybDto.businessTinNumber,
+    });
+
+    const businessLogo = await this.fileService.findFileById(
+      createLandlordKybDto.businessLogoId,
+    );
+    kyb.businessLogo = businessLogo;
+
+    const businessCacCertificate = await this.fileService.findFileById(
+      createLandlordKybDto.businessCacCertificateId,
+    );
+    kyb.businessCACCertificate = businessCacCertificate;
+
+    if (createLandlordKybDto.businessTinCertificateId) {
+      const businessTinCertificate = await this.fileService.findFileById(
+        createLandlordKybDto.businessTinCertificateId,
+      );
+      kyb.businessTINCertificate = businessTinCertificate;
+    }
+
+    if (createLandlordKybDto.businessProofOfAddressId) {
+      const businessProofOfAddress = await this.fileService.findFileById(
+        createLandlordKybDto.businessProofOfAddressId,
+      );
+      kyb.businessProofOfAddressDocument = businessProofOfAddress;
+    }
+    landlord.name = createLandlordKybDto.businessName;
+    landlord.email = createLandlordKybDto.businessEmail;
+
+    const [savedKyb] = await Promise.all([
+      this.landlordKybRepository.save(kyb),
+      this.landlordRepository.save(landlord),
+    ]);
+
+    return savedKyb;
+  }
+
+  async getLandlordKybByLandlordId(landlordId: string) {
+    const kyb = await this.landlordKybRepository.findOne({
+      where: { landlord: { id: landlordId } },
+      relations: {
+        landlord: true,
+      },
+    });
+    if (!kyb) {
+      throw new NotFoundException('Landlord KYB not found');
+    }
+    return kyb;
+  }
+
+  async updateLandlordKyb(
+    landlordId: string,
+    updateLandlordKybDto: UpdateLandlordKybDto,
+  ) {
+    const kyb = await this.getLandlordKybByLandlordId(landlordId);
+
+    if (updateLandlordKybDto.businessName !== undefined) {
+      kyb.businessName = updateLandlordKybDto.businessName;
+    }
+    if (updateLandlordKybDto.businessEmail !== undefined) {
+      kyb.businessEmail = updateLandlordKybDto.businessEmail;
+    }
+    if (updateLandlordKybDto.businessPhoneNumber !== undefined) {
+      kyb.businessPhoneNumber = updateLandlordKybDto.businessPhoneNumber;
+    }
+    if (updateLandlordKybDto.businessAddress !== undefined) {
+      kyb.businessAddress = updateLandlordKybDto.businessAddress;
+    }
+    if (updateLandlordKybDto.businessTinNumber !== undefined) {
+      kyb.businessTINNumber = updateLandlordKybDto.businessTinNumber;
+    }
+
+    if (updateLandlordKybDto.businessLogoId) {
+      kyb.businessLogo = await this.fileService.findFileById(
+        updateLandlordKybDto.businessLogoId,
+      );
+    }
+
+    if (updateLandlordKybDto.businessCacCertificateId) {
+      kyb.businessCACCertificate = await this.fileService.findFileById(
+        updateLandlordKybDto.businessCacCertificateId,
+      );
+    }
+
+    if (updateLandlordKybDto.businessTinCertificateId) {
+      kyb.businessTINCertificate = await this.fileService.findFileById(
+        updateLandlordKybDto.businessTinCertificateId,
+      );
+    }
+
+    if (updateLandlordKybDto.businessProofOfAddressId) {
+      kyb.businessProofOfAddressDocument = await this.fileService.findFileById(
+        updateLandlordKybDto.businessProofOfAddressId,
+      );
+    }
+
+    return await this.landlordKybRepository.save(kyb);
   }
 }

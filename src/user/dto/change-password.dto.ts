@@ -9,7 +9,7 @@ export class ChangePasswordDto {
     minNumbers: 1,
     minSymbols: 1,
   })
-  currentPassword: string;
+  currentPassword!: string;
 
   @IsStrongPassword({
     minLength: 8,
@@ -18,7 +18,7 @@ export class ChangePasswordDto {
     minNumbers: 1,
     minSymbols: 1,
   })
-  newPassword: string;
+  newPassword!: string;
 
   @IsStrongPassword({
     minLength: 8,
@@ -30,5 +30,5 @@ export class ChangePasswordDto {
   @MatchPassword('newPassword', {
     message: 'Confirm password must match new password',
   })
-  confirmNewPassword: string;
+  confirmNewPassword!: string;
 }

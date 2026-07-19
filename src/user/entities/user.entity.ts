@@ -8,6 +8,7 @@ import {
   CreateDateColumn,
   Entity,
   Index,
+  JoinColumn,
   ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
@@ -20,6 +21,8 @@ import { Address, RegistrationTypeEnum } from 'src/utils/constants';
 import { Landlord } from 'src/landlord/entities/landlord.entity';
 import { PropertyManager } from 'src/property-manager/entities/property-manager.entity';
 import { Tenant } from 'src/tenant/entities/tenant.entity';
+import { KYC } from './kyc.entity';
+import { File } from 'src/file/entities/file.entity';
 
 @Entity()
 export class User extends BaseEntity {
@@ -43,6 +46,10 @@ export class User extends BaseEntity {
   @Column({ nullable: true })
   phoneNumber?: string;
 
+  @OneToOne(() => File, { nullable: true, eager: true })
+  @JoinColumn()
+  profilePicture!: Relation<File>;
+
   @Column({ default: false })
   isEmailVerified!: boolean;
 
@@ -54,6 +61,9 @@ export class User extends BaseEntity {
 
   @ManyToOne(() => Role, (role) => role.users, { eager: true })
   role!: Relation<Role>;
+
+  @OneToOne(() => KYC, (kyc) => kyc.user, { cascade: true })
+  kyc!: Relation<KYC>;
 
   @OneToOne(() => Landlord, (landlord) => landlord.user)
   landlord!: Relation<Landlord>;

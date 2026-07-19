@@ -23,10 +23,12 @@ import { QueryUserDto } from './dto/query-user.dto';
 import { RequirePermissions } from 'src/rbac/decorators/permission.decorator';
 import { PERMISSIONS } from 'src/utils/constants';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { CreateClientKycDto } from './dto/create-client-kyc.dto';
 import {
   CurrentDevice,
   CurrentDeviceInfo,
 } from 'src/auth/decorators/current-device.decorator';
+import { UpdateClientKycDto } from './dto/update-client-kyc.dto';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), RolesGuard, PermissionsGuard)
@@ -86,6 +88,42 @@ export class UserController {
       changePasswordDto,
       currentDevice,
     );
+  }
+
+  @Post(':id/kyc')
+  async createKyc(
+    @Param('id') id: string,
+    @Body() createClientKycDto: CreateClientKycDto,
+  ) {
+    const data = await this.userService.createKyc(id, createClientKycDto);
+    return {
+      success: true,
+      message: 'User KYC created successfully',
+      data,
+    };
+  }
+
+  @Get(':id/kyc')
+  async getKyc(@Param('id') id: string) {
+    const data = await this.userService.getKycByUserId(id);
+    return {
+      success: true,
+      message: 'User KYC fetched successfully',
+      data,
+    };
+  }
+
+  @Patch(':id/kyc')
+  async updateKyc(
+    @Param('id') id: string,
+    @Body() updateClientKycDto: UpdateClientKycDto,
+  ) {
+    const data = await this.userService.updateKyc(id, updateClientKycDto);
+    return {
+      success: true,
+      message: 'User KYC updated successfully',
+      data,
+    };
   }
 
   @Delete(':id')

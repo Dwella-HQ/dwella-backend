@@ -58,8 +58,8 @@ export class DepositService {
       narration: createDepositDto.narration,
       action: TransactionActionEnum.DEPOSIT,
       senderDetails: {
-        fullName: wallet.landlord.businessName,
-        email: wallet.landlord.businessEmail,
+        fullName: wallet.landlord.name,
+        email: wallet.landlord.email,
       },
       walletId: wallet.id,
     });

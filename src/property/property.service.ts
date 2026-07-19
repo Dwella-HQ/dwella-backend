@@ -170,7 +170,7 @@ export class PropertyService {
     property.isApproved = true;
     await this.emailService.sendMailToUser({
       context: {
-        name: property.landlord.businessName,
+        name: property.landlord.name,
         propertyLink: `${process.env.FRONTEND_URL}/landlord/dashboard/property/${property.id}`,
       },
       subject: 'Your Property Application is Approved',

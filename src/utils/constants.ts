@@ -19,6 +19,11 @@ export enum INVITE_STATUS {
   EXPIRED = 'expired',
 }
 
+export enum LandlordTypeEnum {
+  PERSONAL = 'personal',
+  BUSINESS = 'business',
+}
+
 export const NonAdminRoles = [
   USER_ROLES.LANDLORD,
   USER_ROLES.PROPERTY_MANAGER,

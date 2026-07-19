@@ -31,7 +31,7 @@ export class WalletWorker extends WorkerHost {
       case 'create-virtual-account:paystack': {
         const wallet = job.data as Wallet;
         const { firstName, middleName, lastName } = breakDownFullName(
-          wallet.landlord.businessName,
+          wallet.landlord.name,
         );
         const response = await this.paystackService.assignVirtualAccount({
           email: wallet.landlord.user.email,
@@ -48,12 +48,12 @@ export class WalletWorker extends WorkerHost {
       case 'create-virtual-account:monnify': {
         const wallet = job.data as Wallet;
         const response = await this.monnifyService.createVirtualAccount({
-          accountName: wallet.landlord.businessName,
+          accountName: wallet.landlord.name,
           customerEmail: wallet.landlord.user.email,
           bvn: wallet.bvn,
           accountReference: wallet.id,
           currencyCode: wallet.currency,
-          customerName: wallet.landlord.businessName,
+          customerName: wallet.landlord.name,
         });
         const vba = await this.walletService.assignVba(wallet.id, {
           accountName: response.responseBody.accounts[0].accountName,
@@ -67,9 +67,7 @@ export class WalletWorker extends WorkerHost {
       }
       case 'create-virtual-account:flutterwave': {
         const wallet = job.data as Wallet;
-        const { firstName, lastName } = breakDownFullName(
-          wallet.landlord.businessName,
-        );
+        const { firstName, lastName } = breakDownFullName(wallet.landlord.name);
         const response = await this.flutterwaveService.createVirtualBankAccount(
           {
             currency: wallet.currency,
@@ -81,7 +79,7 @@ export class WalletWorker extends WorkerHost {
           },
         );
         const vba = await this.walletService.assignVba(wallet.id, {
-          accountName: wallet.landlord.businessName,
+          accountName: wallet.landlord.name,
           accountNumber: response.data.account_number,
           bankCode: '',
           bankName: response.data.bank_name,
