@@ -43,7 +43,7 @@ export class RentWorker extends WorkerHost {
           });
           const propertySettings =
             await this.propertyService.getPropertySettings(
-              lease.unit.property.id,
+              lease.unit!.property.id,
             );
           if (!activeRent) {
             let endDate: Date;
@@ -184,7 +184,7 @@ export class RentWorker extends WorkerHost {
           rent.status = RentStatusEnum.OVERDUE;
           const propertySettings =
             await this.propertyService.getPropertySettings(
-              rent.lease.unit.property.id,
+              rent.lease.unit!.property.id,
             );
           let lateFee = 0;
           if (

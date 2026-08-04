@@ -38,6 +38,7 @@ import { createReadStream } from 'fs';
 import { join } from 'path';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { QueryPropertyUnitDto } from './dto/query-property-unit.dto';
 
 @UseGuards(JwtAuthGuard, PermissionsGuard, RolesGuard)
 @ApiBearerAuth()
@@ -233,8 +234,14 @@ export class PropertyController {
 
   @RequirePermissions(PERMISSIONS.READ_PROPERTY)
   @Get(':id/units')
-  async getUnits(@Param('id') id: string) {
-    const data = await this.propertyService.fetchPropertyUnits(id);
+  async getUnits(
+    @Param('id') id: string,
+    @Query() queryPropertyUnitDto: QueryPropertyUnitDto,
+  ) {
+    const data = await this.propertyService.fetchPropertyUnits(
+      id,
+      queryPropertyUnitDto,
+    );
     return {
       success: true,
       message: 'Units retrieved successfully',

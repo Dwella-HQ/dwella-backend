@@ -28,6 +28,8 @@ import { UpdatePropertyGracePeriodDto } from './dto/update-property-grace-period
 import { UpdatePropertyLateFeeDto } from './dto/update-property-late-fee.dto';
 import * as ExcelJS from 'exceljs';
 import { CreateAddressDto } from 'src/utils/shared.dto';
+import { QueryPropertyUnitDto } from './dto/query-property-unit.dto';
+import { ServiceOfferingTypeEnum } from 'src/utils/constants';
 
 @Injectable()
 export class PropertyService {
@@ -241,11 +243,31 @@ export class PropertyService {
     return await this.unitRepository.save(unit);
   }
 
-  async fetchPropertyUnits(propertyId: string) {
-    const units = await this.unitRepository.find({
-      where: { property: { id: propertyId } },
-      relations: { tenant: true },
+  async fetchPropertyUnits(
+    propertyId: string,
+    queryPropertyUnitDto?: QueryPropertyUnitDto,
+  ) {
+    const property = await this.findOne(propertyId);
+    const queryBuilder = this.unitRepository.createQueryBuilder('unit');
+    queryBuilder.where('unit.propertyId = :propertyId', {
+      propertyId: property.id,
     });
+
+    if (queryPropertyUnitDto?.serviceOfferingType) {
+      if (
+        queryPropertyUnitDto.serviceOfferingType ===
+        ServiceOfferingTypeEnum.RENT
+      ) {
+        queryBuilder.andWhere('unit.rentOfferingId IS NOT NULL');
+      } else if (
+        queryPropertyUnitDto.serviceOfferingType ===
+        ServiceOfferingTypeEnum.SERVICE_APARTMENT
+      ) {
+        queryBuilder.andWhere('unit.serviceApartmentOfferingId IS NOT NULL');
+      }
+    }
+
+    const units = await queryBuilder.getMany();
     return units;
   }
 

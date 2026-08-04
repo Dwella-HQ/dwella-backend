@@ -494,3 +494,8 @@ export interface Address {
   postalCode?: string;
   country: string;
 }
+
+export enum ServiceOfferingTypeEnum {
+  RENT = 'rent',
+  SERVICE_APARTMENT = 'service-apartment',
+}

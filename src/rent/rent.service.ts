@@ -34,7 +34,7 @@ export class RentService {
       leaseId: createRentDto.leaseId,
     });
     const propertySettings = await this.propertyService.getPropertySettings(
-      lease.unit.property.id,
+      lease.unit!.property.id,
     );
     const startDate = createRentDto.startDate || new Date();
     let endDate: Date;
