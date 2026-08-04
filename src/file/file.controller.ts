@@ -12,11 +12,12 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { FileService } from './file.service';
-import { Request } from 'express';
+import { Request, Express } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { User } from 'src/user/entities/user.entity';
+import 'multer';
 
 @Controller('file')
 @ApiBearerAuth()
