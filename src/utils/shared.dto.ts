@@ -111,3 +111,13 @@ export class CreateAddressDto {
   @IsNotEmpty()
   country!: string;
 }
+
+export class UnitPricingDto {
+  @IsString()
+  @IsNotEmpty()
+  mode!: string;
+
+  @IsNumberString()
+  @IsNotEmpty()
+  price!: string;
+}

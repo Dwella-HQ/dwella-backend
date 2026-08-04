@@ -8,16 +8,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-
-class PricingDto {
-  @IsString()
-  @IsNotEmpty()
-  mode!: string;
-
-  @IsNumber()
-  @IsNotEmpty()
-  price!: number;
-}
+import { UnitPricingDto } from 'src/utils/shared.dto';
 
 export class CreateServiceApartmentOfferingDto {
   @IsUUID()
@@ -38,9 +29,9 @@ export class CreateServiceApartmentOfferingDto {
 
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => PricingDto)
+  @Type(() => UnitPricingDto)
   @IsOptional()
-  pricing?: PricingDto[];
+  pricing?: UnitPricingDto[];
 
   @IsString()
   @IsNotEmpty()

@@ -8,6 +8,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Unit } from './unit.entity';
+import { UnitPricingDto } from 'src/utils/shared.dto';
 
 @Entity()
 export class ServiceApartmentOffering {
@@ -24,10 +25,7 @@ export class ServiceApartmentOffering {
   clockoutTime!: string;
 
   @Column({ type: 'json', nullable: true })
-  pricing?: {
-    mode: string;
-    price: number;
-  }[];
+  pricing?: UnitPricingDto[];
 
   @Column()
   rules!: string;

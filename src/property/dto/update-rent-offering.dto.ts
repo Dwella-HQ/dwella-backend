@@ -1,22 +1,6 @@
-import {
-  IsArray,
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsString,
-  ValidateNested,
-} from 'class-validator';
+import { IsArray, IsNumber, IsOptional, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
-
-class PricingDto {
-  @IsString()
-  @IsNotEmpty()
-  mode!: string;
-
-  @IsNumber()
-  @IsNotEmpty()
-  price!: number;
-}
+import { UnitPricingDto } from 'src/utils/shared.dto';
 
 export class UpdateRentOfferingDto {
   @IsNumber()
@@ -29,7 +13,7 @@ export class UpdateRentOfferingDto {
 
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => PricingDto)
+  @Type(() => UnitPricingDto)
   @IsOptional()
-  pricing?: PricingDto[];
+  pricing?: UnitPricingDto[];
 }

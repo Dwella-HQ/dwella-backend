@@ -8,6 +8,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Unit } from './unit.entity';
+import { UnitPricingDto } from 'src/utils/shared.dto';
 
 @Entity()
 export class RentOffering {
@@ -21,10 +22,7 @@ export class RentOffering {
   securityDeposit!: number;
 
   @Column({ type: 'json', nullable: true })
-  pricing?: {
-    mode: string;
-    price: number;
-  }[];
+  pricing?: UnitPricingDto[];
 
   @OneToOne(() => Unit, (unit) => unit.rentOffering, {
     nullable: false,
