@@ -22,59 +22,59 @@ import { ColumnNumericTransformer } from 'src/utils/misc';
 @Entity()
 export class Lease {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @ManyToOne(() => Tenant, (tenant) => tenant.leases, { nullable: false })
-  tenant: Relation<Tenant>;
+  tenant?: Relation<Tenant>;
 
   @ManyToOne(() => Unit, (unit) => unit.leases, { nullable: false })
-  unit: Relation<Unit>;
+  unit?: Relation<Unit>;
 
   @Column()
-  startDate: Date;
+  startDate!: Date;
 
   @Column({ nullable: true })
-  endDate: Date;
+  endDate?: Date;
 
   @Column('decimal', {
     precision: 10,
     scale: 2,
     transformer: new ColumnNumericTransformer(),
   })
-  rentAmount: number;
+  rentAmount!: number;
 
   @Column({ type: 'text' })
-  rentFrequency: RentFrequencyEnum;
+  rentFrequency!: RentFrequencyEnum;
 
   @Column('decimal', {
     precision: 10,
     scale: 2,
     transformer: new ColumnNumericTransformer(),
   })
-  securityDeposit: number;
+  securityDeposit!: number;
 
   @Column('decimal', {
     precision: 10,
     scale: 2,
     transformer: new ColumnNumericTransformer(),
   })
-  serviceCharge: number;
+  serviceCharge!: number;
 
   @Column({ type: 'text' })
-  serviceChargeFrequency: ServiceChargeFrequencyEnum;
+  serviceChargeFrequency!: ServiceChargeFrequencyEnum;
 
   @Column({ default: true })
-  isActive: boolean;
+  isActive!: boolean;
 
   @OneToMany(() => Rent, (rent) => rent.lease)
-  rents: Relation<Rent>[];
+  rents?: Relation<Rent>[];
 
   @OneToOne(() => File, { nullable: true })
-  document: Relation<File>;
+  document?: Relation<File>;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
 }

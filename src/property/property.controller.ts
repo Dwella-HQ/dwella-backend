@@ -21,6 +21,10 @@ import { UpdatePropertyDto } from './dto/update-property.dto';
 import { CreateUnitDto } from './dto/create-unit.dto';
 import { PermissionsGuard } from 'src/auth/guards/permission.guard';
 import { ApiBearerAuth, ApiBody, ApiConsumes } from '@nestjs/swagger';
+import { CreateRentOfferingDto } from './dto/create-rent-offering.dto';
+import { UpdateRentOfferingDto } from './dto/update-rent-offering.dto';
+import { CreateServiceApartmentOfferingDto } from './dto/create-service-apartment-offering.dto';
+import { UpdateServiceApartmentOfferingDto } from './dto/update-service-apartment-offering.dto';
 import { RequirePermissions } from 'src/rbac/decorators/permission.decorator';
 import { AdminRoles, PERMISSIONS } from 'src/utils/constants';
 import { RolesGuard } from 'src/auth/guards/role.guard';
@@ -281,6 +285,118 @@ export class PropertyController {
       success: true,
       message: 'Property removed successfully',
       data: data,
+    };
+  }
+
+  @RequirePermissions(PERMISSIONS.UPDATE_PROPERTY)
+  @Post('unit/:unitId/rent-offering')
+  async createRentOffering(
+    @Param('unitId') unitId: string,
+    @Body() createRentOfferingDto: CreateRentOfferingDto,
+  ) {
+    const data = await this.propertyService.createRentOffering(
+      unitId,
+      createRentOfferingDto,
+    );
+    return {
+      success: true,
+      message: 'Rent offering created successfully',
+      data: data,
+    };
+  }
+
+  @RequirePermissions(PERMISSIONS.READ_PROPERTY)
+  @Get('unit/:unitId/rent-offering')
+  async getRentOffering(@Param('unitId') unitId: string) {
+    const data = await this.propertyService.getRentOffering(unitId);
+    return {
+      success: true,
+      message: 'Rent offering retrieved successfully',
+      data: data,
+    };
+  }
+
+  @RequirePermissions(PERMISSIONS.UPDATE_PROPERTY)
+  @Patch('unit/:unitId/rent-offering')
+  async updateRentOffering(
+    @Param('unitId') unitId: string,
+    @Body() updateRentOfferingDto: UpdateRentOfferingDto,
+  ) {
+    const data = await this.propertyService.updateRentOffering(
+      unitId,
+      updateRentOfferingDto,
+    );
+    return {
+      success: true,
+      message: 'Rent offering updated successfully',
+      data: data,
+    };
+  }
+
+  @RequirePermissions(PERMISSIONS.DELETE_PROPERTY)
+  @Delete('unit/:unitId/rent-offering')
+  async deleteRentOffering(@Param('unitId') unitId: string) {
+    await this.propertyService.deleteRentOffering(unitId);
+    return {
+      success: true,
+      message: 'Rent offering deleted successfully',
+    };
+  }
+
+  @RequirePermissions(PERMISSIONS.UPDATE_PROPERTY)
+  @Post('unit/:unitId/service-apartment-offering')
+  async createServiceApartmentOffering(
+    @Param('unitId') unitId: string,
+    @Body()
+    createServiceApartmentOfferingDto: CreateServiceApartmentOfferingDto,
+  ) {
+    const data = await this.propertyService.createServiceApartmentOffering(
+      unitId,
+      createServiceApartmentOfferingDto,
+    );
+    return {
+      success: true,
+      message: 'Service apartment offering created successfully',
+      data: data,
+    };
+  }
+
+  @RequirePermissions(PERMISSIONS.READ_PROPERTY)
+  @Get('unit/:unitId/service-apartment-offering')
+  async getServiceApartmentOffering(@Param('unitId') unitId: string) {
+    const data = await this.propertyService.getServiceApartmentOffering(unitId);
+    return {
+      success: true,
+      message: 'Service apartment offering retrieved successfully',
+      data: data,
+    };
+  }
+
+  @RequirePermissions(PERMISSIONS.UPDATE_PROPERTY)
+  @Patch('unit/:unitId/service-apartment-offering')
+  async updateServiceApartmentOffering(
+    @Param('unitId') unitId: string,
+    @Body()
+    updateServiceApartmentOfferingDto: UpdateServiceApartmentOfferingDto,
+  ) {
+    const data = await this.propertyService.updateServiceApartmentOffering(
+      unitId,
+      updateServiceApartmentOfferingDto,
+    );
+    return {
+      success: true,
+      message: 'Service apartment offering updated successfully',
+      data: data,
+    };
+  }
+
+  @RequirePermissions(PERMISSIONS.DELETE_PROPERTY)
+  @Delete('unit/:unitId/service-apartment-offering')
+  async deleteServiceApartmentOffering(@Param('unitId') unitId: string) {
+    await this.propertyService.deleteServiceApartmentOffering(unitId);
+    return {
+      success: true,
+      message: 'Service apartment offering deleted successfully',
     };
   }
 }

@@ -15,6 +15,12 @@ import { QueryPropertyDto } from './dto/query-property.dto';
 import { CreateUnitDto } from './dto/create-unit.dto';
 import { Unit } from './entities/unit.entity';
 import { EmailService } from 'src/notification/email/email.service';
+import { RentOffering } from './entities/rent-offering.entity';
+import { ServiceApartmentOffering } from './entities/service-apartment-offering.entity';
+import { CreateRentOfferingDto } from './dto/create-rent-offering.dto';
+import { UpdateRentOfferingDto } from './dto/update-rent-offering.dto';
+import { CreateServiceApartmentOfferingDto } from './dto/create-service-apartment-offering.dto';
+import { UpdateServiceApartmentOfferingDto } from './dto/update-service-apartment-offering.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { FileService } from 'src/file/file.service';
 import { PropertySettings } from './entities/property-settings.entity';
@@ -32,6 +38,10 @@ export class PropertyService {
     private propertySettingsRepository: Repository<PropertySettings>,
     @InjectRepository(Unit)
     private unitRepository: Repository<Unit>,
+    @InjectRepository(RentOffering)
+    private rentOfferingRepository: Repository<RentOffering>,
+    @InjectRepository(ServiceApartmentOffering)
+    private serviceApartmentOfferingRepository: Repository<ServiceApartmentOffering>,
     private landlordService: LandlordService,
     private emailService: EmailService,
     private fileService: FileService,
@@ -139,6 +149,27 @@ export class PropertyService {
       queryBuilder.andWhere('property.address.state = :state', {
         state: queryPropertyDto.state,
       });
+    }
+
+    if (queryPropertyDto.country) {
+      queryBuilder.andWhere('property.address.country = :country', {
+        country: queryPropertyDto.country,
+      });
+    }
+
+    if (queryPropertyDto.parkingSpace !== undefined) {
+      queryBuilder.andWhere('property.parkingSpace = :parkingSpace', {
+        parkingSpace: queryPropertyDto.parkingSpace,
+      });
+    }
+
+    if (queryPropertyDto.isOpenForServiceApartment !== undefined) {
+      queryBuilder.andWhere(
+        'property.isOpenForServiceApartment = :isOpenForServiceApartment',
+        {
+          isOpenForServiceApartment: queryPropertyDto.isOpenForServiceApartment,
+        },
+      );
     }
 
     if (queryPropertyDto.minYearBuilt) {
@@ -420,6 +451,214 @@ export class PropertyService {
     if (result.affected === 0) {
       throw new NotFoundException('Property not found');
     }
+    return true;
+  }
+
+  // Rent Offering Methods
+  async createRentOffering(
+    unitId: string,
+    createRentOfferingDto: CreateRentOfferingDto,
+  ) {
+    const unit = await this.getUnit(unitId);
+
+    // Check if rent offering already exists
+    if (unit.rentOfferingId) {
+      throw new BadRequestException('Unit already has a rent offering');
+    }
+
+    const rentOffering = this.rentOfferingRepository.create({
+      ...createRentOfferingDto,
+      unit,
+    });
+
+    const savedRentOffering =
+      await this.rentOfferingRepository.save(rentOffering);
+
+    // Update unit with rent offering reference
+    unit.rentOffering = savedRentOffering;
+    unit.rentOfferingId = savedRentOffering.id;
+    await this.unitRepository.save(unit);
+
+    return savedRentOffering;
+  }
+
+  async getRentOffering(unitId: string) {
+    const unit = await this.unitRepository.findOne({
+      where: { id: unitId },
+      relations: { rentOffering: true },
+    });
+
+    if (!unit) {
+      throw new NotFoundException('Unit not found');
+    }
+
+    if (!unit.rentOffering) {
+      throw new NotFoundException('Rent offering not found for this unit');
+    }
+
+    return unit.rentOffering;
+  }
+
+  async updateRentOffering(
+    unitId: string,
+    updateRentOfferingDto: UpdateRentOfferingDto,
+  ) {
+    const unit = await this.unitRepository.findOne({
+      where: { id: unitId },
+      relations: { rentOffering: true },
+    });
+
+    if (!unit) {
+      throw new NotFoundException('Unit not found');
+    }
+
+    if (!unit.rentOffering) {
+      throw new NotFoundException('Rent offering not found for this unit');
+    }
+
+    Object.assign(unit.rentOffering, updateRentOfferingDto);
+    return await this.rentOfferingRepository.save(unit.rentOffering);
+  }
+
+  async deleteRentOffering(unitId: string) {
+    const unit = await this.unitRepository.findOne({
+      where: { id: unitId },
+      relations: { rentOffering: true },
+    });
+
+    if (!unit) {
+      throw new NotFoundException('Unit not found');
+    }
+
+    if (!unit.rentOffering) {
+      throw new NotFoundException('Rent offering not found for this unit');
+    }
+
+    const rentOfferingToDelete = unit.rentOffering;
+    unit.rentOffering = undefined;
+    unit.rentOfferingId = undefined;
+
+    await Promise.all([
+      this.unitRepository.save(unit),
+      this.rentOfferingRepository.remove(rentOfferingToDelete),
+    ]);
+
+    return true;
+  }
+
+  // Service Apartment Offering Methods
+  async createServiceApartmentOffering(
+    unitId: string,
+    createServiceApartmentOfferingDto: CreateServiceApartmentOfferingDto,
+  ) {
+    const unit = await this.getUnit(unitId);
+
+    if (!unit.property.isOpenForServiceApartment) {
+      throw new BadRequestException(
+        'Property is not open for service apartment offerings',
+      );
+    }
+
+    // Check if service apartment offering already exists
+    if (unit.serviceApartmentOfferingId) {
+      throw new BadRequestException(
+        'Unit already has a service apartment offering',
+      );
+    }
+
+    const serviceApartmentOffering =
+      this.serviceApartmentOfferingRepository.create({
+        ...createServiceApartmentOfferingDto,
+        unit,
+      });
+
+    const savedServiceApartmentOffering =
+      await this.serviceApartmentOfferingRepository.save(
+        serviceApartmentOffering,
+      );
+
+    // Update unit with service apartment offering reference
+    unit.serviceApartmentOffering = savedServiceApartmentOffering;
+    unit.serviceApartmentOfferingId = savedServiceApartmentOffering.id;
+    await this.unitRepository.save(unit);
+
+    return savedServiceApartmentOffering;
+  }
+
+  async getServiceApartmentOffering(unitId: string) {
+    const unit = await this.unitRepository.findOne({
+      where: { id: unitId },
+      relations: { serviceApartmentOffering: true },
+    });
+
+    if (!unit) {
+      throw new NotFoundException('Unit not found');
+    }
+
+    if (!unit.serviceApartmentOffering) {
+      throw new NotFoundException(
+        'Service apartment offering not found for this unit',
+      );
+    }
+
+    return unit.serviceApartmentOffering;
+  }
+
+  async updateServiceApartmentOffering(
+    unitId: string,
+    updateServiceApartmentOfferingDto: UpdateServiceApartmentOfferingDto,
+  ) {
+    const unit = await this.unitRepository.findOne({
+      where: { id: unitId },
+      relations: { serviceApartmentOffering: true },
+    });
+
+    if (!unit) {
+      throw new NotFoundException('Unit not found');
+    }
+
+    if (!unit.serviceApartmentOffering) {
+      throw new NotFoundException(
+        'Service apartment offering not found for this unit',
+      );
+    }
+
+    Object.assign(
+      unit.serviceApartmentOffering,
+      updateServiceApartmentOfferingDto,
+    );
+    return await this.serviceApartmentOfferingRepository.save(
+      unit.serviceApartmentOffering,
+    );
+  }
+
+  async deleteServiceApartmentOffering(unitId: string) {
+    const unit = await this.unitRepository.findOne({
+      where: { id: unitId },
+      relations: { serviceApartmentOffering: true },
+    });
+
+    if (!unit) {
+      throw new NotFoundException('Unit not found');
+    }
+
+    if (!unit.serviceApartmentOffering) {
+      throw new NotFoundException(
+        'Service apartment offering not found for this unit',
+      );
+    }
+
+    const serviceApartmentOfferingToDelete = unit.serviceApartmentOffering;
+    unit.serviceApartmentOffering = undefined;
+    unit.serviceApartmentOfferingId = undefined;
+
+    await Promise.all([
+      this.unitRepository.save(unit),
+      this.serviceApartmentOfferingRepository.remove(
+        serviceApartmentOfferingToDelete,
+      ),
+    ]);
+
     return true;
   }
 }

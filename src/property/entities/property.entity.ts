@@ -44,8 +44,10 @@ export class Property extends BaseEntity {
   })
   isActive!: boolean;
 
-  @Column({ nullable: true })
-  propertyType!: string;
+  @Column({
+    default: false,
+  })
+  isOpenForServiceApartment!: boolean;
 
   @Column()
   yearBuilt!: string;

@@ -25,6 +25,10 @@ export class CreatePropertyDto {
   @IsNumber()
   numberOfUnits!: number;
 
+  @IsBoolean()
+  @IsOptional()
+  isOpenForServiceApartment?: boolean;
+
   @IsString()
   @IsOptional()
   description?: string;

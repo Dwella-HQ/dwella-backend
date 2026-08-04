@@ -5,9 +5,9 @@ export class UpdateLandlordLateFeeDto {
   @IsNumber()
   @Min(0)
   @IsOptional()
-  lateFeeAmount: number;
+  lateFeeAmount!: number;
 
   @IsEnum(LateFeeTypeEnum)
   @IsOptional()
-  lateFeeType: LateFeeTypeEnum;
+  lateFeeType!: LateFeeTypeEnum;
 }

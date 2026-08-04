@@ -10,16 +10,16 @@ import {
 export class CreateUnitDto {
   @IsString()
   @IsNotEmpty()
-  name: string;
+  name!: string;
 
   @IsNumber()
-  rentAmount: number;
+  rentAmount!: number;
 
   @IsNumber()
-  numberOfBedrooms: number;
+  numberOfBedrooms!: number;
 
   @IsNumber()
-  numberOfBathrooms: number;
+  numberOfBathrooms!: number;
 
   @IsOptional()
   @IsBoolean()
