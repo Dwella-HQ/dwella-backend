@@ -34,11 +34,11 @@ export class Landlord extends BaseEntity {
   @Column({ nullable: true, type: 'json' })
   address?: Address;
 
-  @Column({ unique: true })
+  @Column({ unique: true, nullable: true })
   name!: string;
 
-  @Column({ unique: true })
-  email!: string;
+  @Column({ unique: true, nullable: true })
+  email?: string;
 
   @Column({ nullable: true })
   phoneNumber?: string;
