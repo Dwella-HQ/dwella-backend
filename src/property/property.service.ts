@@ -125,7 +125,6 @@ export class PropertyService {
 
   async query(queryPropertyDto: QueryPropertyDto) {
     const queryBuilder = this.propertyRepository.createQueryBuilder('property');
-    queryBuilder.leftJoinAndSelect('property.address', 'address');
     queryBuilder.leftJoinAndSelect('property.landlord', 'landlord');
     queryBuilder.leftJoinAndSelect('property.units', 'unit');
 
