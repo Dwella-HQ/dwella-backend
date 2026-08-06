@@ -102,7 +102,6 @@ export class PropertyService {
     const properties = await this.propertyRepository.find({
       where: { id: In(propertiesIds) },
       relations: {
-        address: true,
         landlord: true,
       },
     });
@@ -114,7 +113,6 @@ export class PropertyService {
       where: { id },
       relations: {
         landlord: true,
-        address: true,
       },
     });
     if (!property) {
@@ -192,7 +190,7 @@ export class PropertyService {
   async getLandlordProperties(landlordId: string) {
     const properties = await this.propertyRepository.find({
       where: { landlord: { id: landlordId } },
-      relations: { landlord: true, address: true },
+      relations: { landlord: true },
     });
     return properties;
   }
