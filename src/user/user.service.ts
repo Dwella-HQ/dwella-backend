@@ -296,6 +296,10 @@ export class UserService {
   }
 
   async createKyc(userId: string, createClientKycDto: CreateClientKycDto) {
+    const existingKyc = await this.getKycByUserId(userId).catch(() => null);
+    if (existingKyc) {
+      throw new BadRequestException('KYC already exists for this user');
+    }
     const user = await this.findOne(userId);
     const kyc = this.kycRepository.create({
       idType: createClientKycDto.idType,
