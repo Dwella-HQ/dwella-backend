@@ -71,7 +71,7 @@ export class Landlord extends BaseEntity {
   @Column({ default: false })
   isApproved!: boolean;
 
-  @Column({ default: ApprovalStatusEnum.PENDING, type: 'text' })
+  @Column({ nullable: true, type: 'text' })
   approvalStatus!: ApprovalStatusEnum;
 
   @OneToMany(() => Property, (property) => property.landlord)
