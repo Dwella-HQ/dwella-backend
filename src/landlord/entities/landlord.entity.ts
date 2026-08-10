@@ -1,4 +1,5 @@
 import { File } from 'src/file/entities/file.entity';
+import { PropertyManager } from 'src/property-manager/entities/property-manager.entity';
 import { User } from 'src/user/entities/user.entity';
 import {
   BaseEntity,
@@ -6,50 +7,79 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   Relation,
   UpdateDateColumn,
 } from 'typeorm';
+import { LandlordSettings } from './landlord-settings.entity';
+import { Property } from 'src/property/entities/property.entity';
+import {
+  Address,
+  ApprovalStatusEnum,
+  LandlordTypeEnum,
+} from 'src/utils/constants';
+import { LandlordKYB } from './landlord-kyb.entity';
 
 @Entity()
 export class Landlord extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @JoinColumn()
   @OneToOne(() => User, (user) => user.landlord, { eager: true })
-  user: Relation<User>;
+  user!: Relation<User>;
 
-  @Column()
-  landLordName: string;
+  @Column({ nullable: true, type: 'json' })
+  address?: Address;
+
+  @Column({ unique: true, nullable: true })
+  name!: string;
+
+  @Column({ unique: true, nullable: true })
+  email?: string;
+
+  @Column({ nullable: true })
+  phoneNumber?: string;
+
+  @JoinColumn()
+  @OneToOne(() => File, { nullable: true, eager: true })
+  profilePicture!: Relation<File>;
+
+  @OneToOne(() => LandlordKYB, (kyb) => kyb.landlord, { cascade: true })
+  kyb!: Relation<LandlordKYB>;
+
+  @Column({ type: 'text', default: LandlordTypeEnum.PERSONAL })
+  landlordType!: LandlordTypeEnum;
 
   // documents ----
-  @JoinColumn()
-  @OneToOne(() => File, { nullable: true, eager: true })
-  govermentIdDocument: Relation<File>;
+
+  @OneToMany(
+    () => PropertyManager,
+    (propertyManager) => propertyManager.landlord,
+  )
+  propertyManagers!: Relation<PropertyManager[]>;
 
   @JoinColumn()
-  @OneToOne(() => File, { nullable: true, eager: true })
-  landSurveyDocument: Relation<File>;
-
-  @JoinColumn()
-  @OneToOne(() => File, { nullable: true, eager: true })
-  proofOfOwnershipDocument: Relation<File>;
-
-  @JoinColumn()
-  @OneToOne(() => File, { nullable: true, eager: true })
-  taxIdentificationNumberDocument: Relation<File>;
+  @OneToOne(() => LandlordSettings, (settings) => settings.landlord)
+  settings!: Relation<LandlordSettings>;
 
   @Column({ default: true })
-  isActive: boolean;
+  isActive!: boolean;
 
   @Column({ default: false })
-  isApproved: boolean;
+  isApproved!: boolean;
+
+  @Column({ nullable: true, type: 'text' })
+  approvalStatus!: ApprovalStatusEnum;
+
+  @OneToMany(() => Property, (property) => property.landlord)
+  properties!: Relation<Property[]>;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
 }

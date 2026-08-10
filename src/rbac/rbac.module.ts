@@ -4,8 +4,8 @@ import { RbacController } from './rbac.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Role } from './entities/role.entity';
 import { Permission } from './entities/permission.entity';
-import { PermissionsGuard } from './guards/permission.guard';
-import { RolesGuard } from './guards/role.guard';
+import { PermissionsGuard } from '../auth/guards/permission.guard';
+import { RolesGuard } from '../auth/guards/role.guard';
 
 @Global()
 @Module({

@@ -13,7 +13,7 @@ import {
   CreateRoleWithPermissionsDto,
 } from './dto/create-role.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { PermissionsGuard } from './guards/permission.guard';
+import { PermissionsGuard } from '../auth/guards/permission.guard';
 import { RequirePermissions } from './decorators/permission.decorator';
 import { PERMISSIONS } from 'src/utils/constants';
 import { ApiBearerAuth } from '@nestjs/swagger';

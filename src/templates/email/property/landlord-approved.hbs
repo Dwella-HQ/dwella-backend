@@ -1,0 +1,29 @@
+{{> header}}
+
+<h1>Your Property Has Been Approved!</h1>
+
+<p>Hello {{name}},</p>
+
+<p>Great news! Your property listing has been reviewed and approved. It is now live on our platform!</p>
+
+<p>Your property is now visible to potential tenants. You can:</p>
+<ul>
+    <li>View and manage your listing</li>
+    <li>Receive and review tenant applications</li>
+    <li>Update property details anytime</li>
+    <li>Track views and interest</li>
+</ul>
+
+<p>
+    <a href='{{propertyLink}}'>View Your Property Listing</a>
+</p>
+
+{{#if reason}}
+<p><strong>Approval Notes:</strong> {{reason}}</p>
+{{/if}}
+
+<p>If you need to make any changes or have questions, please visit your dashboard or contact our support team.</p>
+
+<p>Good luck with your listing!</p>
+
+{{> footer}}

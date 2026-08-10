@@ -57,3 +57,24 @@ export interface MonnifyCreateVirtualAccountResponse {
     };
   };
 }
+
+export interface MonnifyInitiateWalletCreditResponse {
+  requestSuccessful: true;
+  responseMessage: 'success';
+  responseCode: '0';
+  responseBody: {
+    transactionReference: string;
+    paymentReference: string;
+    merchantName: string;
+    apiKey: string;
+    enabledPaymentMethod: string[];
+    checkoutUrl: string;
+    incomeSplitConfig: Array<{
+      subAccountCode: string;
+      splitAmount: number;
+      feePercentage: number;
+      feeBearer: boolean;
+      splitPercentage: number;
+    }>;
+  };
+}

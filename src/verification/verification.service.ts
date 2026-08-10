@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { UpdateVerificationStatusDto } from './dto/update-verification-status.dto';
@@ -9,6 +10,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Verification } from './entities/verification.entity';
 import { Repository } from 'typeorm';
 import {
+  ApprovalStatusEnum,
   VerificationStatusEnum,
   VerificationTypeEnum,
 } from 'src/utils/constants';
@@ -17,19 +19,29 @@ import { FileService } from 'src/file/file.service';
 import { File } from 'src/file/entities/file.entity';
 import { QueryVerificationDto } from './dto/query-verification.dto';
 import { OnEvent } from '@nestjs/event-emitter';
+import { PropertyService } from 'src/property/property.service';
 
 @Injectable()
 export class VerificationService {
+  private loggerService = new Logger(VerificationService.name);
   constructor(
     @InjectRepository(Verification)
     private verificationRepository: Repository<Verification>,
     private readonly landlordService: LandlordService,
+    private readonly propertyService: PropertyService,
     private readonly fileService: FileService,
   ) {}
 
-  @OnEvent('landlord.created')
+  @OnEvent('landlord.verify')
   async startLandlordVerification(landlordId: string) {
-    const landlord = await this.landlordService.findOne(landlordId);
+    const landlord =
+      await this.landlordService.getLandlordDetailsForVerification(landlordId);
+    if (landlord.approvalStatus !== ApprovalStatusEnum.PENDING) {
+      this.loggerService.log(
+        `Landlord with ID ${landlordId} is already verified or rejected. Skipping verification process.`,
+      );
+      return;
+    }
     const verification = this.verificationRepository.create({
       type: VerificationTypeEnum.LANDLORD_VERIFICATION,
       landlord: landlord,
@@ -37,14 +49,40 @@ export class VerificationService {
     return await this.verificationRepository.save(verification);
   }
 
+  @OnEvent('property.created')
+  async startPropertyVerification(propertyId: string) {
+    const property = await this.propertyService.findOne(propertyId);
+    const verification = this.verificationRepository.create({
+      type: VerificationTypeEnum.PROPERTY_VERIFICATION,
+      property: property,
+    });
+    return await this.verificationRepository.save(verification);
+  }
+
   async findAll() {
-    const verifications = await this.verificationRepository.find();
+    const verifications = await this.verificationRepository.find({
+      relations: {
+        landlord: true,
+        property: true,
+        verifiedBy: true,
+        supportingDocuments: true,
+      },
+    });
     return verifications;
   }
 
   async query(queryVerificationDto: QueryVerificationDto) {
     const queryBuilder =
       this.verificationRepository.createQueryBuilder('verification');
+
+    queryBuilder
+      .leftJoinAndSelect('verification.landlord', 'landlord')
+      .leftJoinAndSelect('verification.property', 'property')
+      .leftJoinAndSelect('verification.verifiedBy', 'verifiedBy')
+      .leftJoinAndSelect(
+        'verification.supportingDocuments',
+        'supportingDocuments',
+      );
 
     if (queryVerificationDto.status) {
       queryBuilder.andWhere('verification.status = :status', {
@@ -59,27 +97,21 @@ export class VerificationService {
     }
 
     if (queryVerificationDto.landlordId) {
-      queryBuilder
-        .leftJoin('verification.landlord', 'landlord')
-        .andWhere('landlord.id = :landlordId', {
-          landlordId: queryVerificationDto.landlordId,
-        });
+      queryBuilder.andWhere('landlord.id = :landlordId', {
+        landlordId: queryVerificationDto.landlordId,
+      });
     }
 
     if (queryVerificationDto.propertyId) {
-      queryBuilder
-        .leftJoin('verification.property', 'property')
-        .andWhere('property.id = :propertyId', {
-          propertyId: queryVerificationDto.propertyId,
-        });
+      queryBuilder.andWhere('property.id = :propertyId', {
+        propertyId: queryVerificationDto.propertyId,
+      });
     }
 
     if (queryVerificationDto.verifiedById) {
-      queryBuilder
-        .leftJoin('verification.verifiedBy', 'user')
-        .andWhere('user.id = :verifiedById', {
-          verifiedById: queryVerificationDto.verifiedById,
-        });
+      queryBuilder.andWhere('verifiedBy.id = :verifiedById', {
+        verifiedById: queryVerificationDto.verifiedById,
+      });
     }
 
     if (queryVerificationDto.minDateVerifiedAt) {
@@ -98,6 +130,7 @@ export class VerificationService {
       const skip = (queryVerificationDto.page - 1) * queryVerificationDto.limit;
       queryBuilder.skip(skip).take(queryVerificationDto.limit);
     }
+
     const verifications = await queryBuilder.getMany();
     return verifications;
   }
@@ -131,19 +164,56 @@ export class VerificationService {
     verification.reason = updateVerificationStatusDto.reason;
     verification.verifiedAt = new Date();
     verification.verifiedBy = user;
-    const supportingDocuments: File[] = [];
-    for (const fileId of updateVerificationStatusDto.supportingDocumentIds) {
-      const file = await this.fileService.findFileById(fileId);
-      supportingDocuments.push(file);
+    if (updateVerificationStatusDto.supportingDocumentIds) {
+      const supportingDocuments: File[] = [];
+      for (const fileId of updateVerificationStatusDto.supportingDocumentIds) {
+        const file = await this.fileService.findFileById(fileId);
+        supportingDocuments.push(file);
+      }
+      verification.supportingDocuments = supportingDocuments;
     }
-    verification.supportingDocuments = supportingDocuments;
-    const updatedVerification =
-      await this.verificationRepository.save(verification);
-    if (updatedVerification.status === VerificationStatusEnum.VERIFIED) {
-      await this.landlordService.approveLandlord(
-        updatedVerification.landlord.id,
+
+    if (verification.status === VerificationStatusEnum.VERIFIED) {
+      await this.landlordService.approveLandlord(verification.landlord!.id);
+    }
+    if (verification.status === VerificationStatusEnum.REJECTED) {
+      await this.landlordService.rejectLandlord(
+        verification.landlord!.id,
+        verification.reason,
       );
     }
+    const updatedVerification =
+      await this.verificationRepository.save(verification);
+    return updatedVerification;
+  }
+
+  async updatePropertyStatus(
+    id: string,
+    updateVerificationStatusDto: UpdateVerificationStatusDto,
+    user: User,
+  ) {
+    const verification = await this.findOne(id);
+    if (verification.type !== VerificationTypeEnum.PROPERTY_VERIFICATION) {
+      throw new BadRequestException('Property verification not found');
+    }
+    verification.status = updateVerificationStatusDto.status;
+    verification.reason = updateVerificationStatusDto.reason;
+    verification.verifiedAt = new Date();
+    verification.verifiedBy = user;
+    if (updateVerificationStatusDto.supportingDocumentIds) {
+      const supportingDocuments: File[] = [];
+      for (const fileId of updateVerificationStatusDto.supportingDocumentIds) {
+        const file = await this.fileService.findFileById(fileId);
+        supportingDocuments.push(file);
+      }
+      verification.supportingDocuments = supportingDocuments;
+    }
+
+    if (verification.status === VerificationStatusEnum.VERIFIED) {
+      await this.propertyService.approveProperty(verification.property!.id);
+    }
+    const updatedVerification =
+      await this.verificationRepository.save(verification);
     return updatedVerification;
   }
 

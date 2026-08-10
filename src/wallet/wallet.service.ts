@@ -9,18 +9,33 @@ import { Wallet } from './entities/wallet.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LandlordService } from 'src/landlord/landlord.service';
 import { InjectQueue } from '@nestjs/bullmq';
-import { JOB_NAMES } from 'src/utils/constants';
+import {
+  CurrenciesEnum,
+  JOB_NAMES,
+  PaymentProviderEnum,
+  TransactionTypeEnum,
+} from 'src/utils/constants';
 import { Queue } from 'bullmq';
 import { VbaService } from './vba/vba.service';
 import { CreateVBADto } from './dto/create-vba.dto';
+import { SettingsService } from 'src/settings/settings.service';
+import { ConfigService } from '@nestjs/config';
+import { EnvironmentVariables } from 'src/config/env.config';
+import { CreditWalletDto, DebitWalletDto } from './dto/update-wallet.dto';
+import { WalletTransaction } from './entities/wallet-transaction.entity';
+import { AssignVBADto } from './dto/assign-vba.dto';
 
 @Injectable()
 export class WalletService {
   constructor(
     @InjectRepository(Wallet)
     private readonly walletRepository: Repository<Wallet>,
+    @InjectRepository(WalletTransaction)
+    private readonly walletTransactionRepository: Repository<WalletTransaction>,
     private readonly landlordService: LandlordService,
     private readonly vbaService: VbaService,
+    private readonly configService: ConfigService<EnvironmentVariables>,
+    private readonly settingsService: SettingsService,
     @InjectQueue(JOB_NAMES.VBA_CREATION_JOB) private readonly vbaQueue: Queue,
   ) {}
 
@@ -28,24 +43,38 @@ export class WalletService {
     const landlord = await this.landlordService.findOne(
       createWalletDto.landlordId,
     );
+
     const activeWallet = await this.walletRepository.findOne({
       where: {
-        landlord: { id: createWalletDto.landlordId },
+        landlord: { id: landlord.id },
         isActive: true,
       },
     });
     if (activeWallet) {
       throw new BadRequestException('Landlord already has a wallet');
     }
+
+    const landlordSettings = await this.landlordService.getLandlordSettings(
+      landlord.id,
+    );
+
+    if (!landlordSettings.bankAccount) {
+      throw new BadRequestException(
+        'Please set up bank account details in landlord settings before creating a wallet',
+      );
+    }
     const wallet = this.walletRepository.create({
       landlord: landlord,
       currency: createWalletDto.currency,
-      bvn: createWalletDto.bvn,
+      bvn: landlordSettings.bankAccount.bvn,
+      withdrawalDetails: {
+        accountNumber: landlordSettings.bankAccount.accountNumber,
+        bankCode: landlordSettings.bankAccount.bankCode,
+        bankName: landlordSettings.bankAccount.bankName,
+        fullName: landlordSettings.bankAccount.accountName,
+      },
     });
     const savedWallet = await this.walletRepository.save(wallet);
-    await this.vbaQueue.add('create-virtual-account:paystack', savedWallet);
-    await this.vbaQueue.add('create-virtual-account:monnify', savedWallet);
-    await this.vbaQueue.add('create-virtual-account:flutterwave', savedWallet);
     return savedWallet;
   }
 
@@ -55,50 +84,110 @@ export class WalletService {
   }
 
   async findOne(id: string) {
-    const wallet = await this.walletRepository.findOne({ where: { id } });
+    const defaultProvider = await this.settingsService.getSetting(
+      'preferredPaymentProvider',
+    );
+    const wallet = await this.walletRepository.findOne({
+      where: { id },
+      relations: {
+        vbas: true,
+        landlord: true,
+      },
+      relationLoadStrategy: 'query',
+    });
     if (!wallet) {
       throw new NotFoundException('Wallet not found');
     }
+    wallet.vba = wallet.vbas?.find(
+      (vba) => vba.provider === defaultProvider && vba.isActive,
+    );
+    wallet.vbas = undefined;
     return wallet;
   }
 
-  async creditWallet(walletId: string, amount: number) {
-    const wallet = await this.findOne(walletId);
-    wallet.balance += amount;
-    wallet.escrowBalance = wallet.balance;
-    return this.walletRepository.save(wallet);
-  }
-
-  async debitWallet(walletId: string, amount: number) {
-    const wallet = await this.findOne(walletId);
-    if (wallet.balance < amount) {
-      throw new NotFoundException('Insufficient balance');
+  async getLandlordWallet(landlordId: string) {
+    const defaultProvider = await this.settingsService.getSetting(
+      'preferredPaymentProvider',
+    );
+    const wallet = await this.walletRepository.findOne({
+      where: { landlord: { id: landlordId }, isActive: true },
+      relations: {
+        vbas: true,
+      },
+    });
+    if (!wallet) {
+      throw new NotFoundException('Wallet not found');
     }
-    wallet.balance -= amount;
-    wallet.escrowBalance = wallet.balance;
-    return this.walletRepository.save(wallet);
+    wallet.vba = wallet.vbas?.find(
+      (vba) => vba.provider === defaultProvider && vba.isActive,
+    );
+    wallet.vbas = undefined;
+    return wallet;
   }
 
-  async createVba(walletId: string, payload: CreateVBADto) {
+  async createVBa(walletId: string, payload: CreateVBADto) {
+    const dedicatedProvider = await this.settingsService.getSetting(
+      'preferredPaymentProvider',
+    );
     const wallet = await this.findOne(walletId);
-    const vba = await this.vbaService.createVBA(wallet, payload);
+    wallet.bvn = payload.bvn;
+    const savedWallet = await this.walletRepository.save(wallet);
+    if (dedicatedProvider === PaymentProviderEnum.PAYSTACK) {
+      await this.vbaQueue.add('create-virtual-account:paystack', wallet, {
+        jobId: `create-vba-${wallet.id}`,
+      });
+    } else if (dedicatedProvider === PaymentProviderEnum.MONNIFY) {
+      await this.vbaQueue.add('create-virtual-account:monnify', wallet, {
+        jobId: `create-vba-${wallet.id}`,
+      });
+    } else if (dedicatedProvider === PaymentProviderEnum.FLUTTERWAVE) {
+      await this.vbaQueue.add('create-virtual-account:flutterwave', wallet, {
+        jobId: `create-vba-${wallet.id}`,
+      });
+    } else {
+      throw new BadRequestException('Invalid payment provider');
+    }
+    return savedWallet;
+  }
+
+  async assignVba(walletId: string, payload: AssignVBADto) {
+    const wallet = await this.findOne(walletId);
+    const vba = await this.vbaService.assignVBA(wallet, payload);
     return vba;
   }
 
-  // async creditEscrow(walletId: string, amount: number) {
-  //   const wallet = await this.findOne(walletId);
-  //   wallet.escrowBalance += amount;
-  //   return this.walletRepository.save(wallet);
-  // }
+  async creditWallet(id: string, creditWalletDto: CreditWalletDto) {
+    const wallet = await this.findOne(id);
+    const walletTransaction = await this.walletTransactionRepository.save({
+      amount: creditWalletDto.amount,
+      preBalance: wallet.balance,
+      postBalance: wallet.balance + creditWalletDto.amount,
+      reference: creditWalletDto.reference,
+      type: TransactionTypeEnum.CREDIT,
+      action: creditWalletDto.action,
+      wallet: wallet,
+      description: creditWalletDto.description,
+    });
+    wallet.balance = walletTransaction.postBalance;
+    await this.walletRepository.save(wallet);
+    return walletTransaction;
+  }
 
-  // async debitEscrow(walletId: string, amount: number) {
-  //   const wallet = await this.findOne(walletId);
-  //   if (wallet.escrowBalance < amount) {
-  //     throw new NotFoundException('Insufficient escrow balance');
-  //   }
-  //   wallet.escrowBalance -= amount;
-  //   return this.walletRepository.save(wallet);
-  // }
+  async debitWallet(id: string, debitWalletDto: DebitWalletDto) {
+    const wallet = await this.findOne(id);
+    const walletTransaction = await this.walletTransactionRepository.save({
+      amount: debitWalletDto.amount,
+      preBalance: wallet.balance,
+      postBalance: wallet.balance - debitWalletDto.amount,
+      reference: debitWalletDto.reference,
+      type: TransactionTypeEnum.DEBIT,
+      action: debitWalletDto.action,
+      wallet: wallet,
+    });
+    wallet.balance = walletTransaction.postBalance;
+    await this.walletRepository.save(wallet);
+    return walletTransaction;
+  }
 
   // update(id: number, updateWalletDto: UpdateWalletDto) {
   //   return `This action updates a #${id} wallet`;
@@ -115,6 +204,30 @@ export class WalletService {
     return wallet.save();
   }
 
+  async findWalletForLease(
+    leaseId: string,
+    currency: CurrenciesEnum = CurrenciesEnum.NGN,
+  ) {
+    const wallet = await this.walletRepository.findOne({
+      where: {
+        landlord: {
+          properties: {
+            units: {
+              leases: {
+                id: leaseId,
+              },
+            },
+          },
+        },
+        currency,
+      },
+      relationLoadStrategy: 'query',
+    });
+    if (!wallet) {
+      throw new NotFoundException('Wallet not found for lease');
+    }
+    return wallet;
+  }
   // remove(id: number) {
   //   return `This action removes a #${id} wallet`;
   // }

@@ -16,8 +16,8 @@ import { Request } from 'express';
 import { User } from 'src/user/entities/user.entity';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
-import { PermissionsGuard } from 'src/rbac/guards/permission.guard';
-import { RolesGuard } from 'src/rbac/guards/role.guard';
+import { PermissionsGuard } from 'src/auth/guards/permission.guard';
+import { RolesGuard } from 'src/auth/guards/role.guard';
 import { RequireRoles } from 'src/rbac/decorators/role.decorator';
 import { AdminRoles, PERMISSIONS } from 'src/utils/constants';
 import { QueryVerificationDto } from './dto/query-verification.dto';
@@ -38,6 +38,18 @@ export class VerificationController {
     return {
       success: true,
       message: 'Landlord verification started successfully',
+      data: data,
+    };
+  }
+
+  @RequirePermissions(PERMISSIONS.APPROVE_PROPERTY)
+  @Post('property/:propertyId')
+  async createPropertyVerification(@Param('propertyId') propertyId: string) {
+    const data =
+      await this.verificationService.startPropertyVerification(propertyId);
+    return {
+      success: true,
+      message: 'Property verification started successfully',
       data: data,
     };
   }
@@ -81,6 +93,26 @@ export class VerificationController {
   ) {
     const user = req.user as User;
     const data = await this.verificationService.updateLandlordStatus(
+      id,
+      updateVerificationStatusDto,
+      user,
+    );
+    return {
+      success: true,
+      message: 'Verification status updated successfully',
+      data: data,
+    };
+  }
+
+  @RequirePermissions(PERMISSIONS.APPROVE_PROPERTY)
+  @Patch(':id/property/status')
+  async updateProperty(
+    @Param('id') id: string,
+    @Body() updateVerificationStatusDto: UpdateVerificationStatusDto,
+    @Req() req: Request,
+  ) {
+    const user = req.user as User;
+    const data = await this.verificationService.updatePropertyStatus(
       id,
       updateVerificationStatusDto,
       user,

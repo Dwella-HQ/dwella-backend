@@ -50,7 +50,6 @@ export class FileService {
       savedFile.url = s3Details.url;
       savedFile.s3ETag = s3Details.etag!;
       savedFile.s3Bucket = this.configService.get('AWS_S3_BUCKET_NAME')!;
-      savedFile.expirationDate = s3Details.expirationDate;
       await queryRunner.manager.save(savedFile);
       await queryRunner.commitTransaction();
       return savedFile;

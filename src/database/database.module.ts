@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { EnvironmentVariables } from '../config/env.config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { readFileSync } from 'fs';
 
 @Module({
   imports: [
@@ -16,12 +17,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_NAME'),
         entities: [__dirname + '/../**/*.entity.{js,ts}'],
-        // ssl:
-        //   configService.get('NODE_ENV') == 'production'
-        //     ? {
-        //         ca: configService.get('POSTGRES_CERT').replace(/\\n/g, '\n'),
-        //       }
-        //     : false,
+        ssl:
+          configService.get('NODE_ENV') !== 'development'
+            ? {
+                ca: readFileSync('./certificates/us-east-1-bundle.pem'),
+              }
+            : false,
         synchronize: true,
         autoLoadEntities: true,
       }),

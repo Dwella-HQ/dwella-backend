@@ -4,9 +4,14 @@ import { VerificationController } from './verification.controller';
 import { LandlordModule } from 'src/landlord/landlord.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Verification } from './entities/verification.entity';
+import { PropertyModule } from 'src/property/property.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Verification]), LandlordModule],
+  imports: [
+    TypeOrmModule.forFeature([Verification]),
+    LandlordModule,
+    PropertyModule,
+  ],
   controllers: [VerificationController],
   providers: [VerificationService],
 })

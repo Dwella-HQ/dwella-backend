@@ -14,7 +14,7 @@ import { UpdateAmenityDto } from './dto/update-amenity.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { PERMISSIONS } from 'src/utils/constants';
-import { PermissionsGuard } from 'src/rbac/guards/permission.guard';
+import { PermissionsGuard } from 'src/auth/guards/permission.guard';
 import { RequirePermissions } from 'src/rbac/decorators/permission.decorator';
 
 @ApiBearerAuth()

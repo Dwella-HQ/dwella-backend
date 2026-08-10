@@ -1,5 +1,5 @@
 import { AuthService } from './auth.service';
-import { LocalAuthGuard } from 'src/guards/loginGuard.guard';
+import { LocalAuthGuard } from 'src/auth/guards/loginGuard.guard';
 import {
   Controller,
   Post,
@@ -19,7 +19,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { Response, Request } from 'express';
 import { VerifyEmailDto } from './dto/verify-email.dto';
-import { ChangePasswordDto } from './dto/change-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { GoogleLoginDto } from './dto/google-login.dto';
 import { FacebookLoginDto } from './dto/facebook-login.dto';
 import { ConfigService } from '@nestjs/config';
@@ -47,7 +47,6 @@ export class AuthController {
   @HttpCode(200)
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async loginUser(
     @Req() request: Request,
     @Res({ passthrough: true }) res: Response,
@@ -124,8 +123,7 @@ export class AuthController {
       res.redirect(
         `${this.configService.get('FRONTEND_URL')}/auth/verify-email?verified=true&email=${verifyEmailDto.email}`,
       );
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error) {
+    } catch (error: any) {
       res.redirect(
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
         `${this.configService.get('FRONTEND_URL')}/auth/verify-email?verified=false&email=${verifyEmailDto.email}&reason=${encodeURIComponent(error?.message || 'Unknown error')}`,
@@ -147,7 +145,7 @@ export class AuthController {
   }
 
   @Post('reset-password')
-  async resetPassword(@Body() changePasswordDto: ChangePasswordDto) {
+  async resetPassword(@Body() changePasswordDto: ResetPasswordDto) {
     const user = await this.authService.resetPassword(changePasswordDto);
     return {
       success: true,
@@ -161,9 +159,15 @@ export class AuthController {
     @Req() request: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const token = request.headers['x-refresh-token'] as string;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    const token = request.cookies['x-refresh-token'] as string;
     const newTokens = await this.authService.refreshTokens(token);
-    res.setHeader('x-refresh-token', newTokens.refreshToken);
+    res.cookie('x-refresh-token', newTokens.refreshToken, {
+      httpOnly: true,
+      secure: this.configService.get('NODE_ENV') === 'production', // only over HTTPS
+      sameSite: 'none',
+      path: '/',
+    });
     return {
       success: true,
       message: 'Tokens refreshed successfully',
@@ -174,9 +178,18 @@ export class AuthController {
   }
 
   @Delete('logout/:userId')
-  async logoutUser(@Param('userId') userId: string, @Req() request: Request) {
+  async logoutUser(
+    @Param('userId') userId: string,
+    @Req() request: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const token = request.cookies['x-refresh-token'] as string;
+    res.clearCookie('x-refresh-token', {
+      httpOnly: true,
+      secure: this.configService.get('NODE_ENV') === 'production', // only over HTTPS
+      sameSite: 'none',
+    });
     await this.authService.logout(userId, token || '');
     return {
       success: true,

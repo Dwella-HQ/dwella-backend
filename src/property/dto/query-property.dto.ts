@@ -38,4 +38,8 @@ export class QueryPropertyDto {
   @IsOptional()
   @IsString()
   country?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isOpenForServiceApartment?: boolean;
 }

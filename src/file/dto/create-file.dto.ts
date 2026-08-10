@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsUUID } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateFileDto {
   @IsString()
@@ -8,9 +8,6 @@ export class CreateFileDto {
   @IsString()
   @IsNotEmpty()
   folder: string;
-
-  @IsUUID()
-  ownerId: string;
 
   file: Express.Multer.File;
 }

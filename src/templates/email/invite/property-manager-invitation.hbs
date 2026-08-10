@@ -1,0 +1,31 @@
+{{> header}}
+
+<h1>Property Manager Invitation</h1>
+
+<p>Hello {{name}},</p>
+
+<p>You have been invited by <strong>{{landlordName}}</strong> to become a property manager on Dwella.</p>
+
+<p>As a property manager, you will be able to:</p>
+<ul>
+    <li>Manage properties on behalf of the landlord</li>
+    <li>Handle tenant applications and communications</li>
+    <li>Oversee property maintenance and operations</li>
+</ul>
+
+<p style="margin: 30px 0; text-align: center;">
+    <a href='{{acceptLink}}' style="display: inline-block; padding: 15px 40px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px; font-size: 16px; font-weight: bold;">Accept Invitation</a>
+</p>
+
+<p>Or copy and paste this link into your browser:</p>
+<p>{{acceptLink}}</p>
+
+<p style="margin-top: 30px; font-size: 12px; color: #666;">
+    If you wish to decline this invitation, <a href='{{rejectLink}}' style="color: #666;">click here</a>.
+</p>
+
+<p><strong>Note:</strong> This invitation will expire in {{expirationTime}}.</p>
+
+<p>If you have any questions, please don't hesitate to contact us.</p>
+
+{{> footer}}

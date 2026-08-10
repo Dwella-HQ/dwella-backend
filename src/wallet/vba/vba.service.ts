@@ -2,9 +2,9 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { VBA } from './entity/vba.entity';
 import { Repository } from 'typeorm';
-import { CreateVBADto } from '../dto/create-vba.dto';
 import { SettingsService } from 'src/settings/settings.service';
 import { Wallet } from '../entities/wallet.entity';
+import { AssignVBADto } from '../dto/assign-vba.dto';
 
 @Injectable()
 export class VbaService {
@@ -13,20 +13,39 @@ export class VbaService {
     private readonly settingsService: SettingsService,
   ) {}
 
-  async createVBA(wallet: Wallet, createVbaDto: CreateVBADto) {
+  async assignVBA(wallet: Wallet, assignVbaDto: AssignVBADto) {
     const vba = this.vbaRepository.create({
-      bankCode: createVbaDto.bankCode,
-      accountName: createVbaDto.accountName,
-      accountNumber: createVbaDto.accountNumber,
+      bankCode: assignVbaDto.bankCode,
+      accountName: assignVbaDto.accountName,
+      accountNumber: assignVbaDto.accountNumber,
+      bankName: assignVbaDto.bankName,
       currency: wallet.currency,
-      metadata: createVbaDto.metadata,
+      metadata: assignVbaDto.metadata,
       wallet: wallet,
+      provider: assignVbaDto.provider,
     });
-    return this.vbaRepository.save(vba);
+    const savedVba = await this.vbaRepository.save(vba);
+    return savedVba;
   }
 
   async findOne(id: string) {
-    const vba = await this.vbaRepository.findOne({ where: { id } });
+    const vba = await this.vbaRepository.findOne({
+      where: { id },
+      relations: {
+        wallet: true,
+      },
+    });
+    if (!vba) {
+      throw new NotFoundException('VBA not found');
+    }
+    return vba;
+  }
+
+  async findByAccountNumber(accountNumber: string) {
+    const vba = await this.vbaRepository.findOne({
+      where: { accountNumber },
+      relations: { wallet: true },
+    });
     if (!vba) {
       throw new NotFoundException('VBA not found');
     }
@@ -38,11 +57,11 @@ export class VbaService {
     return vbas;
   }
 
-  async getVBAByWalletId(walletId: string) {
-    const vba = await this.vbaRepository.find({
+  async getVBAsByWalletId(walletId: string) {
+    const vbas = await this.vbaRepository.find({
       where: { wallet: { id: walletId } },
     });
-    return vba;
+    return vbas;
   }
 
   async disableVBA(id: string) {

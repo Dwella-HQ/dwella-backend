@@ -1,8 +1,13 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { RegistrationTypeEnum } from 'src/utils/constants';
 import { RegisterDto } from './dto/register.dto';
-import { ChangePasswordDto } from './dto/change-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { generateRandomString } from 'src/utils/misc';
 import { JwtService } from '@nestjs/jwt';
 import { GoogleAuthService } from 'src/services/google/google-auth.service';
@@ -45,8 +50,8 @@ export class AuthService {
     return user;
   }
 
-  async resetPassword(changePasswordDto: ChangePasswordDto) {
-    const user = await this.userService.changePassword(
+  async resetPassword(changePasswordDto: ResetPasswordDto) {
+    const user = await this.userService.resetPassword(
       changePasswordDto.token,
       changePasswordDto.password,
     );
@@ -159,7 +164,9 @@ export class AuthService {
   }
 
   async getAuthenticatedUser(email: string, password: string) {
-    const user = await this.userService.findOneByEmail(email);
+    const user = await this.userService.findOneByEmail(email).catch(() => {
+      throw new BadRequestException('Wrong details provided');
+    });
     if (user.registrationType !== RegistrationTypeEnum.EMAIL) {
       throw new BadRequestException(`Wrong Registration type`);
     }
@@ -167,6 +174,20 @@ export class AuthService {
     if (!result) {
       throw new BadRequestException('Wrong details provided');
     }
+    return user;
+  }
+
+  async verifyToken(token: string) {
+    const { sub, tokenId }: { sub: string; email: string; tokenId: string } =
+      await this.jwtService.verifyAsync(token, {
+        secret: this.configService.get<string>('JWT_SECRET_KEY'),
+      });
+    const cachedTokens =
+      (await this.cacheManager.get<string[]>(`tokens:${sub}`)) || [];
+    if (!cachedTokens.includes(tokenId)) {
+      throw new UnauthorizedException('Invalid token');
+    }
+    const user = await this.getUser(sub);
     return user;
   }
 

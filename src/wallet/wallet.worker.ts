@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { PaystackService } from 'src/services/paystack/paystack.service';
@@ -12,6 +11,8 @@ import { breakDownFullName } from 'src/utils/misc';
 import { Wallet } from './entities/wallet.entity';
 import { FlutterwaveService } from 'src/services/flutterwave/flutterwave.service';
 import { MonnifyService } from 'src/services/monnify/monnify.service';
+import { SettingsService } from 'src/settings/settings.service';
+import { TransactionService } from 'src/transaction/transaction.service';
 
 @Processor(JOB_NAMES.VBA_CREATION_JOB)
 export class WalletWorker extends WorkerHost {
@@ -20,6 +21,8 @@ export class WalletWorker extends WorkerHost {
     private readonly flutterwaveService: FlutterwaveService,
     private readonly monnifyService: MonnifyService,
     private readonly walletService: WalletService,
+    private readonly settingsService: SettingsService,
+    private readonly transactionService: TransactionService,
   ) {
     super();
   }
@@ -28,14 +31,14 @@ export class WalletWorker extends WorkerHost {
       case 'create-virtual-account:paystack': {
         const wallet = job.data as Wallet;
         const { firstName, middleName, lastName } = breakDownFullName(
-          wallet.landlord.landLordName,
+          wallet.landlord.name,
         );
         const response = await this.paystackService.assignVirtualAccount({
           email: wallet.landlord.user.email,
           country: wallet.currency === CurrenciesEnum.NGN ? 'NG' : 'NG',
           first_name: firstName,
-          last_name: lastName,
-          middle_name: middleName,
+          last_name: lastName || undefined,
+          middle_name: middleName || undefined,
           phone: wallet.landlord.user.phoneNumber,
           bvn: wallet.bvn,
           metadata: { walletId: wallet.id },
@@ -45,14 +48,14 @@ export class WalletWorker extends WorkerHost {
       case 'create-virtual-account:monnify': {
         const wallet = job.data as Wallet;
         const response = await this.monnifyService.createVirtualAccount({
-          accountName: wallet.landlord.landLordName,
+          accountName: wallet.landlord.name,
           customerEmail: wallet.landlord.user.email,
           bvn: wallet.bvn,
           accountReference: wallet.id,
           currencyCode: wallet.currency,
-          customerName: wallet.landlord.landLordName,
+          customerName: wallet.landlord.name,
         });
-        const vba = await this.walletService.createVba(wallet.id, {
+        const vba = await this.walletService.assignVba(wallet.id, {
           accountName: response.responseBody.accounts[0].accountName,
           accountNumber: response.responseBody.accounts[0].accountNumber,
           bankName: response.responseBody.accounts[0].bankName,
@@ -64,9 +67,7 @@ export class WalletWorker extends WorkerHost {
       }
       case 'create-virtual-account:flutterwave': {
         const wallet = job.data as Wallet;
-        const { firstName, lastName } = breakDownFullName(
-          wallet.landlord.landLordName,
-        );
+        const { firstName, lastName } = breakDownFullName(wallet.landlord.name);
         const response = await this.flutterwaveService.createVirtualBankAccount(
           {
             currency: wallet.currency,
@@ -77,11 +78,11 @@ export class WalletWorker extends WorkerHost {
             reference: wallet.id,
           },
         );
-        const vba = await this.walletService.createVba(wallet.id, {
-          accountName: response.data.account_bank_name,
+        const vba = await this.walletService.assignVba(wallet.id, {
+          accountName: wallet.landlord.name,
           accountNumber: response.data.account_number,
           bankCode: '',
-          bankName: response.data.account_bank_name,
+          bankName: response.data.bank_name,
           metadata: response.data,
           provider: PaymentProviderEnum.FLUTTERWAVE,
         });

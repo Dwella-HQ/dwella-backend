@@ -1,5 +1,6 @@
 import { plainToInstance } from 'class-transformer';
 import {
+  IsEmail,
   IsEnum,
   IsNotEmpty,
   IsNumber,
@@ -145,6 +146,9 @@ export class EnvironmentVariables {
   @IsNumber()
   AWS_S3_SIGNED_URL_EXPIRATION_SECONDS: number;
 
+  @IsUrl()
+  AWS_CLOUDFRONT_URL: string;
+
   @IsString()
   @IsNotEmpty()
   PAYSTACK_SECRET_KEY: string;
@@ -171,11 +175,11 @@ export class EnvironmentVariables {
 
   @IsString()
   @IsNotEmpty()
-  FLUTTERWAVE_CLIENT_ID: string;
+  FLUTTERWAVE_PUBLIC_KEY: string;
 
   @IsString()
   @IsNotEmpty()
-  FLUTTERWAVE_CLIENT_SECRET: string;
+  FLUTTERWAVE_SECRET_KEY: string;
 
   @IsString()
   @IsNotEmpty()
@@ -184,6 +188,14 @@ export class EnvironmentVariables {
   @IsString()
   @IsNotEmpty()
   FLUTTERWAVE_BASE_URL: string;
+
+  @IsEmail()
+  @IsNotEmpty()
+  DWELLA_SUPPORT_EMAIL: string = 'support@dwella.com';
+
+  @IsString()
+  @IsNotEmpty()
+  DWELLA_SUPPORT_PHONE: string = '+1234567890';
 }
 
 export function validateEnv(config: Record<string, unknown>) {

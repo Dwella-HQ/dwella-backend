@@ -15,7 +15,6 @@ import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { RbacModule } from './rbac/rbac.module';
 import { SeederModule } from './seeder/seeder.module';
-import { AddressModule } from './address/address.module';
 import { LandlordModule } from './landlord/landlord.module';
 import { PropertyManagerModule } from './property-manager/property-manager.module';
 import { AgentModule } from './agent/agent.module';
@@ -30,6 +29,16 @@ import { SettingsModule } from './settings/settings.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
 import { VerificationModule } from './verification/verification.module';
 import { AmenitiesModule } from './amenities/amenities.module';
+import { TransactionModule } from './transaction/transaction.module';
+import { ChatModule } from './chat/chat.module';
+import { MaintenanceRequestModule } from './maintenance-request/maintenance-request.module';
+import { RentModule } from './rent/rent.module';
+import { DepositModule } from './deposit/deposit.module';
+import { WithdrawalModule } from './withdrawal/withdrawal.module';
+import { RentPaymentModule } from './rent-payment/rent-payment.module';
+import { AnnouncementModule } from './announcement/announcement.module';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { ContractModule } from './contract/contract.module';
 
 @Module({
   imports: [
@@ -55,8 +64,11 @@ import { AmenitiesModule } from './amenities/amenities.module';
         const redisPort = configService.get<number>('REDIS_PORT');
         const redisUsername = configService.get<string>('REDIS_USERNAME');
         const redisPassword = configService.get<string>('REDIS_PASSWORD');
+        const nodeEnv = configService.get<string>('NODE_ENV');
+        const enableTls = nodeEnv !== 'development';
 
-        let redisUrl = `redis://`;
+        // Use 'rediss://' (double s) when TLS is enabled
+        let redisUrl = enableTls ? `rediss://` : `redis://`;
 
         if (redisUsername && redisPassword) {
           redisUrl += `${redisUsername}:${redisPassword}@`;
@@ -65,6 +77,14 @@ import { AmenitiesModule } from './amenities/amenities.module';
         }
 
         redisUrl += `${redisHost}:${redisPort}`;
+
+        // const tlsOptions = enableTls
+        //   ? {
+        //       rejectUnauthorized: false, // For self-signed ElastiCache certs
+        //       // Optional: provide custom CA certificate if needed
+        //       // ca: [fs.readFileSync('/path/to/ca-cert.pem')],
+        //     }
+        //   : undefined;
 
         return {
           stores: [new KeyvRedis(redisUrl)],
@@ -76,13 +96,14 @@ import { AmenitiesModule } from './amenities/amenities.module';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService<EnvironmentVariables>) => ({
+        prefix: '{bull}',
         connection: {
           host: configService.get<string>('REDIS_HOST'),
           port: configService.get<number>('REDIS_PORT'),
           password: configService.get<string>('REDIS_PASSWORD') ?? undefined,
           username: configService.get<string>('REDIS_USERNAME') ?? undefined,
           tls:
-            configService.get<string>('NODE_ENV') === 'production'
+            configService.get<string>('NODE_ENV') !== 'development'
               ? {}
               : undefined,
           maxRetriesPerRequest: null, // 🛠️ Prevents creating new clients when a request fails
@@ -100,11 +121,11 @@ import { AmenitiesModule } from './amenities/amenities.module';
       wildcard: true,
       delimiter: '.',
     }),
+    ThrottlerModule.forRoot(),
     UserModule,
     AuthModule,
     RbacModule,
     SeederModule,
-    AddressModule,
     LandlordModule,
     PropertyManagerModule,
     AgentModule,
@@ -118,6 +139,15 @@ import { AmenitiesModule } from './amenities/amenities.module';
     WebhooksModule,
     VerificationModule,
     AmenitiesModule,
+    TransactionModule,
+    ChatModule,
+    MaintenanceRequestModule,
+    RentModule,
+    DepositModule,
+    WithdrawalModule,
+    RentPaymentModule,
+    AnnouncementModule,
+    ContractModule,
   ],
   controllers: [AppController],
   providers: [AppService],

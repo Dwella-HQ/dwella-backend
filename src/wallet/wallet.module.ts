@@ -5,20 +5,22 @@ import { VbaModule } from './vba/vba.module';
 import { WalletWorker } from './wallet.worker';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Wallet } from './entities/wallet.entity';
-import { WalletTransactions } from './entities/wallet-transactions.entity';
+import { WalletTransaction } from './entities/wallet-transaction.entity';
 import { LandlordModule } from 'src/landlord/landlord.module';
 import { UserModule } from 'src/user/user.module';
 import { BullModule } from '@nestjs/bullmq';
 import { JOB_NAMES } from 'src/utils/constants';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
+import { TransactionModule } from 'src/transaction/transaction.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Wallet, WalletTransactions]),
+    TypeOrmModule.forFeature([Wallet, WalletTransaction]),
     VbaModule,
     LandlordModule,
     UserModule,
+    TransactionModule,
     BullModule.registerQueue({
       name: JOB_NAMES.VBA_CREATION_JOB,
     }),
@@ -29,6 +31,6 @@ import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
   ],
   controllers: [WalletController],
   providers: [WalletService, WalletWorker],
-  exports: [WalletService],
+  exports: [WalletService, VbaModule],
 })
 export class WalletModule {}

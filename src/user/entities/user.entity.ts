@@ -8,8 +8,8 @@ import {
   CreateDateColumn,
   Entity,
   Index,
+  JoinColumn,
   ManyToOne,
-  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   Relation,
@@ -17,52 +17,71 @@ import {
 } from 'typeorm';
 import bcrypt from 'bcrypt';
 import { Exclude, instanceToPlain } from 'class-transformer';
-import { RegistrationTypeEnum } from 'src/utils/constants';
+import { Address, RegistrationTypeEnum } from 'src/utils/constants';
 import { Landlord } from 'src/landlord/entities/landlord.entity';
-import { Address } from 'src/address/entities/address.entity';
+import { PropertyManager } from 'src/property-manager/entities/property-manager.entity';
+import { Tenant } from 'src/tenant/entities/tenant.entity';
+import { KYC } from './kyc.entity';
+import { File } from 'src/file/entities/file.entity';
 
 @Entity()
 export class User extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Index()
   @Column({ unique: true })
-  email: string;
+  email!: string;
 
   @Column({ type: 'text', default: RegistrationTypeEnum.EMAIL })
-  registrationType: RegistrationTypeEnum;
+  registrationType!: RegistrationTypeEnum;
 
   @Exclude()
   @Column()
-  password: string;
+  password!: string;
 
   @Column()
-  fullName: string;
+  fullName!: string;
 
   @Column({ nullable: true })
-  phoneNumber: string;
+  phoneNumber?: string;
+
+  @OneToOne(() => File, { nullable: true, eager: true })
+  @JoinColumn()
+  profilePicture!: Relation<File>;
 
   @Column({ default: false })
-  isEmailVerified: boolean;
+  isEmailVerified!: boolean;
 
   @Column({ default: true })
-  isActive: boolean;
+  isActive!: boolean;
+
+  @Column({ default: false })
+  forceChangePassword!: boolean;
 
   @ManyToOne(() => Role, (role) => role.users, { eager: true })
-  role: Relation<Role>;
+  role!: Relation<Role>;
+
+  @OneToOne(() => KYC, (kyc) => kyc.user, { cascade: true })
+  kyc!: Relation<KYC>;
 
   @OneToOne(() => Landlord, (landlord) => landlord.user)
-  landlord: Relation<Landlord>;
+  landlord!: Relation<Landlord>;
 
-  @OneToMany(() => Address, (address) => address.user)
-  addresses: Relation<Address>[];
+  @OneToOne(() => PropertyManager, (propertyManager) => propertyManager.user)
+  propertyManager!: Relation<PropertyManager>;
+
+  @OneToOne(() => Tenant, (tenant) => tenant.user)
+  tenant!: Relation<Tenant>;
+
+  @Column({ nullable: true, type: 'json' })
+  address!: Address;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
 
   @BeforeInsert()
   @BeforeUpdate()

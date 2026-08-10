@@ -2,10 +2,16 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AmenitiesService } from 'src/amenities/amenities.service';
 import { EnvironmentVariables } from 'src/config/env.config';
+import { MaintenanceRequestTypesService } from 'src/maintenance-request/maintenance-request-types/maintenance-request-types.service';
 import { RbacService } from 'src/rbac/rbac.service';
 import { SettingsService } from 'src/settings/settings.service';
 import { UserService } from 'src/user/user.service';
-import { DefaultAmenities, PERMISSIONS, USER_ROLES } from 'src/utils/constants';
+import {
+  DefaultAmenities,
+  DefaultMaintenanceRequestTypes,
+  PERMISSIONS,
+  USER_ROLES,
+} from 'src/utils/constants';
 
 @Injectable()
 export class SeederService implements OnModuleInit {
@@ -15,6 +21,7 @@ export class SeederService implements OnModuleInit {
     private readonly userService: UserService,
     private readonly settingsService: SettingsService,
     private readonly amenitiesService: AmenitiesService,
+    private readonly maintenanceRequestTypesService: MaintenanceRequestTypesService,
     private readonly configService: ConfigService<EnvironmentVariables>,
   ) {}
 
@@ -24,6 +31,7 @@ export class SeederService implements OnModuleInit {
     await this.seedAdminUser();
     await this.seedSettings();
     await this.seedAmenities();
+    await this.seedMaintenanceRequestTypes();
   }
 
   private async seedPermissions() {
@@ -68,20 +76,57 @@ export class SeederService implements OnModuleInit {
         PERMISSIONS.MANAGE_WALLET,
         PERMISSIONS.MANAGE_SETTINGS,
         PERMISSIONS.MANAGE_ADDRESS,
+        PERMISSIONS.MANAGE_TRANSACTIONS,
+        PERMISSIONS.MANAGE_AMENITIES,
+        PERMISSIONS.CREATE_PROPERTY_MANAGER,
+        PERMISSIONS.READ_PROPERTY_MANAGER,
+        PERMISSIONS.UPDATE_PROPERTY_MANAGER,
+        PERMISSIONS.DELETE_PROPERTY_MANAGER,
+        PERMISSIONS.MANAGE_MAINTENANCE_REQUESTS,
+        PERMISSIONS.MANAGE_MAINTENANCE_REQUEST_TYPES,
       ],
       [USER_ROLES.SUB_ADMIN]: [],
       [USER_ROLES.LANDLORD]: [
         PERMISSIONS.CREATE_LANDLORD,
+        PERMISSIONS.UPDATE_LANDLORD,
+        PERMISSIONS.READ_LANDLORD,
+        PERMISSIONS.DELETE_LANDLORD,
         PERMISSIONS.CREATE_PROPERTY,
         PERMISSIONS.READ_PROPERTY,
         PERMISSIONS.UPDATE_PROPERTY,
         PERMISSIONS.DELETE_PROPERTY,
+        PERMISSIONS.READ_PROPERTY_MANAGER,
+        PERMISSIONS.CREATE_PROPERTY_MANAGER,
+        PERMISSIONS.UPDATE_PROPERTY_MANAGER,
+        PERMISSIONS.DELETE_PROPERTY_MANAGER,
+        PERMISSIONS.MANAGE_MAINTENANCE_REQUESTS,
+        PERMISSIONS.INVITE_TENANT,
+        PERMISSIONS.MANAGE_LANDLORD_ANNOUNCEMENT,
+        PERMISSIONS.MANAGE_PROPERTY_ANNOUNCEMENT,
       ],
-      [USER_ROLES.PROPERTY_MANAGER]: [],
+      [USER_ROLES.PROPERTY_MANAGER]: [
+        PERMISSIONS.CREATE_PROPERTY,
+        PERMISSIONS.READ_PROPERTY,
+        PERMISSIONS.UPDATE_PROPERTY,
+        PERMISSIONS.DELETE_PROPERTY,
+        PERMISSIONS.READ_PROPERTY_MANAGER,
+        PERMISSIONS.UPDATE_PROPERTY_MANAGER,
+        PERMISSIONS.DELETE_PROPERTY_MANAGER,
+        PERMISSIONS.MANAGE_MAINTENANCE_REQUESTS,
+        PERMISSIONS.INVITE_TENANT,
+        PERMISSIONS.MANAGE_PROPERTY_ANNOUNCEMENT,
+      ],
       [USER_ROLES.AGENT]: [],
       [USER_ROLES.MAINTENANCE_STAFF]: [],
-      [USER_ROLES.TENANT]: [],
+      [USER_ROLES.TENANT]: [
+        PERMISSIONS.READ_LANDLORD,
+        PERMISSIONS.READ_PROPERTY,
+        PERMISSIONS.READ_PROPERTY_MANAGER,
+        PERMISSIONS.CREATE_MAINTENANCE_REQUEST,
+      ],
+      [USER_ROLES.USER]: [],
     };
+
     for (const [roleName, perms] of Object.entries(rolesData)) {
       const permissionsData = perms.map((perm) => ({
         name: perm,
@@ -130,9 +175,8 @@ export class SeederService implements OnModuleInit {
     try {
       const settings = await this.settingsService.createSettings();
       this.logger.log('Settings Created Successfully', settings);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      // console.error('Error creating settings:', error);
+      console.error('Error creating settings:', error);
     }
   }
 
@@ -140,19 +184,54 @@ export class SeederService implements OnModuleInit {
     for (const amenityData of DefaultAmenities) {
       try {
         // Check if the amenity already exists
-        const existingAmenity = await this.amenitiesService.findByName(
-          amenityData.name,
-        );
+        const existingAmenity = await this.amenitiesService
+          .findByName(amenityData.name)
+          .catch(() => null);
         if (existingAmenity) {
           continue; // Skip if it exists
         }
         const amenity = await this.amenitiesService.create(amenityData);
         this.logger.log(`Added amenity: ${amenity.name}`);
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (error) {
         // Handle errors
-        // console.error(`Error adding amenity ${amenityData.name}:`, error);
+        console.error(`Error adding amenity ${amenityData.name}:`, error);
       }
+    }
+  }
+
+  private async seedMaintenanceRequestTypes() {
+    for (const key of Object.keys(DefaultMaintenanceRequestTypes)) {
+      const maintenanceRequestTypeData =
+        await this.maintenanceRequestTypesService
+          .findOneByName(key)
+          .catch(() => null);
+      if (maintenanceRequestTypeData) {
+        continue; // Skip if it exists
+      }
+      const maintenanceRequestType =
+        await this.maintenanceRequestTypesService.create({
+          name: key,
+          description: `${key} related maintenance requests`,
+        });
+      for (const subTypeName of DefaultMaintenanceRequestTypes[
+        key
+      ] as string[]) {
+        const subTypeData = await this.maintenanceRequestTypesService
+          .getSubTypesByName(subTypeName)
+          .catch(() => null);
+        if (subTypeData) {
+          continue; // Skip if it exists
+        }
+        await this.maintenanceRequestTypesService.addSubType(
+          maintenanceRequestType.id,
+          {
+            name: subTypeName,
+          },
+        );
+      }
+      this.logger.log(
+        `Added maintenance request type: ${maintenanceRequestType.name}`,
+      );
     }
   }
 }

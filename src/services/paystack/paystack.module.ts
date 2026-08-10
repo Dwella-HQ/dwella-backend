@@ -3,6 +3,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PaystackService } from './paystack.service';
 import { WalletModule } from 'src/wallet/wallet.module';
+import { JOB_NAMES } from 'src/utils/constants';
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   imports: [
@@ -17,6 +19,9 @@ import { WalletModule } from 'src/wallet/wallet.module';
       }),
     }),
     WalletModule,
+    BullModule.registerQueue({
+      name: JOB_NAMES.HANDLE_TRANSACTION_JOB,
+    }),
   ],
   providers: [PaystackService],
   exports: [PaystackService],

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {
   BadRequestException,
@@ -12,26 +14,40 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { RbacService } from 'src/rbac/rbac.service';
-import { EmailService } from 'src/notification/email/email.service';
 import { ConfigService } from '@nestjs/config';
 import { EnvironmentVariables } from 'src/config/env.config';
 import { JwtService } from '@nestjs/jwt';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import ms from 'ms';
-import { RegistrationTypeEnum } from 'src/utils/constants';
+import {
+  NotificationMediumEnum,
+  RegistrationTypeEnum,
+  USER_ROLES,
+} from 'src/utils/constants';
 import { QueryUserDto } from './dto/query-user.dto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { NotificationService } from 'src/notification/notification.service';
+import { CurrentDeviceInfo } from 'src/auth/decorators/current-device.decorator';
+import { CreateClientKycDto } from './dto/create-client-kyc.dto';
+import { KYC } from './entities/kyc.entity';
+import { FileService } from 'src/file/file.service';
+import { UpdateClientKycDto } from './dto/update-client-kyc.dto';
 
 @Injectable()
 export class UserService {
   constructor(
     private dataSource: DataSource,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
+    @InjectRepository(KYC) private readonly kycRepository: Repository<KYC>,
     private readonly rbacService: RbacService,
-    private readonly emailService: EmailService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
     private readonly configService: ConfigService<EnvironmentVariables>,
     private readonly jwtService: JwtService,
+    private readonly eventEmitter: EventEmitter2,
+    private readonly notificationService: NotificationService,
+    private readonly fileService: FileService,
   ) {}
 
   async create(createUserDto: CreateUserDto) {
@@ -39,7 +55,9 @@ export class UserService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      const role = await this.rbacService.getRoleByName(createUserDto.roleName);
+      const role = await this.rbacService.getRoleByName(
+        createUserDto.roleName || USER_ROLES.USER,
+      );
       const user = this.userRepository.create(createUserDto);
       user.role = role;
       const savedUser = await queryRunner.manager.save(user);
@@ -49,6 +67,12 @@ export class UserService {
         savedUser.isEmailVerified = true;
         await queryRunner.manager.save(savedUser);
       }
+      if (createUserDto.roleName === USER_ROLES.TENANT) {
+        this.eventEmitter.emit('tenant.created', user);
+      }
+      if (createUserDto.roleName === USER_ROLES.PROPERTY_MANAGER) {
+        this.eventEmitter.emit('propertyManager.created', user);
+      }
       await queryRunner.commitTransaction();
       return user;
     } catch (error: any) {
@@ -56,10 +80,13 @@ export class UserService {
 
       await queryRunner.rollbackTransaction();
       if (error?.code == '23505') {
-        throw new BadRequestException(error.detail);
+        // throw new BadRequestException('A user with this email already exists');
+        const field = error.detail?.match(/Key \((.+?)\)/)?.[1] ?? 'field';
+        throw new BadRequestException(`${field} already exists`);
       }
-      throw new InternalServerErrorException(error.detail);
-      throw error;
+      throw new InternalServerErrorException(
+        error.detail || 'An error occurred while creating the user',
+      );
     } finally {
       await queryRunner.release();
     }
@@ -71,32 +98,32 @@ export class UserService {
     );
     let verificationLink = '';
     if (token) {
-      verificationLink = `${this.configService.get('BACKEND_URL')}/auth/verify-email?email=${user.email}&token=${token}`;
+      verificationLink = `${this.configService.get('BACKEND_URL')}/auth/verify-email?email=${encodeURIComponent(user.email)}&token=${encodeURIComponent(token)}`;
     } else {
       const payload = { sub: user.id, email: user.email };
       const newToken = this.jwtService.sign(payload, {
         expiresIn: this.configService.get('JWT_EXPIRES_IN'),
       });
-      verificationLink = `${this.configService.get('BACKEND_URL')}/auth/verify-email?email=${user.email}&token=${newToken}`;
+      verificationLink = `${this.configService.get('BACKEND_URL')}/auth/verify-email?email=${encodeURIComponent(user.email)}&token=${encodeURIComponent(newToken)}`;
       await this.cacheManager.set(
         `email-verification-token-${user.id}`,
         newToken,
         ms(this.configService.get('JWT_EXPIRES_IN') as ms.StringValue),
       ); // 30 minutes
-
-      await this.emailService.sendMailToUser({
-        user,
-        subject: 'Verify your email address',
-        template: 'verify-email',
-        context: {
-          name: user.fullName,
-          verificationLink,
-          expirationTime: this.configService.get<string>('JWT_EXPIRES_IN'),
-        },
-      });
-
-      return user;
     }
+
+    await this.notificationService.sendNotificationToUser(user, {
+      title: 'Verify your email address',
+      medium: [NotificationMediumEnum.EMAIL],
+      templateName: 'auth.verify-otp',
+      context: {
+        name: user.fullName,
+        verificationLink,
+        expirationTime: this.configService.get<string>('JWT_EXPIRES_IN'),
+      },
+    });
+
+    return user;
   }
 
   async verifyEmail(token: string) {
@@ -122,10 +149,11 @@ export class UserService {
     const resetLink = `${this.configService.get(
       'FRONTEND_URL',
     )}/auth/reset-password?token=${encodeURIComponent(token)}`;
-    await this.emailService.sendMailToUser({
-      user,
-      subject: 'Password Reset Request',
-      template: 'reset-password',
+
+    await this.notificationService.sendNotificationToUser(user, {
+      title: 'Password Reset Request',
+      medium: [NotificationMediumEnum.EMAIL],
+      templateName: 'auth.forgot-password',
       context: {
         fullName: user.fullName,
         resetLink,
@@ -135,7 +163,7 @@ export class UserService {
     return true;
   }
 
-  async changePassword(token: string, password: string) {
+  async resetPassword(token: string, password: string) {
     const payload = await this.jwtService
       .verifyAsync<{ email: string; sub: string }>(token)
       .catch(() => {
@@ -236,11 +264,112 @@ export class UserService {
     const user = await this.findOne(id);
     for (const key in updateUserDto) {
       if (updateUserDto[key] !== undefined) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         user[key] = updateUserDto[key];
       }
     }
     return user.save();
+  }
+
+  async updatePassword(
+    userId: string,
+    changePasswordDto: ChangePasswordDto,
+    currentDevice?: CurrentDeviceInfo,
+  ) {
+    const user = await this.findOne(userId);
+    const isCurrentPasswordValid = await user.comparePasswords(
+      changePasswordDto.currentPassword,
+    );
+    if (!isCurrentPasswordValid) {
+      throw new BadRequestException('Current password is incorrect');
+    }
+    user.password = changePasswordDto.newPassword;
+    await this.notificationService.sendNotificationToUser(user, {
+      title: 'Password Changed',
+      medium: [NotificationMediumEnum.EMAIL],
+      templateName: 'auth.notify-password-change',
+      context: {
+        fullName: user.fullName,
+        currentDevice,
+      },
+    });
+    return await user.save();
+  }
+
+  async createKyc(userId: string, createClientKycDto: CreateClientKycDto) {
+    const existingKyc = await this.getKycByUserId(userId).catch(() => null);
+    if (existingKyc) {
+      throw new BadRequestException('KYC already exists for this user');
+    }
+    const user = await this.findOne(userId);
+    const kyc = this.kycRepository.create({
+      idType: createClientKycDto.idType,
+      idNumber: createClientKycDto.idNumber,
+      tinNumber: createClientKycDto.tinNumber,
+    });
+    if (createClientKycDto.idDocumentId) {
+      const idDocument = await this.fileService.findFileById(
+        createClientKycDto.idDocumentId,
+      );
+      kyc.idDocument = idDocument;
+    }
+    if (createClientKycDto.proofOfAddressDocumentId) {
+      const proofOfAddressDocument = await this.fileService.findFileById(
+        createClientKycDto.proofOfAddressDocumentId,
+      );
+      kyc.proofOfAddressDocument = proofOfAddressDocument;
+    }
+    if (createClientKycDto.tinDocumentId) {
+      const tinDocument = await this.fileService.findFileById(
+        createClientKycDto.tinDocumentId,
+      );
+      kyc.tinDocument = tinDocument;
+    }
+    kyc.user = user;
+    return await this.kycRepository.save(kyc);
+  }
+
+  async getKycByUserId(userId: string) {
+    const kyc = await this.kycRepository.findOne({
+      where: { user: { id: userId } },
+      relations: [
+        'user',
+        'idDocument',
+        'proofOfAddressDocument',
+        'tinDocument',
+      ],
+    });
+    if (!kyc) {
+      throw new NotFoundException('KYC not found for this user');
+    }
+    return kyc;
+  }
+
+  async updateKyc(userId: string, updateClientKycDto: UpdateClientKycDto) {
+    const kyc = await this.getKycByUserId(userId);
+    for (const key in updateClientKycDto) {
+      if (updateClientKycDto[key] !== undefined) {
+        kyc[key] = updateClientKycDto[key];
+      }
+    }
+    if (updateClientKycDto.idDocumentId) {
+      const idDocument = await this.fileService.findFileById(
+        updateClientKycDto.idDocumentId,
+      );
+      kyc.idDocument = idDocument;
+    }
+    if (updateClientKycDto.proofOfAddressDocumentId) {
+      const proofOfAddressDocument = await this.fileService.findFileById(
+        updateClientKycDto.proofOfAddressDocumentId,
+      );
+      kyc.proofOfAddressDocument = proofOfAddressDocument;
+    }
+    if (updateClientKycDto.tinDocumentId) {
+      const tinDocument = await this.fileService.findFileById(
+        updateClientKycDto.tinDocumentId,
+      );
+      kyc.tinDocument = tinDocument;
+    }
+    return await this.kycRepository.save(kyc);
   }
 
   async remove(id: string) {

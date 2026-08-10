@@ -9,6 +9,19 @@ export enum USER_ROLES {
   AGENT = 'agent',
   MAINTENANCE_STAFF = 'maintenance_staff',
   TENANT = 'tenant',
+  USER = 'user',
+}
+
+export enum INVITE_STATUS {
+  PENDING = 'pending',
+  ACCEPTED = 'accepted',
+  REJECTED = 'rejected',
+  EXPIRED = 'expired',
+}
+
+export enum LandlordTypeEnum {
+  PERSONAL = 'personal',
+  BUSINESS = 'business',
 }
 
 export const NonAdminRoles = [
@@ -17,6 +30,7 @@ export const NonAdminRoles = [
   USER_ROLES.AGENT,
   USER_ROLES.MAINTENANCE_STAFF,
   USER_ROLES.TENANT,
+  USER_ROLES.USER,
 ];
 
 export const AdminRoles = [
@@ -70,6 +84,40 @@ export enum PERMISSIONS {
 
   //Amenities
   MANAGE_AMENITIES = 'manage_amenities',
+
+  // Transactions
+  MANAGE_TRANSACTIONS = 'manage_transactions',
+
+  //TENANT
+  INVITE_TENANT = 'invite_tenant',
+
+  //Property Managers
+  CREATE_PROPERTY_MANAGER = 'create_property_manager',
+  READ_PROPERTY_MANAGER = 'read_property_manager',
+  UPDATE_PROPERTY_MANAGER = 'update_property_manager',
+  DELETE_PROPERTY_MANAGER = 'delete_property_manager',
+
+  //MAINTENANCE REQUESTS
+  CREATE_MAINTENANCE_REQUEST = 'create_maintenance_request',
+  MANAGE_MAINTENANCE_REQUESTS = 'manage_maintenance_requests',
+  MANAGE_MAINTENANCE_REQUEST_TYPES = 'manage_maintenance_request_types',
+
+  // CHAT
+  MANAGE_CHAT = 'manage_chat',
+  READ_CHAT = 'read_chat',
+  DELETE_CHAT = 'delete_chat',
+  UPDATE_CHAT = 'update_chat',
+  CREATE_CHAT = 'create_chat',
+
+  // Payments
+  CREATE_PAYMENT = 'create_payment',
+  READ_PAYMENT = 'read_payment',
+  UPDATE_PAYMENT = 'update_payment',
+  DELETE_PAYMENT = 'delete_payment',
+
+  // Announcements
+  MANAGE_LANDLORD_ANNOUNCEMENT = 'manage_landlord_announcement',
+  MANAGE_PROPERTY_ANNOUNCEMENT = 'manage_property_announcement',
 }
 
 export enum RegistrationTypeEnum {
@@ -84,13 +132,27 @@ export enum CurrenciesEnum {
   NGN = 'NGN',
 }
 
+export enum LanguagesEnum {
+  ENGLISH = 'en',
+}
+
 export enum TransactionTypeEnum {
   CREDIT = 'credit',
   DEBIT = 'debit',
 }
 
+export enum TransactionStatusEnum {
+  PENDING = 'pending',
+  COMPLETED = 'completed',
+  FAILED = 'failed',
+  REVERSED = 'reversed',
+}
+
 export enum TransactionActionEnum {
+  DEPOSIT = 'deposit',
+  WITHDRAWAL = 'withdrawal',
   RENT_PAYMENT = 'rent_payment',
+  RENT_PAYMENT_LATE_FEE = 'rent_payment_late_fee',
   SECURITY_DEPOSIT = 'security_deposit',
   MAINTENANCE_FEE = 'maintenance_fee',
   UTILITY_BILL = 'utility_bill',
@@ -101,6 +163,11 @@ export enum PaymentProviderEnum {
   PAYSTACK = 'paystack',
   MONNIFY = 'monnify',
   FLUTTERWAVE = 'flutterwave',
+}
+
+export enum PaymentMethodEnum {
+  CARD = 'card',
+  BANK_TRANSFER = 'bank_transfer',
 }
 
 export enum VerificationTypeEnum {
@@ -116,7 +183,319 @@ export enum VerificationStatusEnum {
 }
 
 export const JOB_NAMES = {
+  APP_NOTIFICATION: 'APP_NOTIFICATION',
+  EMAIL_NOTIFICATION: 'EMAIL_NOTIFICATION',
   VBA_CREATION_JOB: 'VBA_CREATION_JOB',
+  HANDLE_TRANSACTION_JOB: 'HANDLE_TRANSACTION_JOB',
+  WITHDRAWAL_TRANSFER_JOB: 'WITHDRAWAL_TRANSFER_JOB',
+  RENT_MANAGEMENT_JOB: 'RENT_MANAGEMENT_JOB',
 };
 
-export const DefaultAmenities: CreateAmenityDto[] = [];
+export enum NotificationTypeEnum {
+  INFO = 'info',
+  SUCCESS = 'success',
+  WARNING = 'warning',
+  ERROR = 'error',
+}
+
+export const DefaultAmenities: CreateAmenityDto[] = [
+  // In-Unit Amenities - Appliances
+  { name: 'Refrigerator', description: 'Full-size refrigerator included' },
+  { name: 'Microwave', description: 'Built-in or countertop microwave' },
+  { name: 'Garbage Disposal', description: 'In-sink garbage disposal unit' },
+  {
+    name: 'Energy-Efficient Appliances',
+    description: 'ENERGY STAR certified appliances',
+  },
+
+  // In-Unit Amenities - Laundry
+  {
+    name: 'In-Unit Washer and Dryer',
+    description: 'Private washer and dryer in the unit',
+  },
+
+  // In-Unit Amenities - Comfort
+  {
+    name: 'Air Conditioning',
+    description: 'Central or window air conditioning',
+  },
+  {
+    name: 'Ceiling Fans',
+    description: 'Ceiling fans in living areas and bedrooms',
+  },
+
+  // In-Unit Amenities - Flooring & Finishes
+  {
+    name: 'Hardwood Floors',
+    description: 'Real or engineered hardwood flooring',
+  },
+  { name: 'Walk-In Closets', description: 'Spacious walk-in closet storage' },
+  {
+    name: 'High-End Fixtures',
+    description: 'Premium bathroom and kitchen fixtures',
+  },
+  {
+    name: 'Vaulted Ceilings',
+    description: 'High vaulted or cathedral ceilings',
+  },
+
+  // In-Unit Amenities - Outdoor Access
+  { name: 'Private Balcony', description: 'Private outdoor balcony space' },
+  { name: 'Patio', description: 'Ground-level patio area' },
+  { name: 'Deck', description: 'Private deck with outdoor access' },
+
+  // In-Unit Amenities - Technology
+  {
+    name: 'Smart Home Technology',
+    description: 'Smart home devices and controls',
+  },
+  {
+    name: 'High-Speed Internet',
+    description: 'High-speed internet connectivity available',
+  },
+  {
+    name: 'Keyless Entry/Smart Lock',
+    description: 'Electronic keyless entry system',
+  },
+
+  // Community Amenities - Fitness & Wellness
+  {
+    name: '24/7 Fitness Center',
+    description: 'Fully-equipped fitness center with 24/7 access',
+  },
+  { name: 'Swimming Pool', description: 'Community swimming pool' },
+  { name: 'Yoga Studio', description: 'Dedicated yoga and meditation studio' },
+  { name: 'Sauna', description: 'Sauna and steam room facilities' },
+
+  // Community Amenities - Social & Entertainment
+  {
+    name: 'Clubhouse',
+    description: 'Community clubhouse for events and gatherings',
+  },
+  {
+    name: 'Game Room',
+    description: 'Recreation room with games and entertainment',
+  },
+  {
+    name: 'Rooftop Lounge/Deck',
+    description: 'Rooftop terrace with lounge seating',
+  },
+  { name: 'BBQ Area', description: 'Outdoor grilling and BBQ stations' },
+
+  // Community Amenities - Work & Convenience
+  {
+    name: 'Co-Working Spaces',
+    description: 'Shared workspace with high-speed internet',
+  },
+  {
+    name: 'Business Center',
+    description: 'Professional business center with office equipment',
+  },
+  { name: 'Package Lockers', description: 'Secure package delivery lockers' },
+  {
+    name: 'On-Site Retail Shops',
+    description: 'Convenient on-site retail and services',
+  },
+
+  // Community Amenities - Parking & Security
+  { name: 'Covered Parking', description: 'Protected covered parking spaces' },
+  { name: 'Secure Entry', description: 'Controlled access entry system' },
+  {
+    name: 'On-Site Security/Concierge',
+    description: '24/7 security staff or concierge service',
+  },
+
+  // Community Amenities - Outdoor Spaces
+  {
+    name: 'Landscaped Gardens',
+    description: 'Professionally maintained garden areas',
+  },
+  { name: 'Playgrounds', description: "Children's playground and play area" },
+
+  // Basic/Standard Amenities
+  {
+    name: 'On-Site Maintenance and Management',
+    description: 'Professional property management and maintenance staff',
+  },
+  {
+    name: 'Trash Removal',
+    description: 'Regular trash collection and disposal service',
+  },
+  {
+    name: 'Controlled Secure Access',
+    description: 'Gated or controlled building access',
+  },
+  { name: 'Elevators', description: 'Elevator access to all floors' },
+];
+
+export enum NextOfKinRelationshipEnum {
+  PARENT = 'Parent',
+  SIBLING = 'Sibling',
+  SPOUSE = 'Spouse',
+  CHILD = 'Child',
+  FRIEND = 'Friend',
+  OTHER = 'Other',
+}
+
+export enum RentFrequencyEnum {
+  WEEKLY = 'weekly',
+  BIWEEKLY = 'biweekly',
+  MONTHLY = 'monthly',
+  QUARTERLY = 'quarterly',
+  YEARLY = 'yearly',
+}
+
+export enum ServiceChargeFrequencyEnum {
+  WEEKLY = 'weekly',
+  BIWEEKLY = 'biweekly',
+  MONTHLY = 'monthly',
+  QUARTERLY = 'quarterly',
+  YEARLY = 'yearly',
+  ONE_TIME = 'one_time',
+}
+
+export const DefaultMaintenanceRequestTypes = {
+  plumbing: [
+    'leaking_sink',
+    'leaking_toilet',
+    'blocked_drain',
+    'low_water_pressure',
+    'water_heater_issue',
+    'burst_pipe',
+  ],
+  electrical: [
+    'faulty_switch',
+    'faulty_outlet',
+    'circuit_breaker_issue',
+    'light_fixture_problem',
+    'power_outage',
+    'wiring_issue',
+  ],
+  hvac: [
+    'Ac not working',
+    'Heating not working',
+    'Ventilation issue',
+    'Thermostat problem',
+    'Filter replacement',
+  ],
+  structural: [
+    'cracked_wall',
+    'ceiling_damage',
+    'floor_damage',
+    'door_issue',
+    'window_issue',
+    'roof_leak',
+  ],
+  other: ['general_maintenance', 'lock_key_issue', 'pest_control'],
+};
+
+export enum MaintenanceRequestLevel {
+  PROPERTY = 'PROPERTY',
+  UNIT = 'UNIT',
+}
+
+export enum MaintenanceRequestPriority {
+  HIGH = 'HIGH',
+  MEDIUM = 'MEDIUM',
+  LOW = 'LOW',
+}
+
+export enum MaintenanceRequestStatus {
+  PENDING = 'PENDING',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+}
+
+export enum RentStatusEnum {
+  PENDING = 'pending',
+  PAID = 'paid',
+  OVERDUE = 'overdue',
+  PARTIAL = 'partial',
+}
+
+export enum IdTypeEnum {
+  NATIONAL_ID = 'NATIONAL_ID',
+  DRIVER_LICENSE = 'DRIVER_LICENSE',
+  PASSPORT = 'PASSPORT',
+  OTHER = 'OTHER',
+}
+
+export enum NotificationChannelEnum {
+  EMAIL_NOTIFICATION = 'EMAIL_NOTIFICATION',
+  APP_NOTIFICATION = 'APP_NOTIFICATION',
+  PUSH_NOTIFICATION = 'PUSH_NOTIFICATION',
+}
+
+export enum MonthlyRentGracePeriodEnum {
+  NO_GRACE_PERIOD = 'NO_GRACE_PERIOD',
+  ONE_WEEK = 'ONE_WEEK',
+  TWO_WEEKS = 'TWO_WEEKS',
+}
+
+export enum QuarterlyRentGracePeriodEnum {
+  NO_GRACE_PERIOD = 'NO_GRACE_PERIOD',
+  ONE_WEEK = 'ONE_WEEK',
+  TWO_WEEKS = 'TWO_WEEKS',
+  THREE_WEEKS = 'THREE_WEEKS',
+  ONE_MONTH = 'ONE_MONTH',
+  FIVE_WEEKS = 'FIVE_WEEKS',
+  SIX_WEEKS = 'SIX_WEEKS',
+}
+
+export enum YearlyRentGracePeriodEnum {
+  NO_GRACE_PERIOD = 'NO_GRACE_PERIOD',
+  ONE_MONTH = 'ONE_MONTH',
+  TWO_MONTHS = 'TWO_MONTHS',
+  THREE_MONTHS = 'THREE_MONTHS',
+  FOUR_MONTHS = 'FOUR_MONTHS',
+  FIVE_MONTHS = 'FIVE_MONTHS',
+  SIX_MONTHS = 'SIX_MONTHS',
+}
+
+export enum AnnounementLevelEnum {
+  PROPERTY = 'PROPERTY',
+  LANDLORD = 'LANDLORD',
+}
+
+export enum ApprovalStatusEnum {
+  APPROVED = 'Approved',
+  REJECTED = 'Rejected',
+  PENDING = 'Pending',
+}
+
+export enum LateFeeTypeEnum {
+  FIXED = 'fixed',
+  PERCENTAGE = 'percentage',
+}
+
+export enum NotificationMediumEnum {
+  EMAIL = 'email',
+  APP = 'app',
+  PUSH = 'push',
+}
+
+type UniqueArray<T extends readonly any[], Seen = never> = T extends readonly [
+  infer Head,
+  ...infer Tail,
+]
+  ? Head extends Seen
+    ? never
+    : UniqueArray<Tail, Seen | Head>
+  : T;
+
+export type UniqueNotificationMediumArray<
+  T extends readonly NotificationMediumEnum[],
+> = UniqueArray<T>;
+
+export interface Address {
+  address: string;
+  city: string;
+  state: string;
+  postalCode?: string;
+  country: string;
+}
+
+export enum ServiceOfferingTypeEnum {
+  RENT = 'rent',
+  SERVICE_APARTMENT = 'service-apartment',
+}

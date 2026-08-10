@@ -1,11 +1,13 @@
-import { Address } from 'src/address/entities/address.entity';
 import { File } from 'src/file/entities/file.entity';
 import { Landlord } from 'src/landlord/entities/landlord.entity';
 import {
   BaseEntity,
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
+  JoinColumn,
+  ManyToMany,
   ManyToOne,
   OneToMany,
   OneToOne,
@@ -13,77 +15,90 @@ import {
   Relation,
   UpdateDateColumn,
 } from 'typeorm';
-import { Unit } from './units.entity';
-import { User } from 'src/user/entities/user.entity';
+import { Unit } from './unit.entity';
+import { PropertyManager } from 'src/property-manager/entities/property-manager.entity';
+import { PropertySettings } from './property-settings.entity';
+import { Address } from 'src/utils/constants';
 
 @Entity()
 export class Property extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
-  @ManyToOne(() => Landlord)
-  landlord: Relation<Landlord>;
+  @ManyToOne(() => Landlord, (landlord) => landlord.properties)
+  landlord!: Relation<Landlord>;
 
   @Column()
-  name: string;
+  name!: string;
 
-  @OneToOne(() => Address, { eager: true })
-  address: Relation<Address>;
+  @Column({ type: 'json', nullable: true })
+  address?: Address;
 
   @Column({
     default: false,
   })
-  isApproved: boolean;
-
-  @ManyToOne(() => User, { nullable: true })
-  approvedBy: Relation<User>;
+  isApproved!: boolean;
 
   @Column({
     default: true,
   })
-  isActive: boolean;
+  isActive!: boolean;
 
-  @Column({ nullable: true })
-  propertyType: string;
+  @Column({
+    default: false,
+  })
+  isOpenForServiceApartment!: boolean;
 
   @Column()
-  yearBuilt: number;
+  yearBuilt!: string;
 
   @Column({ default: 0 })
-  numberOfUnits: number;
+  numberOfUnits!: number;
 
   @Column({
     nullable: true,
   })
-  description: string;
+  description!: string;
 
   @Column()
-  parkingSpace: boolean;
+  parkingSpace!: boolean;
 
   @OneToMany(() => File, (file) => file.propertyPhoto, {
     eager: true,
     cascade: true,
   })
-  photos: Relation<File[]>;
+  photos!: Relation<File[]>;
 
   @OneToMany(() => File, (file) => file.propertyDocument, {
     eager: true,
     cascade: true,
   })
-  documents: Relation<File[]>;
+  documents!: Relation<File[]>;
 
   @OneToMany(() => Unit, (units) => units.property, {
-    eager: true,
     cascade: true,
   })
-  units: Relation<Unit[]>;
+  units!: Relation<Unit[]>;
+
+  @ManyToMany(
+    () => PropertyManager,
+    (propertyManager) => propertyManager.properties,
+  )
+  propertyManagers!: Relation<PropertyManager[]>;
+
+  @JoinColumn()
+  @OneToOne(() => PropertySettings, (settings) => settings.property)
+  settings!: Relation<PropertySettings>;
 
   @Column('simple-array', { nullable: true })
-  amenities: string[];
+  amenities!: string[];
+
+  @DeleteDateColumn()
+  deletedAt!: Date;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
 }
