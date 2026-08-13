@@ -68,9 +68,6 @@ export class Landlord extends BaseEntity {
   @Column({ default: true })
   isActive!: boolean;
 
-  @Column({ default: false })
-  isApproved!: boolean;
-
   @Column({ nullable: true, type: 'text' })
   approvalStatus!: ApprovalStatusEnum;
 

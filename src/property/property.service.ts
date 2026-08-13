@@ -29,7 +29,10 @@ import { UpdatePropertyLateFeeDto } from './dto/update-property-late-fee.dto';
 import * as ExcelJS from 'exceljs';
 import { CreateAddressDto } from 'src/utils/shared.dto';
 import { QueryPropertyUnitDto } from './dto/query-property-unit.dto';
-import { ServiceOfferingTypeEnum } from 'src/utils/constants';
+import {
+  ApprovalStatusEnum,
+  ServiceOfferingTypeEnum,
+} from 'src/utils/constants';
 
 @Injectable()
 export class PropertyService {
@@ -55,7 +58,7 @@ export class PropertyService {
     const landlord = await this.landlordService.findOne(
       createPropertyDto.landlordId,
     );
-    if (landlord.isApproved === false) {
+    if (landlord.approvalStatus !== ApprovalStatusEnum.APPROVED) {
       throw new BadRequestException('Landlord is not approved yet');
     }
 

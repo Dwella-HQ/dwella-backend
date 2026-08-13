@@ -4,7 +4,11 @@ import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { User } from 'src/user/entities/user.entity';
 import { LandlordService } from '../landlord.service';
-import { AdminRoles, USER_ROLES } from 'src/utils/constants';
+import {
+  AdminRoles,
+  ApprovalStatusEnum,
+  USER_ROLES,
+} from 'src/utils/constants';
 
 @Injectable()
 export class LandLordApprovedGuard implements CanActivate {
@@ -26,7 +30,7 @@ export class LandLordApprovedGuard implements CanActivate {
 
     if (user?.role?.name === USER_ROLES.LANDLORD) {
       const landlord = await this.landlordService.findByUserId(user.id);
-      if (landlord && landlord.isApproved) {
+      if (landlord && landlord.approvalStatus === ApprovalStatusEnum.APPROVED) {
         return true;
       }
     }

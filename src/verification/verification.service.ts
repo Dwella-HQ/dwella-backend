@@ -91,6 +91,7 @@ export class VerificationService {
     }
 
     if (queryVerificationDto.type) {
+      console.log('queryVerificationDto.type', queryVerificationDto.type);
       queryBuilder.andWhere('verification.type = :type', {
         type: queryVerificationDto.type,
       });

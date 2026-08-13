@@ -111,7 +111,6 @@ export class LandlordService {
 
   async approveLandlord(id: string) {
     const landlord = await this.findOne(id);
-    landlord.isApproved = true;
     landlord.approvalStatus = ApprovalStatusEnum.APPROVED;
     const updatedLandlord = await this.landlordRepository.save(landlord);
     await this.notificationService.sendNotificationToUser(landlord.user, {
@@ -129,7 +128,6 @@ export class LandlordService {
 
   async rejectLandlord(id: string, reason: string) {
     const landlord = await this.findOne(id);
-    landlord.isApproved = true;
     landlord.approvalStatus = ApprovalStatusEnum.REJECTED;
     const updatedLandlord = await this.landlordRepository.save(landlord);
     await this.notificationService.sendNotificationToUser(landlord.user, {
@@ -237,7 +235,6 @@ export class LandlordService {
           },
         },
         kyb: {
-          businessAddress: true,
           businessCACCertificate: true,
           businessLogo: true,
           businessProofOfAddressDocument: true,
