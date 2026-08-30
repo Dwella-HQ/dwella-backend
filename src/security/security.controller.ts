@@ -41,7 +41,11 @@ export class SecurityController {
     @Body() dto: AssignSecurityDto,
     @Req() request: Request & { user: { id: string } },
   ) {
-    return this.securityService.assign(propertyId, dto.securityId, request.user.id);
+    return this.securityService.assign(
+      propertyId,
+      dto.securityId,
+      request.user.id,
+    );
   }
 
   @UseGuards(JwtAuthGuard)

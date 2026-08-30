@@ -100,7 +100,8 @@ export class SecurityService {
       property: { id: propertyId },
       security: { id: securityId },
     });
-    if (!result.affected) throw new NotFoundException('Security assignment not found');
+    if (!result.affected)
+      throw new NotFoundException('Security assignment not found');
   }
 
   async listSecurity(propertyId: string, managerId: string) {
@@ -112,14 +113,19 @@ export class SecurityService {
     });
   }
 
-  async generateCode(unitId: string, tenantId: string, dto: CreateAccessCodeDto) {
+  async generateCode(
+    unitId: string,
+    tenantId: string,
+    dto: CreateAccessCodeDto,
+  ) {
     const unit = await this.getUnit(unitId);
     if (!unit.tenant?.user || unit.tenant.user.id !== tenantId) {
       throw new UnauthorizedException('You are not the tenant of this unit');
     }
     const property = unit.property;
     const indexKey = this.propertyIndexKey(property.id);
-    const existingKeys = (await this.cacheManager.get<string[]>(indexKey)) || [];
+    const existingKeys =
+      (await this.cacheManager.get<string[]>(indexKey)) || [];
     for (const key of existingKeys) {
       const existing = await this.cacheManager.get<CachedAccessCode>(key);
       if (existing?.unitId === unit.id) await this.cacheManager.del(key);
@@ -147,7 +153,10 @@ export class SecurityService {
 
   async getCodes(propertyId: string, securityId: string) {
     await this.assertAssigned(securityId, propertyId);
-    const keys = (await this.cacheManager.get<string[]>(this.propertyIndexKey(propertyId))) || [];
+    const keys =
+      (await this.cacheManager.get<string[]>(
+        this.propertyIndexKey(propertyId),
+      )) || [];
     const codes: CachedAccessCode[] = [];
     for (const key of keys) {
       const value = await this.cacheManager.get<CachedAccessCode>(key);
@@ -158,10 +167,16 @@ export class SecurityService {
 
   async useCode(propertyId: string, dto: { code: string }, securityId: string) {
     await this.assertAssigned(securityId, propertyId);
-    const keys = (await this.cacheManager.get<string[]>(this.propertyIndexKey(propertyId))) || [];
+    const keys =
+      (await this.cacheManager.get<string[]>(
+        this.propertyIndexKey(propertyId),
+      )) || [];
     const key = keys.find((candidate) => candidate.endsWith(`:${dto.code}`));
-    const value = key ? await this.cacheManager.get<CachedAccessCode>(key) : null;
-    if (!key || !value) throw new NotFoundException('Access code is invalid or expired');
+    const value = key
+      ? await this.cacheManager.get<CachedAccessCode>(key)
+      : null;
+    if (!key || !value)
+      throw new NotFoundException('Access code is invalid or expired');
     await this.accessCodeLogRepository.save(
       this.accessCodeLogRepository.create({
         ...value,
@@ -181,7 +196,10 @@ export class SecurityService {
   async getUsageLogs(propertyId: string, managerId: string) {
     await this.getProperty(propertyId);
     await this.assertPropertyManager(managerId, propertyId);
-    return this.accessCodeLogRepository.find({ where: { propertyId }, order: { usedAt: 'DESC' } });
+    return this.accessCodeLogRepository.find({
+      where: { propertyId },
+      order: { usedAt: 'DESC' },
+    });
   }
 
   private async getProperty(propertyId: string) {
@@ -208,14 +226,18 @@ export class SecurityService {
     const manager = await this.propertyManagerRepository.findOne({
       where: { user: { id: userId }, properties: { id: propertyId } },
     });
-    if (!manager) throw new UnauthorizedException('You cannot manage this property');
+    if (!manager)
+      throw new UnauthorizedException('You cannot manage this property');
   }
 
   private async assertAssigned(securityId: string, propertyId: string) {
     const assignment = await this.assignmentRepository.findOne({
       where: { security: { id: securityId }, property: { id: propertyId } },
     });
-    if (!assignment) throw new UnauthorizedException('Security agency is not assigned to this property');
+    if (!assignment)
+      throw new UnauthorizedException(
+        'Security agency is not assigned to this property',
+      );
   }
 
   private propertyIndexKey(propertyId: string) {

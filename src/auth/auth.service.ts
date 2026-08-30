@@ -178,9 +178,11 @@ export class AuthService {
   }
 
   async getAuthenticatedUserByPhone(phoneNumber: string, password: string) {
-    const user = await this.userService.findOneByPhone(phoneNumber).catch(() => {
-      throw new BadRequestException('Wrong details provided');
-    });
+    const user = await this.userService
+      .findOneByPhone(phoneNumber)
+      .catch(() => {
+        throw new BadRequestException('Wrong details provided');
+      });
     const result = await user.comparePasswords(password);
     if (!result) {
       throw new BadRequestException('Wrong details provided');
