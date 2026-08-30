@@ -30,7 +30,7 @@ export class User extends BaseEntity {
   id!: string;
 
   @Index()
-  @Column({ unique: true })
+  @Column({ unique: true, nullable: true })
   email!: string;
 
   @Column({ type: 'text', default: RegistrationTypeEnum.EMAIL })
@@ -43,7 +43,7 @@ export class User extends BaseEntity {
   @Column()
   fullName!: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, unique: true })
   phoneNumber?: string;
 
   @OneToOne(() => File, { nullable: true, eager: true })

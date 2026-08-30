@@ -61,7 +61,10 @@ export class UserService {
       const user = this.userRepository.create(createUserDto);
       user.role = role;
       const savedUser = await queryRunner.manager.save(user);
-      if ([RegistrationTypeEnum.EMAIL].includes(savedUser.registrationType)) {
+      if (
+        [RegistrationTypeEnum.EMAIL].includes(savedUser.registrationType) &&
+        savedUser.role.name !== USER_ROLES.SECURITY
+      ) {
         await this.sendVerifyEmail(savedUser);
       } else {
         savedUser.isEmailVerified = true;
@@ -90,6 +93,16 @@ export class UserService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async findOneByPhone(phoneNumber: string) {
+    const user = await this.userRepository.findOne({
+      where: { phoneNumber },
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
   }
 
   async sendVerifyEmail(user: User) {

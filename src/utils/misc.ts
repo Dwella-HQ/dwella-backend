@@ -25,6 +25,14 @@ export const generateRandomString = (length: number = 10) => {
   return result;
 };
 
+export const generateNumericToken = (length: number = 6) => {
+  let result = '';
+  for (let index = 0; index < length; index++) {
+    result += Math.floor(Math.random() * 10).toString();
+  }
+  return result;
+};
+
 export function breakDownFullName(fullName: string) {
   const names = fullName.trim().split(' ');
   const firstName = names[0] || '';

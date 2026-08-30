@@ -177,6 +177,17 @@ export class AuthService {
     return user;
   }
 
+  async getAuthenticatedUserByPhone(phoneNumber: string, password: string) {
+    const user = await this.userService.findOneByPhone(phoneNumber).catch(() => {
+      throw new BadRequestException('Wrong details provided');
+    });
+    const result = await user.comparePasswords(password);
+    if (!result) {
+      throw new BadRequestException('Wrong details provided');
+    }
+    return user;
+  }
+
   async verifyToken(token: string) {
     const { sub, tokenId }: { sub: string; email: string; tokenId: string } =
       await this.jwtService.verifyAsync(token, {

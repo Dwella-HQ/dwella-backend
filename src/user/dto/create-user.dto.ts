@@ -12,8 +12,9 @@ import { RegistrationTypeEnum, USER_ROLES } from 'src/utils/constants';
 import { CreateAddressDto } from 'src/utils/shared.dto';
 
 export class CreateUserDto {
+  @IsOptional()
   @IsEmail()
-  email!: string;
+  email?: string;
 
   @IsStrongPassword({
     minLength: 8,

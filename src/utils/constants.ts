@@ -9,6 +9,7 @@ export enum USER_ROLES {
   AGENT = 'agent',
   MAINTENANCE_STAFF = 'maintenance_staff',
   TENANT = 'tenant',
+  SECURITY = 'security',
   USER = 'user',
 }
 
@@ -30,6 +31,7 @@ export const NonAdminRoles = [
   USER_ROLES.AGENT,
   USER_ROLES.MAINTENANCE_STAFF,
   USER_ROLES.TENANT,
+  USER_ROLES.SECURITY,
   USER_ROLES.USER,
 ];
 
@@ -118,6 +120,9 @@ export enum PERMISSIONS {
   // Announcements
   MANAGE_LANDLORD_ANNOUNCEMENT = 'manage_landlord_announcement',
   MANAGE_PROPERTY_ANNOUNCEMENT = 'manage_property_announcement',
+
+  // Access codes
+  MANAGE_ACCESS_CODES = 'manage_access_codes',
 }
 
 export enum RegistrationTypeEnum {

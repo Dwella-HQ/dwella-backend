@@ -39,6 +39,7 @@ import { RentPaymentModule } from './rent-payment/rent-payment.module';
 import { AnnouncementModule } from './announcement/announcement.module';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { ContractModule } from './contract/contract.module';
+import { SecurityModule } from './security/security.module';
 
 @Module({
   imports: [
@@ -148,6 +149,7 @@ import { ContractModule } from './contract/contract.module';
     RentPaymentModule,
     AnnouncementModule,
     ContractModule,
+    SecurityModule,
   ],
   controllers: [AppController],
   providers: [AppService],

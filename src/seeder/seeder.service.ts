@@ -124,6 +124,10 @@ export class SeederService implements OnModuleInit {
         PERMISSIONS.READ_PROPERTY_MANAGER,
         PERMISSIONS.CREATE_MAINTENANCE_REQUEST,
       ],
+      [USER_ROLES.SECURITY]: [
+        PERMISSIONS.READ_PROPERTY,
+        PERMISSIONS.MANAGE_ACCESS_CODES,
+      ],
       [USER_ROLES.USER]: [],
     };
 
