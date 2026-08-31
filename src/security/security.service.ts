@@ -58,8 +58,18 @@ export class SecurityService {
       phoneNumber: dto.phoneNumber,
       password: dto.password,
       roleName: USER_ROLES.SECURITY,
-      fullName: 'Security Agency',
+      fullName: 'Security',
     });
+  }
+
+  async registerAndAssign(
+    propertyId: string,
+    dto: RegisterSecurityDto,
+    managerId: string,
+  ) {
+    const security = await this.register(dto);
+    const assignment = await this.assign(propertyId, security.id, managerId);
+    return { security, assignment };
   }
 
   async login(phoneNumber: string, password: string) {
@@ -236,7 +246,7 @@ export class SecurityService {
     });
     if (!assignment)
       throw new UnauthorizedException(
-        'Security agency is not assigned to this property',
+        'Security is not assigned to this property',
       );
   }
 
