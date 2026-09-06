@@ -37,6 +37,32 @@ export class SecurityController {
     };
   }
 
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  @RequireRoles(USER_ROLES.SECURITY)
+  async getMySecurity(@Req() request: Request & { user: { id: string } }) {
+    const data = await this.securityService.getSecurityByUserId(
+      request.user.id,
+    );
+    return {
+      success: true,
+      message: 'Security retrieved successfully',
+      data,
+    };
+  }
+
+  @Get('user/:userId')
+  @UseGuards(JwtAuthGuard)
+  @RequireRoles(USER_ROLES.LANDLORD, USER_ROLES.PROPERTY_MANAGER)
+  async getSecurityByUserId(@Param('userId') userId: string) {
+    const data = await this.securityService.getSecurityByUserId(userId);
+    return {
+      success: true,
+      message: 'Security retrieved successfully',
+      data,
+    };
+  }
+
   @UseGuards(JwtAuthGuard)
   @RequireRoles(USER_ROLES.LANDLORD, USER_ROLES.PROPERTY_MANAGER)
   @HttpCode(HttpStatus.CREATED)

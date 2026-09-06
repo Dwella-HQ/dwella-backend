@@ -5,20 +5,19 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToOne,
   PrimaryGeneratedColumn,
   Relation,
-  Unique,
 } from 'typeorm';
 
 @Entity()
-@Unique(['security', 'property'])
-export class SecurityProperty {
+export class Security {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @ManyToOne(() => User, { nullable: false, onDelete: 'CASCADE' })
+  @OneToOne(() => User, { nullable: false, onDelete: 'CASCADE' })
   @JoinColumn()
-  security!: Relation<User>;
+  user!: Relation<User>;
 
   @ManyToOne(() => Property, { nullable: false, onDelete: 'CASCADE' })
   @JoinColumn()
