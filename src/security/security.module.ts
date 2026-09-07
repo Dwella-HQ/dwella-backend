@@ -5,8 +5,8 @@ import { Property } from 'src/property/entities/property.entity';
 import { Unit } from 'src/property/entities/unit.entity';
 import { PropertyManager } from 'src/property-manager/entities/property-manager.entity';
 import { UserModule } from 'src/user/user.module';
-import { AccessCodeLog } from './entities/access-code-log.entity';
 import { Security } from './entities/security-property.entity';
+import { AccessLogService } from './access-log.service';
 import { SecurityController } from './security.controller';
 import { SecurityService } from './security.service';
 
@@ -14,15 +14,9 @@ import { SecurityService } from './security.service';
   imports: [
     AuthModule,
     UserModule,
-    TypeOrmModule.forFeature([
-      Property,
-      Unit,
-      PropertyManager,
-      Security,
-      AccessCodeLog,
-    ]),
+    TypeOrmModule.forFeature([Property, Unit, PropertyManager, Security]),
   ],
   controllers: [SecurityController],
-  providers: [SecurityService],
+  providers: [SecurityService, AccessLogService],
 })
 export class SecurityModule {}

@@ -19,8 +19,8 @@ import { USER_ROLES } from 'src/utils/constants';
 import { generateNumericToken } from 'src/utils/misc';
 import { CreateAccessCodeDto } from './dto/create-access-code.dto';
 import { RegisterSecurityDto } from './dto/register-security.dto';
-import { AccessCodeLog } from './entities/access-code-log.entity';
 import { Security } from './entities/security-property.entity';
+import { AccessLogService } from './access-log.service';
 
 export interface CachedAccessCode {
   name: string;
@@ -48,8 +48,7 @@ export class SecurityService {
     private readonly propertyManagerRepository: Repository<PropertyManager>,
     @InjectRepository(Security)
     private readonly securityRepository: Repository<Security>,
-    @InjectRepository(AccessCodeLog)
-    private readonly accessCodeLogRepository: Repository<AccessCodeLog>,
+    private readonly accessLogService: AccessLogService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
 
@@ -204,13 +203,11 @@ export class SecurityService {
       : null;
     if (!key || !value)
       throw new NotFoundException('Access code is invalid or expired');
-    await this.accessCodeLogRepository.save(
-      this.accessCodeLogRepository.create({
-        ...value,
-        securityId,
-        message: `${value.name} granted access with code ${value.code} at ${new Date().toISOString()} to property: ${value.propertyName}, unit: ${value.unitName} by tenant: ${value.tenantUsername}`,
-      }),
-    );
+    await this.accessLogService.record({
+      ...value,
+      securityId,
+      message: `${value.name} granted access with code ${value.code} at ${new Date().toISOString()} to property: ${value.propertyName}, unit: ${value.unitName} by tenant: ${value.tenantUsername}`,
+    });
     await this.cacheManager.del(key);
     await this.cacheManager.set(
       this.propertyIndexKey(propertyId),
@@ -220,13 +217,14 @@ export class SecurityService {
     return value;
   }
 
-  async getUsageLogs(propertyId: string, managerId: string) {
+  async getUsageLogs(propertyId: string, managerId: string, search?: string) {
     await this.getProperty(propertyId);
     await this.assertPropertyManager(managerId, propertyId);
-    return this.accessCodeLogRepository.find({
-      where: { propertyId },
-      order: { usedAt: 'DESC' },
-    });
+    return this.accessLogService.search({ propertyId, q: search });
+  }
+
+  async getTenantUsageLogs(tenantId: string, search?: string) {
+    return this.accessLogService.search({ tenantId, q: search });
   }
 
   private async getProperty(propertyId: string) {

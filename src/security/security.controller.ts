@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Param,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -182,10 +183,30 @@ export class SecurityController {
   async getUsageLogs(
     @Param('propertyId') propertyId: string,
     @Req() request: Request & { user: { id: string } },
+    @Query('search') search?: string,
   ) {
     const data = await this.securityService.getUsageLogs(
       propertyId,
       request.user.id,
+      search,
+    );
+    return {
+      success: true,
+      message: 'Access code logs retrieved successfully',
+      data,
+    };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @RequireRoles(USER_ROLES.TENANT)
+  @Get('my-access-code-logs')
+  async getMyUsageLogs(
+    @Req() request: Request & { user: { id: string } },
+    @Query('search') search?: string,
+  ) {
+    const data = await this.securityService.getTenantUsageLogs(
+      request.user.id,
+      search,
     );
     return {
       success: true,
