@@ -16,6 +16,10 @@ import { UpdateTenantDto } from './dto/update-tenant.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { PermissionsGuard } from 'src/auth/guards/permission.guard';
 import { RolesGuard } from 'src/auth/guards/role.guard';
+import { PropertyAccessGuard } from 'src/property-access/property-access.guard';
+import { PropertyScope } from 'src/property-access/property-scope.decorator';
+import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import { User } from 'src/user/entities/user.entity';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { QueryPaginationDto } from 'src/utils/query-pagination.dto';
 import { InviteTenantDto } from './dto/invite-tenant.dto';
@@ -25,7 +29,7 @@ import { ConfigService } from '@nestjs/config';
 import { EnvironmentVariables } from 'src/config/env.config';
 import { QueryInviteDto } from './dto/query-invite.dto';
 
-@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard, PropertyAccessGuard)
 @ApiBearerAuth()
 @Controller('tenant')
 export class TenantController {
@@ -35,8 +39,11 @@ export class TenantController {
   ) {}
 
   @Post()
-  async create(@Body() createTenantDto: CreateTenantDto) {
-    const data = await this.tenantService.create(createTenantDto);
+  async create(
+    @Body() createTenantDto: CreateTenantDto,
+    @CurrentUser() user: User,
+  ) {
+    const data = await this.tenantService.create(createTenantDto, user);
     return {
       success: true,
       message: 'Tenant created successfully',
@@ -45,8 +52,11 @@ export class TenantController {
   }
 
   @Get()
-  async findAll(@Query() queryPaginationDto: QueryPaginationDto) {
-    const data = await this.tenantService.findAll(queryPaginationDto);
+  async findAll(
+    @Query() queryPaginationDto: QueryPaginationDto,
+    @CurrentUser() user: User,
+  ) {
+    const data = await this.tenantService.findAll(queryPaginationDto, user);
     return {
       success: true,
       message: 'Tenants retrieved successfully',
@@ -54,6 +64,7 @@ export class TenantController {
     };
   }
 
+  @PropertyScope({ param: 'id', type: 'tenant' })
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const data = await this.tenantService.findOne(id);
@@ -65,8 +76,11 @@ export class TenantController {
   }
 
   @Get('user/:userId')
-  async getTenantByUserId(@Param('userId') userId: string) {
-    const data = await this.tenantService.getTenantByUserId(userId);
+  async getTenantByUserId(
+    @Param('userId') userId: string,
+    @CurrentUser() user: User,
+  ) {
+    const data = await this.tenantService.getTenantByUserId(userId, user);
     return {
       success: true,
       message: 'Tenant retrieved successfully',
@@ -74,6 +88,7 @@ export class TenantController {
     };
   }
 
+  @PropertyScope({ param: 'unitId', type: 'unit' })
   @Get('unit/:unitId')
   async findTenantsByUnitId(@Param('unitId') unitId: string) {
     const data = await this.tenantService.findTenantsByUnitId(unitId);
@@ -84,6 +99,7 @@ export class TenantController {
     };
   }
 
+  @PropertyScope()
   @Get('property/:propertyId')
   async findTenantsByPropertyId(@Param('propertyId') propertyId: string) {
     const data = await this.tenantService.findTenantsByPropertyId(propertyId);
@@ -94,6 +110,7 @@ export class TenantController {
     };
   }
 
+  @PropertyScope({ param: 'landlordId', type: 'landlord' })
   @Get('landlord/:landlordId')
   async findTenantsByLandlordId(@Param('landlordId') landlordId: string) {
     const data = await this.tenantService.findTenantsByLandlordId(landlordId);
@@ -104,6 +121,7 @@ export class TenantController {
     };
   }
 
+  @PropertyScope({ param: 'id', type: 'tenant' })
   @Patch(':id')
   async update(
     @Param('id') id: string,
@@ -118,6 +136,7 @@ export class TenantController {
     };
   }
 
+  @PropertyScope({ param: 'id', type: 'tenant' })
   @Delete(':id')
   async remove(@Param('id') id: string) {
     await this.tenantService.remove(id);
@@ -128,8 +147,11 @@ export class TenantController {
   }
 
   @Post('invite')
-  async inviteTenant(@Body() inviteTenantDto: InviteTenantDto) {
-    const data = await this.tenantService.inviteTenant(inviteTenantDto);
+  async inviteTenant(
+    @Body() inviteTenantDto: InviteTenantDto,
+    @CurrentUser() user: User,
+  ) {
+    const data = await this.tenantService.inviteTenant(inviteTenantDto, user);
     return {
       success: true,
       message: 'Tenant invited successfully',
@@ -138,8 +160,11 @@ export class TenantController {
   }
 
   @Get('invite/query')
-  async queryInvites(@Query() query: QueryInviteDto) {
-    const data = await this.tenantService.queryInvites(query);
+  async queryInvites(
+    @Query() query: QueryInviteDto,
+    @CurrentUser() user: User,
+  ) {
+    const data = await this.tenantService.queryInvites(query, user);
     return {
       success: true,
       message: 'Invites retrieved successfully',

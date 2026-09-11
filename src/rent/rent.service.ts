@@ -16,6 +16,8 @@ import {
 import { CreateRentDto } from './dto/create-rent.dto';
 import { TenantService } from 'src/tenant/tenant.service';
 import { PropertyService } from 'src/property/property.service';
+import { PropertyAccessService } from 'src/property-access/property-access.service';
+import { User } from 'src/user/entities/user.entity';
 import { addMonths } from 'date-fns/addMonths';
 import { addWeeks } from 'date-fns/addWeeks';
 import { addYears } from 'date-fns/addYears';
@@ -27,12 +29,19 @@ export class RentService {
     private rentRepository: Repository<Rent>,
     private readonly tenantService: TenantService,
     private readonly propertyService: PropertyService,
+    private readonly propertyAccessService: PropertyAccessService,
   ) {}
 
-  async createRent(createRentDto: CreateRentDto) {
+  async createRent(createRentDto: CreateRentDto, user: User) {
     const [lease] = await this.tenantService.queryLease({
       leaseId: createRentDto.leaseId,
     });
+    if (lease?.unit?.property) {
+      await this.propertyAccessService.assertProperty(
+        user,
+        lease.unit.property.id,
+      );
+    }
     const propertySettings = await this.propertyService.getPropertySettings(
       lease.unit!.property.id,
     );
@@ -174,7 +183,7 @@ export class RentService {
       where: { id },
       relations: {
         lease: {
-          unit: true,
+          unit: { property: true },
           tenant: true,
         },
       },
@@ -191,7 +200,14 @@ export class RentService {
     return rents;
   }
 
-  async getRentsByLeaseId(leaseId: string) {
+  async getRentsByLeaseId(leaseId: string, user: User) {
+    const [lease] = await this.tenantService.queryLease({ leaseId });
+    if (lease?.unit?.property) {
+      await this.propertyAccessService.assertProperty(
+        user,
+        lease.unit.property.id,
+      );
+    }
     const rents = await this.rentRepository.find({
       where: {
         leaseId,
@@ -204,8 +220,14 @@ export class RentService {
     return rents;
   }
 
-  async handleRentPayment(id: string) {
+  async handleRentPayment(id: string, user?: User) {
     const rent = await this.findOne(id);
+    if (user && rent.lease?.unit?.property) {
+      await this.propertyAccessService.assertProperty(
+        user,
+        rent.lease.unit.property.id,
+      );
+    }
     rent.status = RentStatusEnum.PAID;
     await this.rentRepository.save(rent);
     return rent;

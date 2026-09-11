@@ -40,6 +40,7 @@ import { AnnouncementModule } from './announcement/announcement.module';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { ContractModule } from './contract/contract.module';
 import { SecurityModule } from './security/security.module';
+import { PropertyAccessModule } from './property-access/property-access.module';
 
 @Module({
   imports: [
@@ -123,6 +124,7 @@ import { SecurityModule } from './security/security.module';
       delimiter: '.',
     }),
     ThrottlerModule.forRoot(),
+    PropertyAccessModule,
     UserModule,
     AuthModule,
     RbacModule,

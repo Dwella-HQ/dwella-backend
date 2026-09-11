@@ -35,6 +35,9 @@ import { LandlordKYB } from './entities/landlord-kyb.entity';
 import { CreateLandlordKybDto } from './dto/create-landlord-kyb.dto';
 import { UpdateLandlordKybDto } from './dto/update-landlord-kyb.dto';
 import { UpdateLandlordBankAccountDetailsDto } from './dto/update-landlord-bank-account-details.dto';
+import { UnauthorizedException } from '@nestjs/common';
+import { User } from 'src/user/entities/user.entity';
+import { PropertyAccessService } from 'src/property-access/property-access.service';
 
 @Injectable()
 export class LandlordService {
@@ -50,6 +53,7 @@ export class LandlordService {
     private readonly emailService: EmailService,
     private readonly notificationService: NotificationService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly propertyAccessService: PropertyAccessService,
   ) {}
 
   async create(createLandlordDto: CreateLandlordDto) {
@@ -250,7 +254,15 @@ export class LandlordService {
     return landlord;
   }
 
-  async findByUserId(userId: string) {
+  async findByUserId(userId: string, requester?: User) {
+    if (requester && requester.id !== userId) {
+      const scope = await this.propertyAccessService.getScope(requester);
+      if (scope.kind !== 'all') {
+        throw new UnauthorizedException(
+          'You do not have access to this landlord',
+        );
+      }
+    }
     const landlord = await this.landlordRepository.findOne({
       where: { user: { id: userId } },
       relations: {

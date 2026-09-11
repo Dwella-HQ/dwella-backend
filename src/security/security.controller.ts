@@ -13,6 +13,8 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
+import { PropertyAccessGuard } from 'src/property-access/property-access.guard';
+import { PropertyScope } from 'src/property-access/property-scope.decorator';
 import { RequireRoles } from 'src/rbac/decorators/role.decorator';
 import { USER_ROLES } from 'src/utils/constants';
 import { CreateAccessCodeDto } from './dto/create-access-code.dto';
@@ -64,20 +66,16 @@ export class SecurityController {
     };
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PropertyAccessGuard)
   @RequireRoles(USER_ROLES.LANDLORD, USER_ROLES.PROPERTY_MANAGER)
+  @PropertyScope()
   @HttpCode(HttpStatus.CREATED)
   @Post('property/:propertyId/register')
   async registerAndAssign(
     @Param('propertyId') propertyId: string,
     @Body() dto: RegisterSecurityDto,
-    @Req() request: Request & { user: { id: string } },
   ) {
-    const data = await this.securityService.registerAndAssign(
-      propertyId,
-      dto,
-      request.user.id,
-    );
+    const data = await this.securityService.registerAndAssign(propertyId, dto);
     return {
       success: true,
       message: 'Security registered and assigned to property successfully',
@@ -85,15 +83,15 @@ export class SecurityController {
     };
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PropertyAccessGuard)
   @RequireRoles(USER_ROLES.LANDLORD, USER_ROLES.PROPERTY_MANAGER)
+  @PropertyScope()
   @Delete('property/:propertyId/:securityId')
   async remove(
     @Param('propertyId') propertyId: string,
     @Param('securityId') securityId: string,
-    @Req() request: Request & { user: { id: string } },
   ) {
-    await this.securityService.remove(propertyId, securityId, request.user.id);
+    await this.securityService.remove(propertyId, securityId);
     return {
       success: true,
       message: 'Security removed from property',
@@ -101,17 +99,12 @@ export class SecurityController {
     };
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PropertyAccessGuard)
   @RequireRoles(USER_ROLES.LANDLORD, USER_ROLES.PROPERTY_MANAGER)
+  @PropertyScope()
   @Get('property/:propertyId')
-  async listSecurity(
-    @Param('propertyId') propertyId: string,
-    @Req() request: Request & { user: { id: string } },
-  ) {
-    const data = await this.securityService.listSecurity(
-      propertyId,
-      request.user.id,
-    );
+  async listSecurity(@Param('propertyId') propertyId: string) {
+    const data = await this.securityService.listSecurity(propertyId);
     return {
       success: true,
       message: 'Security retrieved successfully',
@@ -119,8 +112,9 @@ export class SecurityController {
     };
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PropertyAccessGuard)
   @RequireRoles(USER_ROLES.TENANT)
+  @PropertyScope({ param: 'unitId', type: 'unit' })
   @Post('unit/:unitId/access-code')
   async generateCode(
     @Param('unitId') unitId: string,
@@ -139,17 +133,12 @@ export class SecurityController {
     };
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PropertyAccessGuard)
   @RequireRoles(USER_ROLES.SECURITY)
+  @PropertyScope()
   @Get('property/:propertyId/access-codes')
-  async getCodes(
-    @Param('propertyId') propertyId: string,
-    @Req() request: Request & { user: { id: string } },
-  ) {
-    const data = await this.securityService.getCodes(
-      propertyId,
-      request.user.id,
-    );
+  async getCodes(@Param('propertyId') propertyId: string) {
+    const data = await this.securityService.getCodes(propertyId);
     return {
       success: true,
       message: 'Access codes retrieved successfully',
@@ -157,8 +146,9 @@ export class SecurityController {
     };
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PropertyAccessGuard)
   @RequireRoles(USER_ROLES.SECURITY)
+  @PropertyScope()
   @Post('property/:propertyId/access-codes/use')
   async useCode(
     @Param('propertyId') propertyId: string,
@@ -177,19 +167,15 @@ export class SecurityController {
     };
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PropertyAccessGuard)
   @RequireRoles(USER_ROLES.LANDLORD, USER_ROLES.PROPERTY_MANAGER)
+  @PropertyScope()
   @Get('property/:propertyId/access-code-logs')
   async getUsageLogs(
     @Param('propertyId') propertyId: string,
-    @Req() request: Request & { user: { id: string } },
     @Query('search') search?: string,
   ) {
-    const data = await this.securityService.getUsageLogs(
-      propertyId,
-      request.user.id,
-      search,
-    );
+    const data = await this.securityService.getUsageLogs(propertyId, search);
     return {
       success: true,
       message: 'Access code logs retrieved successfully',

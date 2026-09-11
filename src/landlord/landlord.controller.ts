@@ -28,8 +28,12 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { CreateLandlordKybDto } from './dto/create-landlord-kyb.dto';
 import { UpdateLandlordKybDto } from './dto/update-landlord-kyb.dto';
 import { UpdateLandlordBankAccountDetailsDto } from './dto/update-landlord-bank-account-details.dto';
+import { PropertyAccessGuard } from 'src/property-access/property-access.guard';
+import { PropertyScope } from 'src/property-access/property-scope.decorator';
+import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import { User } from 'src/user/entities/user.entity';
 
-@UseGuards(JwtAuthGuard, PermissionsGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard, RolesGuard, PropertyAccessGuard)
 @ApiBearerAuth()
 @Controller('landlord')
 export class LandlordController {
@@ -57,6 +61,7 @@ export class LandlordController {
     };
   }
 
+  @PropertyScope({ param: 'id', type: 'landlord' })
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const data = await this.landlordService.findOne(id);
@@ -68,8 +73,11 @@ export class LandlordController {
   }
 
   @Get('user/:userId')
-  async findByUserId(@Param('userId') userId: string) {
-    const data = await this.landlordService.findByUserId(userId);
+  async findByUserId(
+    @Param('userId') userId: string,
+    @CurrentUser() user: User,
+  ) {
+    const data = await this.landlordService.findByUserId(userId, user);
     return {
       message: 'Landlord fetched successfully',
       data,
@@ -89,6 +97,7 @@ export class LandlordController {
   }
 
   @RequirePermissions(PERMISSIONS.UPDATE_LANDLORD)
+  @PropertyScope({ param: 'id', type: 'landlord' })
   @Patch(':id')
   async update(
     @Param('id') id: string,
@@ -103,6 +112,7 @@ export class LandlordController {
   }
 
   @RequirePermissions(PERMISSIONS.UPDATE_LANDLORD)
+  @PropertyScope({ param: 'id', type: 'landlord' })
   @Post(':id/kyb')
   async createKyb(
     @Param('id') id: string,
@@ -120,6 +130,7 @@ export class LandlordController {
   }
 
   @RequirePermissions(PERMISSIONS.READ_LANDLORD)
+  @PropertyScope({ param: 'id', type: 'landlord' })
   @Get(':id/kyb')
   async getKyb(@Param('id') id: string) {
     const data = await this.landlordService.getLandlordKybByLandlordId(id);
@@ -131,6 +142,7 @@ export class LandlordController {
   }
 
   @RequirePermissions(PERMISSIONS.UPDATE_LANDLORD)
+  @PropertyScope({ param: 'id', type: 'landlord' })
   @Patch(':id/kyb')
   async updateKyb(
     @Param('id') id: string,
@@ -147,6 +159,7 @@ export class LandlordController {
     };
   }
 
+  @PropertyScope({ param: 'id', type: 'landlord' })
   @Post(':id/verify')
   async initiateLandlordVerification(@Param('id') id: string) {
     const data =
@@ -158,6 +171,7 @@ export class LandlordController {
     };
   }
 
+  @PropertyScope({ param: 'id', type: 'landlord' })
   @Delete(':id')
   async remove(@Param('id') id: string) {
     const data = await this.landlordService.remove(id);
@@ -169,6 +183,7 @@ export class LandlordController {
   }
 
   @RequirePermissions(PERMISSIONS.READ_LANDLORD)
+  @PropertyScope({ param: 'id', type: 'landlord' })
   @Get(':id/settings')
   async getLandlordSettings(@Param('id') id: string) {
     const data = await this.landlordService.getLandlordSettings(id);
@@ -180,6 +195,7 @@ export class LandlordController {
   }
 
   @RequirePermissions(PERMISSIONS.UPDATE_LANDLORD)
+  @PropertyScope({ param: 'id', type: 'landlord' })
   @Patch(':id/profile')
   async updateProfile(
     @Param('id') id: string,
@@ -197,6 +213,7 @@ export class LandlordController {
   }
 
   @RequirePermissions(PERMISSIONS.UPDATE_LANDLORD)
+  @PropertyScope({ param: 'id', type: 'landlord' })
   @Patch(':id/settings/platform-preferences')
   async updatePlatformPreferences(
     @Param('id') id: string,
@@ -214,6 +231,7 @@ export class LandlordController {
   }
 
   @RequirePermissions(PERMISSIONS.UPDATE_LANDLORD)
+  @PropertyScope({ param: 'id', type: 'landlord' })
   @Patch(':id/settings/notification-preferences')
   async updateNotificationPreferences(
     @Param('id') id: string,
@@ -233,6 +251,7 @@ export class LandlordController {
   }
 
   @RequirePermissions(PERMISSIONS.UPDATE_LANDLORD)
+  @PropertyScope({ param: 'id', type: 'landlord' })
   @Patch(':id/settings/grace-periods')
   async updateGracePeriods(
     @Param('id') id: string,
@@ -250,6 +269,7 @@ export class LandlordController {
   }
 
   @RequirePermissions(PERMISSIONS.UPDATE_LANDLORD)
+  @PropertyScope({ param: 'id', type: 'landlord' })
   @Patch(':id/settings/late-fee')
   async updateLateFeeSettings(
     @Param('id') id: string,
@@ -267,6 +287,7 @@ export class LandlordController {
   }
 
   @RequirePermissions(PERMISSIONS.UPDATE_LANDLORD)
+  @PropertyScope({ param: 'id', type: 'landlord' })
   @Patch(':id/settings/bank-account')
   async updateBankAccountDetails(
     @Param('id') id: string,

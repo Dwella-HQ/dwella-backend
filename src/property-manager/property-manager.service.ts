@@ -4,6 +4,7 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { CreatePropertyManagerDto } from './dto/create-property-manager.dto';
 import { UpdatePropertyManagerDto } from './dto/update-property-manager.dto';
@@ -30,6 +31,7 @@ import { EmailService } from 'src/notification/email/email.service';
 import { ConfigService } from '@nestjs/config';
 import { User } from 'src/user/entities/user.entity';
 import { OnEvent } from '@nestjs/event-emitter';
+import { PropertyAccessService } from 'src/property-access/property-access.service';
 
 @Injectable()
 export class PropertyManagerService {
@@ -43,7 +45,18 @@ export class PropertyManagerService {
     private propertyService: PropertyService,
     private readonly emailService: EmailService,
     private readonly configService: ConfigService<EnvironmentVariables>,
+    private readonly propertyAccessService: PropertyAccessService,
   ) {}
+
+  /** Ensure `user` owns the landlord that the property manager `id` belongs to. */
+  private async assertManagerAccess(user: User, id: string) {
+    const propertyManager = await this.findOne(id);
+    await this.propertyAccessService.assertLandlord(
+      user,
+      propertyManager.landlord.id,
+    );
+    return propertyManager;
+  }
   async create(createPropertyManagerDto: CreatePropertyManagerDto) {
     const user = await this.userService.findOne(
       createPropertyManagerDto.userId,
@@ -78,14 +91,19 @@ export class PropertyManagerService {
     await this.propertyManagerRepository.save(propertyManager);
   }
 
-  async findAll() {
+  async findAll(user?: User) {
     const propertyManagers = await this.propertyManagerRepository.find({
       relations: {
         user: true,
-        landlord: true,
+        landlord: { user: true },
       },
     });
-    return propertyManagers;
+    if (!user) return propertyManagers;
+    const scope = await this.propertyAccessService.getScope(user);
+    if (scope.kind === 'all') return propertyManagers;
+    return propertyManagers.filter(
+      (manager) => manager.landlord?.user?.id === user.id,
+    );
   }
 
   async findOne(id: string) {
@@ -100,6 +118,10 @@ export class PropertyManagerService {
       throw new NotFoundException('Property Manager not found');
     }
     return propertyManager;
+  }
+
+  async findOneScoped(id: string, user: User) {
+    return this.assertManagerAccess(user, id);
   }
 
   async findOneByEmail(email: string) {
@@ -129,7 +151,15 @@ export class PropertyManagerService {
     return propertyManagers;
   }
 
-  async getUserPropertyManagers(userId: string) {
+  async getUserPropertyManagers(userId: string, requester?: User) {
+    if (requester && requester.id !== userId) {
+      const scope = await this.propertyAccessService.getScope(requester);
+      if (scope.kind !== 'all') {
+        throw new UnauthorizedException(
+          'You do not have access to this property manager',
+        );
+      }
+    }
     const propertyManagers = await this.propertyManagerRepository.find({
       where: {
         user: { id: userId },
@@ -157,8 +187,14 @@ export class PropertyManagerService {
     return propertyManagers;
   }
 
-  async update(id: string, updatePropertyManagerDto: UpdatePropertyManagerDto) {
-    const propertyManager = await this.findOne(id);
+  async update(
+    id: string,
+    updatePropertyManagerDto: UpdatePropertyManagerDto,
+    user?: User,
+  ) {
+    const propertyManager = user
+      ? await this.assertManagerAccess(user, id)
+      : await this.findOne(id);
     for (const key in updatePropertyManagerDto) {
       if (updatePropertyManagerDto[key] !== undefined) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -168,7 +204,8 @@ export class PropertyManagerService {
     return this.propertyManagerRepository.save(propertyManager);
   }
 
-  async remove(id: string) {
+  async remove(id: string, user?: User) {
+    if (user) await this.assertManagerAccess(user, id);
     const result = await this.propertyManagerRepository.softDelete(id);
     if (result.affected === 0) {
       throw new NotFoundException('Property Manager not found');

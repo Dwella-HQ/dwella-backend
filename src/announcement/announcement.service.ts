@@ -16,6 +16,7 @@ import { File } from 'src/file/entities/file.entity';
 import { QueryAnnouncementDto } from './dto/query-announcement.dto';
 import { Property } from 'src/property/entities/property.entity';
 import { QueryPaginationDto } from 'src/utils/query-pagination.dto';
+import { PropertyAccessService } from 'src/property-access/property-access.service';
 
 @Injectable()
 export class AnnouncementService {
@@ -29,7 +30,38 @@ export class AnnouncementService {
     private readonly propertyService: PropertyService,
     private readonly landlordService: LandlordService,
     private readonly fileService: FileService,
+    private readonly propertyAccessService: PropertyAccessService,
   ) {}
+
+  /**
+   * Ensure `user` is entitled to the announcement `id` — either through one of
+   * its properties or through its landlord. Throws 401 otherwise.
+   */
+  private async assertAnnouncementAccess(user: User, id: string) {
+    const announcement = await this.announcementRepository.findOne({
+      where: { id },
+      relations: { properties: true, landlord: true },
+    });
+    if (!announcement) {
+      throw new NotFoundException('Announcement not found');
+    }
+    const propertyIds = (announcement.properties ?? []).map(
+      (property) => property.id,
+    );
+    for (const propertyId of propertyIds) {
+      try {
+        await this.propertyAccessService.assertProperty(user, propertyId);
+        return announcement;
+      } catch {
+        // try the next property / fall through to the landlord check
+      }
+    }
+    await this.propertyAccessService.assertLandlord(
+      user,
+      announcement.landlord.id,
+    );
+    return announcement;
+  }
 
   bindServer(server: Server) {
     this.server = server;
@@ -44,6 +76,9 @@ export class AnnouncementService {
     if (createAnnouncementDto.propertyIds) {
       properties = await this.propertyService.findMultiplePropertiesById(
         createAnnouncementDto.propertyIds,
+      );
+      properties = properties.filter(
+        (property) => property.landlord?.id === landlord.id,
       );
     } else {
       properties = await this.propertyService.getLandlordProperties(
@@ -127,8 +162,10 @@ export class AnnouncementService {
   async update(
     id: string,
     updateAnnouncementDto: UpdateAnnouncementDto,
+    user: User,
     level?: AnnounementLevelEnum,
   ) {
+    await this.assertAnnouncementAccess(user, id);
     const announcement = await this.announcementRepository.findOne({
       where: { id, level },
     });
@@ -154,7 +191,8 @@ export class AnnouncementService {
     return savedAnnouncement;
   }
 
-  async remove(id: string, level?: AnnounementLevelEnum) {
+  async remove(id: string, user: User, level?: AnnounementLevelEnum) {
+    await this.assertAnnouncementAccess(user, id);
     const result = await this.announcementRepository.delete({
       id,
       level,
@@ -165,22 +203,30 @@ export class AnnouncementService {
     return true;
   }
 
-  async query(query: QueryAnnouncementDto) {
+  async query(query: QueryAnnouncementDto, user: User) {
+    const accessiblePropertyIds =
+      await this.propertyAccessService.getAccessiblePropertyIds(user);
     const qb = this.announcementRepository.createQueryBuilder('announcement');
     qb.leftJoinAndSelect('announcement.landlord', 'landlord');
-    qb.leftJoinAndSelect('announcement.property', 'property');
+    qb.leftJoinAndSelect('announcement.properties', 'property');
     if (query.landlordId) {
       qb.andWhere('announcement.landlordId = :landlordId', {
         landlordId: query.landlordId,
       });
     }
     if (query.propertyId) {
-      qb.andWhere('announcement.propertyId = :propertyId', {
+      qb.andWhere('property.id = :propertyId', {
         propertyId: query.propertyId,
       });
     }
     if (query.level) {
       qb.andWhere('announcement.level = :level', { level: query.level });
+    }
+    if (accessiblePropertyIds !== 'all') {
+      if (accessiblePropertyIds.length === 0) return [];
+      qb.andWhere('property.id IN (:...accessiblePropertyIds)', {
+        accessiblePropertyIds,
+      });
     }
 
     qb.leftJoinAndSelect('announcement.files', 'file');

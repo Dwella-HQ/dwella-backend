@@ -13,7 +13,6 @@ import { Repository } from 'typeorm';
 import { AuthService } from 'src/auth/auth.service';
 import { Property } from 'src/property/entities/property.entity';
 import { Unit } from 'src/property/entities/unit.entity';
-import { PropertyManager } from 'src/property-manager/entities/property-manager.entity';
 import { UserService } from 'src/user/user.service';
 import { USER_ROLES } from 'src/utils/constants';
 import { generateNumericToken } from 'src/utils/misc';
@@ -44,8 +43,6 @@ export class SecurityService {
     private readonly propertyRepository: Repository<Property>,
     @InjectRepository(Unit)
     private readonly unitRepository: Repository<Unit>,
-    @InjectRepository(PropertyManager)
-    private readonly propertyManagerRepository: Repository<PropertyManager>,
     @InjectRepository(Security)
     private readonly securityRepository: Repository<Security>,
     private readonly accessLogService: AccessLogService,
@@ -61,13 +58,9 @@ export class SecurityService {
     });
   }
 
-  async registerAndAssign(
-    propertyId: string,
-    dto: RegisterSecurityDto,
-    managerId: string,
-  ) {
+  async registerAndAssign(propertyId: string, dto: RegisterSecurityDto) {
     const security = await this.register(dto);
-    const assignment = await this.assign(propertyId, security.id, managerId);
+    const assignment = await this.assign(propertyId, security.id);
     return { security, assignment };
   }
 
@@ -103,9 +96,8 @@ export class SecurityService {
     });
   }
 
-  async assign(propertyId: string, userId: string, managerId: string) {
+  async assign(propertyId: string, userId: string) {
     const property = await this.getProperty(propertyId);
-    await this.assertPropertyManager(managerId, propertyId);
     const user = await this.userService.findOne(userId);
     if (user.role.name !== USER_ROLES.SECURITY) {
       throw new BadRequestException('User is not Security');
@@ -119,9 +111,8 @@ export class SecurityService {
     );
   }
 
-  async remove(propertyId: string, securityId: string, managerId: string) {
+  async remove(propertyId: string, securityId: string) {
     await this.getProperty(propertyId);
-    await this.assertPropertyManager(managerId, propertyId);
     const result = await this.securityRepository.delete({
       property: { id: propertyId },
       user: { id: securityId },
@@ -130,9 +121,8 @@ export class SecurityService {
       throw new NotFoundException('Security assignment not found');
   }
 
-  async listSecurity(propertyId: string, managerId: string) {
+  async listSecurity(propertyId: string) {
     await this.getProperty(propertyId);
-    await this.assertPropertyManager(managerId, propertyId);
     return this.securityRepository.find({
       where: { property: { id: propertyId } },
       relations: { user: true },
@@ -177,8 +167,7 @@ export class SecurityService {
     return value;
   }
 
-  async getCodes(propertyId: string, securityId: string) {
-    await this.assertAssigned(securityId, propertyId);
+  async getCodes(propertyId: string) {
     const keys =
       (await this.cacheManager.get<string[]>(
         this.propertyIndexKey(propertyId),
@@ -192,7 +181,6 @@ export class SecurityService {
   }
 
   async useCode(propertyId: string, dto: { code: string }, securityId: string) {
-    await this.assertAssigned(securityId, propertyId);
     const keys =
       (await this.cacheManager.get<string[]>(
         this.propertyIndexKey(propertyId),
@@ -217,9 +205,8 @@ export class SecurityService {
     return value;
   }
 
-  async getUsageLogs(propertyId: string, managerId: string, search?: string) {
+  async getUsageLogs(propertyId: string, search?: string) {
     await this.getProperty(propertyId);
-    await this.assertPropertyManager(managerId, propertyId);
     return this.accessLogService.search({ propertyId, q: search });
   }
 
@@ -243,26 +230,6 @@ export class SecurityService {
     });
     if (!unit) throw new NotFoundException('Unit not found');
     return unit;
-  }
-
-  private async assertPropertyManager(userId: string, propertyId: string) {
-    const property = await this.getProperty(propertyId);
-    if (property.landlord.user.id === userId) return;
-    const manager = await this.propertyManagerRepository.findOne({
-      where: { user: { id: userId }, properties: { id: propertyId } },
-    });
-    if (!manager)
-      throw new UnauthorizedException('You cannot manage this property');
-  }
-
-  private async assertAssigned(securityId: string, propertyId: string) {
-    const assignment = await this.securityRepository.findOne({
-      where: { user: { id: securityId }, property: { id: propertyId } },
-    });
-    if (!assignment)
-      throw new UnauthorizedException(
-        'Security is not assigned to this property',
-      );
   }
 
   private propertyIndexKey(propertyId: string) {

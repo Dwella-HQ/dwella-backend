@@ -15,6 +15,8 @@ import { MaintenanceRequestStatus } from 'src/utils/constants';
 import { QueryMaintenanceRequestDto } from './dto/query-maintenance-request.dto';
 import { MaintenanceRequestTypesService } from './maintenance-request-types/maintenance-request-types.service';
 import { QueryMaintenanceRequestsDto } from './dto/query-maintenance-requests.dto';
+import { PropertyAccessService } from 'src/property-access/property-access.service';
+import { User } from 'src/user/entities/user.entity';
 
 @Injectable()
 export class MaintenanceRequestService {
@@ -25,12 +27,24 @@ export class MaintenanceRequestService {
     private readonly propertyService: PropertyService,
     private readonly fileService: FileService,
     private readonly maintenanceRequestTypesService: MaintenanceRequestTypesService,
+    private readonly propertyAccessService: PropertyAccessService,
   ) {}
 
-  async create(createMaintenanceRequestDto: CreateMaintenanceRequestDto) {
+  /** Ensure `user` can act on the maintenance request `id`. Throws 401. */
+  private async assertRequestAccess(user: User, id: string) {
+    const request = await this.findOne(id);
+    await this.propertyAccessService.assertProperty(user, request.property.id);
+    return request;
+  }
+
+  async create(
+    createMaintenanceRequestDto: CreateMaintenanceRequestDto,
+    user: User,
+  ) {
     const property = await this.propertyService.findOne(
       createMaintenanceRequestDto.propertyId,
     );
+    await this.propertyAccessService.assertProperty(user, property.id);
     const type = await this.maintenanceRequestTypesService.findOneByName(
       createMaintenanceRequestDto.type,
     );
@@ -163,11 +177,16 @@ export class MaintenanceRequestService {
     return request;
   }
 
+  async findOneScoped(id: string, user: User) {
+    return this.assertRequestAccess(user, id);
+  }
+
   async update(
     id: string,
     updateMaintenanceRequestDto: UpdateMaintenanceRequestDto,
+    user: User,
   ) {
-    const request = await this.findOne(id);
+    const request = await this.assertRequestAccess(user, id);
     for (const key in updateMaintenanceRequestDto) {
       if (updateMaintenanceRequestDto[key] == undefined) {
         continue;
@@ -195,13 +214,14 @@ export class MaintenanceRequestService {
     return request;
   }
 
-  async updateStatus(id: string, status: MaintenanceRequestStatus) {
-    const request = await this.findOne(id);
+  async updateStatus(id: string, status: MaintenanceRequestStatus, user: User) {
+    const request = await this.assertRequestAccess(user, id);
     request.status = status as any;
     return await this.maintananceRequestRepository.save(request);
   }
 
-  async remove(id: string) {
+  async remove(id: string, user: User) {
+    await this.assertRequestAccess(user, id);
     const result = await this.maintananceRequestRepository.delete({ id });
     if (result.affected === 0) {
       throw new NotFoundException('Maintenance request not found');
@@ -209,7 +229,12 @@ export class MaintenanceRequestService {
     return true;
   }
 
-  async queryMaintenanceRequests(query: QueryMaintenanceRequestsDto) {
+  async queryMaintenanceRequests(
+    query: QueryMaintenanceRequestsDto,
+    user: User,
+  ) {
+    const accessiblePropertyIds =
+      await this.propertyAccessService.getAccessiblePropertyIds(user);
     const queryBuilder =
       this.maintananceRequestRepository.createQueryBuilder(
         'maintenanceRequest',
@@ -222,6 +247,12 @@ export class MaintenanceRequestService {
       'file',
     );
 
+    if (accessiblePropertyIds !== 'all') {
+      if (accessiblePropertyIds.length === 0) return [];
+      queryBuilder.andWhere('property.id IN (:...accessiblePropertyIds)', {
+        accessiblePropertyIds,
+      });
+    }
     if (query.propertyId) {
       queryBuilder.andWhere('property.id = :propertyId', {
         propertyId: query.propertyId,

@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   Query,
+  Req,
   Res,
   UseInterceptors,
   UploadedFile,
@@ -16,6 +17,10 @@ import {
   FileTypeValidator,
 } from '@nestjs/common';
 import { PropertyService } from './property.service';
+import { PropertyAccessGuard } from 'src/property-access/property-access.guard';
+import { PropertyAccessService } from 'src/property-access/property-access.service';
+import { PropertyScope } from 'src/property-access/property-scope.decorator';
+import { User } from 'src/user/entities/user.entity';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
 import { CreateUnitDto } from './dto/create-unit.dto';
@@ -33,22 +38,32 @@ import { QueryPropertyDto } from './dto/query-property.dto';
 import { UpdatePropertyGracePeriodDto } from './dto/update-property-grace-period.dto';
 import { UpdatePropertyLateFeeDto } from './dto/update-property-late-fee.dto';
 import { Public } from 'src/auth/decorators/public.decorator';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { createReadStream } from 'fs';
 import { join } from 'path';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { QueryPropertyUnitDto } from './dto/query-property-unit.dto';
 
-@UseGuards(JwtAuthGuard, PermissionsGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard, RolesGuard, PropertyAccessGuard)
 @ApiBearerAuth()
 @Controller('property')
 export class PropertyController {
-  constructor(private readonly propertyService: PropertyService) {}
+  constructor(
+    private readonly propertyService: PropertyService,
+    private readonly propertyAccessService: PropertyAccessService,
+  ) {}
 
   @RequirePermissions(PERMISSIONS.CREATE_PROPERTY)
   @Post()
-  async create(@Body() createPropertyDto: CreatePropertyDto) {
+  async create(
+    @Body() createPropertyDto: CreatePropertyDto,
+    @Req() request: Request & { user: User },
+  ) {
+    await this.propertyAccessService.assertLandlord(
+      request.user,
+      createPropertyDto.landlordId,
+    );
     const data = await this.propertyService.create(createPropertyDto);
     return {
       success: true,
@@ -143,6 +158,7 @@ export class PropertyController {
   }
 
   @RequirePermissions(PERMISSIONS.READ_PROPERTY)
+  @PropertyScope({ param: 'id' })
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const data = await this.propertyService.findOne(id);
@@ -153,6 +169,7 @@ export class PropertyController {
     };
   }
 
+  @PropertyScope({ param: 'landlordId', type: 'landlord' })
   @Get('landlord/:landlordId')
   async getLandlordProperties(@Param('landlordId') landlordId: string) {
     const data = await this.propertyService.getLandlordProperties(landlordId);
@@ -164,6 +181,7 @@ export class PropertyController {
   }
 
   @RequirePermissions(PERMISSIONS.UPDATE_PROPERTY)
+  @PropertyScope({ param: 'id' })
   @Patch(':id')
   async update(
     @Param('id') id: string,
@@ -177,6 +195,7 @@ export class PropertyController {
     };
   }
 
+  @PropertyScope({ param: 'id' })
   @Get(':id/settings')
   async getPropertySettings(@Param('id') id: string) {
     const data = await this.propertyService.getPropertySettings(id);
@@ -189,6 +208,7 @@ export class PropertyController {
 
   @Patch(':id/settings/grace-period')
   @RequirePermissions(PERMISSIONS.UPDATE_PROPERTY)
+  @PropertyScope({ param: 'id' })
   async updateGracePeriod(
     @Param('id') id: string,
     @Body() updateGracePeriodDto: UpdatePropertyGracePeriodDto,
@@ -206,6 +226,7 @@ export class PropertyController {
 
   @Patch(':id/settings/late-fee')
   @RequirePermissions(PERMISSIONS.UPDATE_PROPERTY)
+  @PropertyScope({ param: 'id' })
   async updateLateFee(
     @Param('id') id: string,
     @Body() updateLateFeeDto: UpdatePropertyLateFeeDto,
@@ -222,6 +243,7 @@ export class PropertyController {
   }
 
   @RequirePermissions(PERMISSIONS.UPDATE_PROPERTY)
+  @PropertyScope({ param: 'id' })
   @Post(':id/unit')
   async addUnit(@Param('id') id: string, @Body() createUnitDto: CreateUnitDto) {
     const data = await this.propertyService.createUnit(id, createUnitDto);
@@ -233,6 +255,7 @@ export class PropertyController {
   }
 
   @RequirePermissions(PERMISSIONS.READ_PROPERTY)
+  @PropertyScope({ param: 'id' })
   @Get(':id/units')
   async getUnits(
     @Param('id') id: string,
@@ -250,6 +273,7 @@ export class PropertyController {
   }
 
   @RequirePermissions(PERMISSIONS.READ_PROPERTY)
+  @PropertyScope({ param: 'unitId', type: 'unit' })
   @Get('unit/:unitId')
   async getUnit(@Param('unitId') unitId: string) {
     const data = await this.propertyService.getUnit(unitId);
@@ -261,6 +285,7 @@ export class PropertyController {
   }
 
   @RequirePermissions(PERMISSIONS.UPDATE_PROPERTY)
+  @PropertyScope({ param: 'unitId', type: 'unit' })
   @Patch('unit/:unitId')
   async updateUnit(
     @Param('unitId') unitId: string,
@@ -275,6 +300,7 @@ export class PropertyController {
   }
 
   @RequirePermissions(PERMISSIONS.DELETE_PROPERTY)
+  @PropertyScope({ param: 'unitId', type: 'unit' })
   @Delete('unit/:unitId')
   async deleteUnit(@Param('unitId') unitId: string) {
     await this.propertyService.deleteUnit(unitId);
@@ -285,6 +311,7 @@ export class PropertyController {
   }
 
   @RequirePermissions(PERMISSIONS.DELETE_PROPERTY)
+  @PropertyScope({ param: 'id' })
   @Delete(':id')
   async remove(@Param('id') id: string) {
     const data = await this.propertyService.remove(id);
@@ -296,6 +323,7 @@ export class PropertyController {
   }
 
   @RequirePermissions(PERMISSIONS.UPDATE_PROPERTY)
+  @PropertyScope({ param: 'unitId', type: 'unit' })
   @Post('unit/:unitId/rent-offering')
   async createRentOffering(
     @Param('unitId') unitId: string,
@@ -313,6 +341,7 @@ export class PropertyController {
   }
 
   @RequirePermissions(PERMISSIONS.READ_PROPERTY)
+  @PropertyScope({ param: 'unitId', type: 'unit' })
   @Get('unit/:unitId/rent-offering')
   async getRentOffering(@Param('unitId') unitId: string) {
     const data = await this.propertyService.getRentOffering(unitId);
@@ -324,6 +353,7 @@ export class PropertyController {
   }
 
   @RequirePermissions(PERMISSIONS.UPDATE_PROPERTY)
+  @PropertyScope({ param: 'unitId', type: 'unit' })
   @Patch('unit/:unitId/rent-offering')
   async updateRentOffering(
     @Param('unitId') unitId: string,
@@ -341,6 +371,7 @@ export class PropertyController {
   }
 
   @RequirePermissions(PERMISSIONS.DELETE_PROPERTY)
+  @PropertyScope({ param: 'unitId', type: 'unit' })
   @Delete('unit/:unitId/rent-offering')
   async deleteRentOffering(@Param('unitId') unitId: string) {
     await this.propertyService.deleteRentOffering(unitId);
@@ -351,6 +382,7 @@ export class PropertyController {
   }
 
   @RequirePermissions(PERMISSIONS.UPDATE_PROPERTY)
+  @PropertyScope({ param: 'unitId', type: 'unit' })
   @Post('unit/:unitId/service-apartment-offering')
   async createServiceApartmentOffering(
     @Param('unitId') unitId: string,
@@ -369,6 +401,7 @@ export class PropertyController {
   }
 
   @RequirePermissions(PERMISSIONS.READ_PROPERTY)
+  @PropertyScope({ param: 'unitId', type: 'unit' })
   @Get('unit/:unitId/service-apartment-offering')
   async getServiceApartmentOffering(@Param('unitId') unitId: string) {
     const data = await this.propertyService.getServiceApartmentOffering(unitId);
@@ -380,6 +413,7 @@ export class PropertyController {
   }
 
   @RequirePermissions(PERMISSIONS.UPDATE_PROPERTY)
+  @PropertyScope({ param: 'unitId', type: 'unit' })
   @Patch('unit/:unitId/service-apartment-offering')
   async updateServiceApartmentOffering(
     @Param('unitId') unitId: string,
@@ -398,6 +432,7 @@ export class PropertyController {
   }
 
   @RequirePermissions(PERMISSIONS.DELETE_PROPERTY)
+  @PropertyScope({ param: 'unitId', type: 'unit' })
   @Delete('unit/:unitId/service-apartment-offering')
   async deleteServiceApartmentOffering(@Param('unitId') unitId: string) {
     await this.propertyService.deleteServiceApartmentOffering(unitId);

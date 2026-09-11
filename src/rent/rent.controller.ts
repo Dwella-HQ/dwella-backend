@@ -16,6 +16,8 @@ import { CreateRentDto } from './dto/create-rent.dto';
 import { PERMISSIONS, USER_ROLES } from 'src/utils/constants';
 import { RequireRoles } from 'src/rbac/decorators/role.decorator';
 import { RequirePermissions } from 'src/rbac/decorators/permission.decorator';
+import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import { User } from 'src/user/entities/user.entity';
 
 @UseGuards(JwtAuthGuard, PermissionsGuard, RolesGuard)
 @ApiBearerAuth()
@@ -23,9 +25,12 @@ import { RequirePermissions } from 'src/rbac/decorators/permission.decorator';
 export class RentController {
   constructor(private readonly rentService: RentService) {}
 
-  @Get('lease/leaseId')
-  async getRentsByLease(@Param('leaseId') leaseId: string) {
-    const data = await this.rentService.getRentsByLeaseId(leaseId);
+  @Get('lease/:leaseId')
+  async getRentsByLease(
+    @Param('leaseId') leaseId: string,
+    @CurrentUser() user: User,
+  ) {
+    const data = await this.rentService.getRentsByLeaseId(leaseId, user);
     return {
       success: true,
       message: 'Rents fetched successfully',
@@ -35,8 +40,11 @@ export class RentController {
 
   @RequireRoles(USER_ROLES.LANDLORD)
   @Post()
-  async createRent(@Body() createRentDto: CreateRentDto) {
-    const data = await this.rentService.createRent(createRentDto);
+  async createRent(
+    @Body() createRentDto: CreateRentDto,
+    @CurrentUser() user: User,
+  ) {
+    const data = await this.rentService.createRent(createRentDto, user);
     return {
       success: true,
       message: 'Rent created successfully',
@@ -46,8 +54,11 @@ export class RentController {
 
   @RequirePermissions(PERMISSIONS.UPDATE_PAYMENT)
   @Patch(':rentId/status/paid')
-  async markRentAsPaid(@Param('rentId') rentId: string) {
-    const data = await this.rentService.handleRentPayment(rentId);
+  async markRentAsPaid(
+    @Param('rentId') rentId: string,
+    @CurrentUser() user: User,
+  ) {
+    const data = await this.rentService.handleRentPayment(rentId, user);
     return {
       success: true,
       message: 'Rent updated successfully',

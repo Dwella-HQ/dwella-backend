@@ -25,8 +25,12 @@ import { ConfigService } from '@nestjs/config';
 import { InvitePropertyManagerDto } from './dto/invite-property-manager.dto';
 import { Public } from 'src/auth/decorators/public.decorator';
 import { RequireRoles } from 'src/rbac/decorators/role.decorator';
+import { PropertyAccessGuard } from 'src/property-access/property-access.guard';
+import { PropertyScope } from 'src/property-access/property-scope.decorator';
+import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import { User } from 'src/user/entities/user.entity';
 
-@UseGuards(JwtAuthGuard, PermissionsGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard, RolesGuard, PropertyAccessGuard)
 @ApiBearerAuth()
 @Controller('property-manager')
 export class PropertyManagerController {
@@ -51,8 +55,8 @@ export class PropertyManagerController {
 
   @RequirePermissions(PERMISSIONS.READ_PROPERTY_MANAGER)
   @Get()
-  async findAll() {
-    const data = await this.propertyManagerService.findAll();
+  async findAll(@CurrentUser() user: User) {
+    const data = await this.propertyManagerService.findAll(user);
     return {
       success: true,
       message: 'Property Managers retrieved successfully',
@@ -61,8 +65,8 @@ export class PropertyManagerController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    const data = await this.propertyManagerService.findOne(id);
+  async findOne(@Param('id') id: string, @CurrentUser() user: User) {
+    const data = await this.propertyManagerService.findOneScoped(id, user);
     return {
       success: true,
       message: `Property Manager #${id} retrieved successfully`,
@@ -70,6 +74,7 @@ export class PropertyManagerController {
     };
   }
 
+  @PropertyScope({ param: 'landlordId', type: 'landlord' })
   @Get('landlord/:landlordId')
   async getLandlordPropertyManagers(@Param('landlordId') landlordId: string) {
     const data =
@@ -82,9 +87,14 @@ export class PropertyManagerController {
   }
 
   @Get('user/:userId')
-  async getUserPropertyManagers(@Param('userId') userId: string) {
-    const data =
-      await this.propertyManagerService.getUserPropertyManagers(userId);
+  async getUserPropertyManagers(
+    @Param('userId') userId: string,
+    @CurrentUser() user: User,
+  ) {
+    const data = await this.propertyManagerService.getUserPropertyManagers(
+      userId,
+      user,
+    );
     return {
       success: true,
       message: `Property Managers retrieved successfully`,
@@ -92,6 +102,7 @@ export class PropertyManagerController {
     };
   }
 
+  @PropertyScope()
   @Get('property/:propertyId')
   async getPropertyPropertyManagers(@Param('propertyId') propertyId: string) {
     const data =
@@ -108,10 +119,12 @@ export class PropertyManagerController {
   async update(
     @Param('id') id: string,
     @Body() updatePropertyManagerDto: UpdatePropertyManagerDto,
+    @CurrentUser() user: User,
   ) {
     const data = await this.propertyManagerService.update(
       id,
       updatePropertyManagerDto,
+      user,
     );
     return {
       success: true,
@@ -121,6 +134,7 @@ export class PropertyManagerController {
   }
 
   @RequirePermissions(PERMISSIONS.CREATE_PROPERTY_MANAGER)
+  @PropertyScope({ param: 'landlordId', type: 'landlord' })
   @Post('invite/:landlordId')
   async invite(
     @Param('landlordId') landlordId: string,
@@ -155,8 +169,8 @@ export class PropertyManagerController {
 
   @RequirePermissions(PERMISSIONS.DELETE_PROPERTY_MANAGER)
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    const data = await this.propertyManagerService.remove(id);
+  async remove(@Param('id') id: string, @CurrentUser() user: User) {
+    const data = await this.propertyManagerService.remove(id, user);
     return {
       success: true,
       message: `Property Manager #${id} removed successfully`,

@@ -6,8 +6,10 @@ import { PermissionsGuard } from 'src/auth/guards/permission.guard';
 import { LandLordApprovedGuard } from 'src/landlord/guards/landlord.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { CreateVBADto } from './dto/create-vba.dto';
+import { PropertyAccessGuard } from 'src/property-access/property-access.guard';
+import { PropertyScope } from 'src/property-access/property-scope.decorator';
 
-@UseGuards(AuthGuard('jwt'), PermissionsGuard)
+@UseGuards(AuthGuard('jwt'), PermissionsGuard, PropertyAccessGuard)
 @ApiBearerAuth()
 @Controller('wallet')
 export class WalletController {
@@ -56,6 +58,7 @@ export class WalletController {
     };
   }
 
+  @PropertyScope({ param: 'landlordId', type: 'landlord' })
   @Get('landlord/:landlordId')
   async getLandlordWallet(@Param('landlordId') landlordId: string) {
     const wallet = await this.walletService.getLandlordWallet(landlordId);

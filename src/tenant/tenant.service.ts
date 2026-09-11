@@ -26,6 +26,7 @@ import { QueryLeaseDto } from './dto/query-lease.dto';
 import { OnEvent } from '@nestjs/event-emitter';
 import { User } from 'src/user/entities/user.entity';
 import { QueryInviteDto } from './dto/query-invite.dto';
+import { PropertyAccessService } from 'src/property-access/property-access.service';
 
 @Injectable()
 export class TenantService {
@@ -41,10 +42,17 @@ export class TenantService {
     private readonly fileService: FileService,
     private readonly emailService: EmailService,
     private readonly configService: ConfigService<EnvironmentVariables>,
+    private readonly propertyAccessService: PropertyAccessService,
   ) {}
 
-  async create(createTenantDto: CreateTenantDto) {
+  async create(createTenantDto: CreateTenantDto, requester?: User) {
     const unit = await this.propertyService.getUnit(createTenantDto.unitId);
+    if (requester) {
+      await this.propertyAccessService.assertProperty(
+        requester,
+        unit.property.id,
+      );
+    }
     if (unit.tenant) {
       throw new BadRequestException('Unit is already occupied by a tenant');
     }
@@ -93,16 +101,27 @@ export class TenantService {
     await this.tenantRepository.save(tenant);
   }
 
-  async findAll(queryPaginationDto: QueryPaginationDto) {
+  async findAll(queryPaginationDto: QueryPaginationDto, user: User) {
     const { limit = 10, cursor } = queryPaginationDto;
+    const accessiblePropertyIds =
+      await this.propertyAccessService.getAccessiblePropertyIds(user);
+    if (accessiblePropertyIds !== 'all' && accessiblePropertyIds.length === 0) {
+      return [];
+    }
     const tenants = await this.tenantRepository.find({
-      relations: ['user', 'leases', 'currentUnit'],
+      relations: ['user', 'leases', 'currentUnit', 'currentUnit.property'],
       order: { createdAt: 'DESC' },
       take: limit + 1,
       skip: cursor ? 1 : 0,
       where: cursor ? { createdAt: LessThan(cursor) } : {},
     });
-    return tenants;
+    if (accessiblePropertyIds === 'all') return tenants;
+    const accessible = new Set(accessiblePropertyIds);
+    return tenants.filter((tenant) =>
+      tenant.currentUnit?.property
+        ? accessible.has(tenant.currentUnit.property.id)
+        : false,
+    );
   }
 
   async findOne(id: string) {
@@ -137,7 +156,7 @@ export class TenantService {
     return tenant;
   }
 
-  async getTenantByUserId(userId: string) {
+  async getTenantByUserId(userId: string, requester?: User) {
     const tenant = await this.tenantRepository.findOne({
       where: { user: { id: userId } },
       relations: {
@@ -148,6 +167,9 @@ export class TenantService {
     });
     if (!tenant) {
       throw new NotFoundException(`Tenant not found for user`);
+    }
+    if (requester && requester.id !== userId) {
+      await this.propertyAccessService.assertTenant(requester, tenant.id);
     }
     return tenant;
   }
@@ -200,8 +222,14 @@ export class TenantService {
     return true;
   }
 
-  async inviteTenant(inviteTenantDto: InviteTenantDto) {
+  async inviteTenant(inviteTenantDto: InviteTenantDto, requester?: User) {
     const unit = await this.propertyService.getUnit(inviteTenantDto.unitId);
+    if (requester) {
+      await this.propertyAccessService.assertProperty(
+        requester,
+        unit.property.id,
+      );
+    }
     if (unit.property.isApproved === false) {
       throw new BadRequestException(
         'Cannot invite tenant to a unit in a property that is not approved',
@@ -400,11 +428,19 @@ export class TenantService {
     return true;
   }
 
-  async queryInvites(query: QueryInviteDto) {
+  async queryInvites(query: QueryInviteDto, user: User) {
+    const accessiblePropertyIds =
+      await this.propertyAccessService.getAccessiblePropertyIds(user);
     const queryBuilder =
       this.tenantInviteRepository.createQueryBuilder('invite');
     queryBuilder.leftJoinAndSelect('invite.unit', 'unit');
     queryBuilder.leftJoinAndSelect('unit.property', 'property');
+    if (accessiblePropertyIds !== 'all') {
+      if (accessiblePropertyIds.length === 0) return [];
+      queryBuilder.andWhere('property.id IN (:...accessiblePropertyIds)', {
+        accessiblePropertyIds,
+      });
+    }
     if (query.unitId) {
       queryBuilder.andWhere('invite.unitId = :unitId', {
         unitId: query.unitId,

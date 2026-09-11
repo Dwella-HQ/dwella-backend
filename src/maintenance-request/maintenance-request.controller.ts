@@ -22,6 +22,8 @@ import { AdminRoles, PERMISSIONS } from 'src/utils/constants';
 import { UpdateMaintenanceRequestStatusDto } from './dto/update-maintenance-request-status.dto';
 import { QueryMaintenanceRequestsDto } from './dto/query-maintenance-requests.dto';
 import { RequireRoles } from 'src/rbac/decorators/role.decorator';
+import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import { User } from 'src/user/entities/user.entity';
 
 @UseGuards(JwtAuthGuard, PermissionsGuard, RolesGuard)
 @ApiBearerAuth()
@@ -35,9 +37,11 @@ export class MaintenanceRequestController {
   @Post()
   async create(
     @Body() createMaintenanceRequestDto: CreateMaintenanceRequestDto,
+    @CurrentUser() user: User,
   ) {
     const data = await this.maintenanceRequestService.create(
       createMaintenanceRequestDto,
+      user,
     );
     return {
       success: true,
@@ -58,9 +62,14 @@ export class MaintenanceRequestController {
   }
 
   @Get('query')
-  async query(@Query() queryDto: QueryMaintenanceRequestsDto) {
-    const data =
-      await this.maintenanceRequestService.queryMaintenanceRequests(queryDto);
+  async query(
+    @Query() queryDto: QueryMaintenanceRequestsDto,
+    @CurrentUser() user: User,
+  ) {
+    const data = await this.maintenanceRequestService.queryMaintenanceRequests(
+      queryDto,
+      user,
+    );
     return {
       success: true,
       message: 'Maintenance requests retrieved successfully',
@@ -69,8 +78,8 @@ export class MaintenanceRequestController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    const data = await this.maintenanceRequestService.findOne(id);
+  async findOne(@Param('id') id: string, @CurrentUser() user: User) {
+    const data = await this.maintenanceRequestService.findOneScoped(id, user);
     return {
       success: true,
       message: 'Maintenance request retrieved successfully',
@@ -82,10 +91,12 @@ export class MaintenanceRequestController {
   async update(
     @Param('id') id: string,
     @Body() updateMaintenanceRequestDto: UpdateMaintenanceRequestDto,
+    @CurrentUser() user: User,
   ) {
     const data = await this.maintenanceRequestService.update(
       id,
       updateMaintenanceRequestDto,
+      user,
     );
     return {
       success: true,
@@ -100,10 +111,12 @@ export class MaintenanceRequestController {
     @Param('id') id: string,
     @Body()
     updateMaintenanceRequestStatusDto: UpdateMaintenanceRequestStatusDto,
+    @CurrentUser() user: User,
   ) {
     const data = await this.maintenanceRequestService.updateStatus(
       id,
       updateMaintenanceRequestStatusDto.status,
+      user,
     );
     return {
       success: true,
@@ -113,8 +126,8 @@ export class MaintenanceRequestController {
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    await this.maintenanceRequestService.remove(id);
+  async remove(@Param('id') id: string, @CurrentUser() user: User) {
+    await this.maintenanceRequestService.remove(id, user);
     return {
       success: true,
       message: 'Maintenance request deleted successfully',

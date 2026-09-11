@@ -19,14 +19,19 @@ import { PermissionsGuard } from 'src/auth/guards/permission.guard';
 import { RolesGuard } from 'src/auth/guards/role.guard';
 import { RequirePermissions } from 'src/rbac/decorators/permission.decorator';
 import { AnnounementLevelEnum, PERMISSIONS } from 'src/utils/constants';
+import { PropertyAccessGuard } from 'src/property-access/property-access.guard';
+import { PropertyScope } from 'src/property-access/property-scope.decorator';
+import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import { User } from 'src/user/entities/user.entity';
 
-@UseGuards(JwtAuthGuard, PermissionsGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard, RolesGuard, PropertyAccessGuard)
 @ApiBearerAuth()
 @Controller('announcement')
 export class AnnouncementController {
   constructor(private readonly announcementService: AnnouncementService) {}
 
   @RequirePermissions(PERMISSIONS.MANAGE_LANDLORD_ANNOUNCEMENT)
+  @PropertyScope({ param: 'landlordId', type: 'landlord' })
   @Post('landlord/:landlordId')
   async create(
     @Param('landlordId') landlordId: string,
@@ -44,6 +49,7 @@ export class AnnouncementController {
   }
 
   @RequirePermissions(PERMISSIONS.MANAGE_PROPERTY_ANNOUNCEMENT)
+  @PropertyScope()
   @Post('property/:propertyId')
   async createPropertyAnnouncement(
     @Param('propertyId') propertyId: string,
@@ -66,8 +72,8 @@ export class AnnouncementController {
   }
 
   @Get('query')
-  async query(@Query() query: QueryAnnouncementDto) {
-    const data = await this.announcementService.query(query);
+  async query(@Query() query: QueryAnnouncementDto, @CurrentUser() user: User) {
+    const data = await this.announcementService.query(query, user);
     return {
       success: true,
       message: 'Announcements retrieved successfully',
@@ -90,10 +96,12 @@ export class AnnouncementController {
   updateLandlordAnnouncement(
     @Param('id') id: string,
     @Body() updateAnnouncementDto: UpdateAnnouncementDto,
+    @CurrentUser() user: User,
   ) {
     return this.announcementService.update(
       id,
       updateAnnouncementDto,
+      user,
       AnnounementLevelEnum.LANDLORD,
     );
   }
@@ -103,18 +111,27 @@ export class AnnouncementController {
   updatePropertyAnnouncement(
     @Param('id') id: string,
     @Body() updateAnnouncementDto: UpdateAnnouncementDto,
+    @CurrentUser() user: User,
   ) {
     return this.announcementService.update(
       id,
       updateAnnouncementDto,
+      user,
       AnnounementLevelEnum.PROPERTY,
     );
   }
 
   @RequirePermissions(PERMISSIONS.MANAGE_LANDLORD_ANNOUNCEMENT)
   @Delete(':id/landlord')
-  async removeLandlordAnnouncement(@Param('id') id: string) {
-    await this.announcementService.remove(id, AnnounementLevelEnum.LANDLORD);
+  async removeLandlordAnnouncement(
+    @Param('id') id: string,
+    @CurrentUser() user: User,
+  ) {
+    await this.announcementService.remove(
+      id,
+      user,
+      AnnounementLevelEnum.LANDLORD,
+    );
     return {
       success: true,
       message: 'Announcement removed successfully',
@@ -123,8 +140,15 @@ export class AnnouncementController {
 
   @RequirePermissions(PERMISSIONS.MANAGE_PROPERTY_ANNOUNCEMENT)
   @Delete(':id/property')
-  async removePropertyAnnouncement(@Param('id') id: string) {
-    await this.announcementService.remove(id, AnnounementLevelEnum.PROPERTY);
+  async removePropertyAnnouncement(
+    @Param('id') id: string,
+    @CurrentUser() user: User,
+  ) {
+    await this.announcementService.remove(
+      id,
+      user,
+      AnnounementLevelEnum.PROPERTY,
+    );
     return {
       success: true,
       message: 'Announcement removed successfully',
