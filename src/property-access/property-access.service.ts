@@ -10,9 +10,14 @@ import { Property } from 'src/property/entities/property.entity';
 import { Unit } from 'src/property/entities/unit.entity';
 import { PropertyManager } from 'src/property-manager/entities/property-manager.entity';
 import { Security } from 'src/security/entities/security-property.entity';
-import { Lease } from 'src/tenant/entities/lease.entity';
+import { Contract } from 'src/contract/entities/contract.entity';
 import { User } from 'src/user/entities/user.entity';
-import { AdminRoles, USER_ROLES } from 'src/utils/constants';
+import {
+  AdminRoles,
+  ContractStatusEnum,
+  ContractTypeEnum,
+  USER_ROLES,
+} from 'src/utils/constants';
 
 export type PropertyScopeResult =
   | { kind: 'all' }
@@ -32,8 +37,8 @@ export class PropertyAccessService {
     private readonly propertyRepository: Repository<Property>,
     @InjectRepository(Unit)
     private readonly unitRepository: Repository<Unit>,
-    @InjectRepository(Lease)
-    private readonly leaseRepository: Repository<Lease>,
+    @InjectRepository(Contract)
+    private readonly contractRepository: Repository<Contract>,
     @InjectRepository(PropertyManager)
     private readonly propertyManagerRepository: Repository<PropertyManager>,
     @InjectRepository(Security)
@@ -93,16 +98,21 @@ export class PropertyAccessService {
       }
 
       case USER_ROLES.TENANT: {
-        const leases = await this.leaseRepository.find({
-          where: { tenant: { user: { id: user.id } }, isActive: true },
+        const contracts = await this.contractRepository.find({
+          where: {
+            tenant: { user: { id: user.id } },
+            type: ContractTypeEnum.LEASE,
+            status: ContractStatusEnum.ACTIVE,
+          },
           relations: { unit: { property: true } },
         });
         const propertyIds: string[] = [];
         const unitIds: string[] = [];
-        for (const lease of leases) {
-          if (!lease.unit) continue;
-          unitIds.push(lease.unit.id);
-          if (lease.unit.property) propertyIds.push(lease.unit.property.id);
+        for (const contract of contracts) {
+          if (!contract.unit) continue;
+          unitIds.push(contract.unit.id);
+          if (contract.unit.property)
+            propertyIds.push(contract.unit.property.id);
         }
         return this.propertyScope(propertyIds, unitIds);
       }
@@ -148,28 +158,55 @@ export class PropertyAccessService {
     const scope = await this.getScope(user);
     if (scope.kind === 'all') return;
 
-    const leases = await this.leaseRepository.find({
+    const contracts = await this.contractRepository.find({
       where: { tenant: { id: tenantId } },
       relations: { tenant: { user: true }, unit: { property: true } },
     });
 
     if (user?.role?.name === USER_ROLES.TENANT) {
-      const ownsTenant = leases.some(
-        (lease) => lease.tenant?.user?.id === user.id,
+      const ownsTenant = contracts.some(
+        (contract) => contract.tenant?.user?.id === user.id,
       );
       if (ownsTenant) return;
       throw new UnauthorizedException('You do not have access to this tenant');
     }
 
     if (scope.kind === 'properties') {
-      const overlaps = leases.some((lease) =>
-        lease.unit?.property
-          ? scope.propertyIds.has(lease.unit.property.id)
+      const overlaps = contracts.some((contract) =>
+        contract.unit?.property
+          ? scope.propertyIds.has(contract.unit.property.id)
           : false,
       );
       if (overlaps) return;
     }
     throw new UnauthorizedException('You do not have access to this tenant');
+  }
+
+  async assertContract(user: User, contractId: string): Promise<void> {
+    const scope = await this.getScope(user);
+    if (scope.kind === 'all') return;
+
+    const contract = await this.contractRepository.findOne({
+      where: { id: contractId },
+      relations: {
+        tenant: { user: true },
+        guest: true,
+        unit: { property: true },
+      },
+    });
+    if (!contract) throw new NotFoundException('Contract not found');
+
+    if (user?.role?.name === USER_ROLES.TENANT) {
+      if (contract.tenant?.user?.id === user.id) return;
+      throw new UnauthorizedException(
+        'You do not have access to this contract',
+      );
+    }
+
+    if (scope.kind === 'properties' && contract.unit?.property) {
+      if (scope.propertyIds.has(contract.unit.property.id)) return;
+    }
+    throw new UnauthorizedException('You do not have access to this contract');
   }
 
   async assertLandlord(user: User, landlordId: string): Promise<void> {

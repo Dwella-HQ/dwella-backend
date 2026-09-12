@@ -2,8 +2,9 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Job } from 'bullmq';
-import { TenantService } from 'src/tenant/tenant.service';
+import { ContractService } from 'src/contract/contract.service';
 import {
+  ContractTypeEnum,
   JOB_NAMES,
   LateFeeTypeEnum,
   MonthlyRentGracePeriodEnum,
@@ -20,7 +21,7 @@ import { PropertyService } from 'src/property/property.service';
 @Processor(JOB_NAMES.RENT_MANAGEMENT_JOB)
 export class RentWorker extends WorkerHost {
   constructor(
-    private readonly tenantService: TenantService,
+    private readonly contractService: ContractService,
     private readonly propertyService: PropertyService,
     @InjectRepository(Rent) private readonly rentRepository: Repository<Rent>,
   ) {
@@ -30,14 +31,18 @@ export class RentWorker extends WorkerHost {
   async process(job: Job<any, any, string>) {
     switch (job.name) {
       case 'rent-creation': {
-        const leases = await this.tenantService.queryLease({
+        // Explicit `type: LEASE` filter — shortlets already got their
+        // one-time charge from `RentService`'s `contract.shortlet.created`
+        // handler, and must never be re-billed by this recurring job.
+        const leases = await this.contractService.queryContract({
           active: true,
+          type: ContractTypeEnum.LEASE,
         });
         for (const lease of leases) {
           // Check if rent is due for the lease and create rent record if necessary
           const activeRent = await this.rentRepository.findOne({
             where: {
-              leaseId: lease.id,
+              contractId: lease.id,
               endDate: MoreThanOrEqual(new Date()),
             },
           });
@@ -150,7 +155,7 @@ export class RentWorker extends WorkerHost {
                 dueDate = endDate;
             }
             const newRent = this.rentRepository.create({
-              leaseId: lease.id,
+              contractId: lease.id,
               amount: lease.rentAmount,
               totalAmount: lease.rentAmount,
               status: RentStatusEnum.PENDING,
@@ -172,7 +177,7 @@ export class RentWorker extends WorkerHost {
             status: RentStatusEnum.PENDING,
           },
           relations: {
-            lease: {
+            contract: {
               unit: {
                 property: true,
               },
@@ -184,7 +189,7 @@ export class RentWorker extends WorkerHost {
           rent.status = RentStatusEnum.OVERDUE;
           const propertySettings =
             await this.propertyService.getPropertySettings(
-              rent.lease.unit!.property.id,
+              rent.contract.unit!.property.id,
             );
           let lateFee = 0;
           if (
@@ -214,7 +219,7 @@ export class RentWorker extends WorkerHost {
             endDate: MoreThanOrEqual(date),
           },
           relations: {
-            lease: {
+            contract: {
               unit: {
                 property: true,
               },

@@ -2,7 +2,7 @@ import { IsDate, IsNumber, IsOptional, IsUUID, Min } from 'class-validator';
 
 export class CreateRentDto {
   @IsUUID()
-  leaseId!: string;
+  contractId!: string;
 
   @IsDate()
   @IsOptional()

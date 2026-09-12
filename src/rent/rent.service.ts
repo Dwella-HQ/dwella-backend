@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Rent } from './entity/rent.entity';
 import { MoreThanOrEqual, Repository } from 'typeorm';
 import {
+  ContractTypeEnum,
   MonthlyRentGracePeriodEnum,
   QuarterlyRentGracePeriodEnum,
   RentFrequencyEnum,
@@ -14,10 +15,12 @@ import {
   YearlyRentGracePeriodEnum,
 } from 'src/utils/constants';
 import { CreateRentDto } from './dto/create-rent.dto';
-import { TenantService } from 'src/tenant/tenant.service';
+import { ContractService } from 'src/contract/contract.service';
+import { Contract } from 'src/contract/entities/contract.entity';
 import { PropertyService } from 'src/property/property.service';
 import { PropertyAccessService } from 'src/property-access/property-access.service';
 import { User } from 'src/user/entities/user.entity';
+import { OnEvent } from '@nestjs/event-emitter';
 import { addMonths } from 'date-fns/addMonths';
 import { addWeeks } from 'date-fns/addWeeks';
 import { addYears } from 'date-fns/addYears';
@@ -27,15 +30,42 @@ export class RentService {
   constructor(
     @InjectRepository(Rent)
     private rentRepository: Repository<Rent>,
-    private readonly tenantService: TenantService,
+    private readonly contractService: ContractService,
     private readonly propertyService: PropertyService,
     private readonly propertyAccessService: PropertyAccessService,
   ) {}
 
-  async createRent(createRentDto: CreateRentDto, user: User) {
-    const [lease] = await this.tenantService.queryLease({
-      leaseId: createRentDto.leaseId,
+  /**
+   * A shortlet bills once for the whole stay — this generates that single
+   * charge right when the booking is made, bypassing `createRent()`'s
+   * monthly-cycle grace-period logic entirely (there's no recurrence to wait for).
+   */
+  @OnEvent('contract.shortlet.created')
+  async handleShortletContractCreated(contract: Contract) {
+    const newRent = this.rentRepository.create({
+      contractId: contract.id,
+      amount: contract.rentAmount,
+      totalAmount: contract.rentAmount,
+      status: RentStatusEnum.PENDING,
+      startDate: contract.startDate,
+      endDate: contract.endDate!,
+      dueDate: contract.startDate,
     });
+    await this.rentRepository.save(newRent);
+  }
+
+  async createRent(createRentDto: CreateRentDto, user: User) {
+    const [lease] = await this.contractService.queryContract({
+      contractId: createRentDto.contractId,
+    });
+    if (!lease) {
+      throw new NotFoundException('Contract not found');
+    }
+    if (lease.type !== ContractTypeEnum.LEASE) {
+      throw new BadRequestException(
+        'Rent is not applicable to shortlet contracts',
+      );
+    }
     if (lease?.unit?.property) {
       await this.propertyAccessService.assertProperty(
         user,
@@ -156,7 +186,7 @@ export class RentService {
     }
     const activeRent = await this.rentRepository.findOne({
       where: {
-        leaseId: lease.id,
+        contractId: lease.id,
         endDate: MoreThanOrEqual(new Date()),
       },
     });
@@ -166,7 +196,7 @@ export class RentService {
     }
 
     const newRent = this.rentRepository.create({
-      leaseId: lease.id,
+      contractId: lease.id,
       amount: lease.rentAmount,
       totalAmount: createRentDto.amount || lease.rentAmount,
       status: RentStatusEnum.PENDING,
@@ -182,9 +212,10 @@ export class RentService {
     const rent = await this.rentRepository.findOne({
       where: { id },
       relations: {
-        lease: {
+        contract: {
           unit: { property: true },
           tenant: true,
+          guest: true,
         },
       },
       relationLoadStrategy: 'query',
@@ -200,20 +231,22 @@ export class RentService {
     return rents;
   }
 
-  async getRentsByLeaseId(leaseId: string, user: User) {
-    const [lease] = await this.tenantService.queryLease({ leaseId });
-    if (lease?.unit?.property) {
+  async getRentsByContractId(contractId: string, user: User) {
+    const [contract] = await this.contractService.queryContract({
+      contractId,
+    });
+    if (contract?.unit?.property) {
       await this.propertyAccessService.assertProperty(
         user,
-        lease.unit.property.id,
+        contract.unit.property.id,
       );
     }
     const rents = await this.rentRepository.find({
       where: {
-        leaseId,
+        contractId,
       },
       relations: {
-        lease: true,
+        contract: true,
         payments: true,
       },
     });
@@ -222,10 +255,10 @@ export class RentService {
 
   async handleRentPayment(id: string, user?: User) {
     const rent = await this.findOne(id);
-    if (user && rent.lease?.unit?.property) {
+    if (user && rent.contract?.unit?.property) {
       await this.propertyAccessService.assertProperty(
         user,
-        rent.lease.unit.property.id,
+        rent.contract.unit.property.id,
       );
     }
     rent.status = RentStatusEnum.PAID;

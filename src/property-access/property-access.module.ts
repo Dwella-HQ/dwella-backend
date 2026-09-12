@@ -5,7 +5,7 @@ import { Property } from 'src/property/entities/property.entity';
 import { Unit } from 'src/property/entities/unit.entity';
 import { PropertyManager } from 'src/property-manager/entities/property-manager.entity';
 import { Security } from 'src/security/entities/security-property.entity';
-import { Lease } from 'src/tenant/entities/lease.entity';
+import { Contract } from 'src/contract/entities/contract.entity';
 import { PropertyAccessGuard } from './property-access.guard';
 import { PropertyAccessService } from './property-access.service';
 
@@ -15,7 +15,7 @@ import { PropertyAccessService } from './property-access.service';
     TypeOrmModule.forFeature([
       Property,
       Unit,
-      Lease,
+      Contract,
       PropertyManager,
       Security,
       Landlord,

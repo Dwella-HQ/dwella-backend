@@ -13,7 +13,7 @@ import {
 } from 'typeorm';
 import { Property } from './property.entity';
 // import { ColumnNumericTransformer } from 'src/utils/misc';
-import { Lease } from 'src/tenant/entities/lease.entity';
+import { Contract } from 'src/contract/entities/contract.entity';
 import { Tenant } from 'src/tenant/entities/tenant.entity';
 import { File } from 'src/file/entities/file.entity';
 import { ServiceApartmentOffering } from './service-apartment-offering.entity';
@@ -54,8 +54,8 @@ export class Unit extends BaseEntity {
   @Column({ type: 'simple-array', nullable: true })
   amenities!: string[];
 
-  @OneToMany(() => Lease, (lease) => lease.unit)
-  leases?: Relation<Lease>[];
+  @OneToMany(() => Contract, (contract) => contract.unit)
+  contracts?: Relation<Contract>[];
 
   @JoinColumn()
   @OneToOne(() => Tenant, (tenant) => tenant.currentUnit)

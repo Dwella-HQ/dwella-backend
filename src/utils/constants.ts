@@ -123,6 +123,11 @@ export enum PERMISSIONS {
 
   // Access codes
   MANAGE_ACCESS_CODES = 'manage_access_codes',
+
+  // Contracts
+  CREATE_CONTRACT = 'create_contract',
+  UPDATE_CONTRACT = 'update_contract',
+  DELETE_CONTRACT = 'delete_contract',
 }
 
 export enum RegistrationTypeEnum {
@@ -348,6 +353,20 @@ export enum RentFrequencyEnum {
   MONTHLY = 'monthly',
   QUARTERLY = 'quarterly',
   YEARLY = 'yearly',
+  ONE_TIME = 'one_time',
+}
+
+export enum ContractTypeEnum {
+  LEASE = 'lease',
+  SHORTLET = 'shortlet',
+}
+
+export enum ContractStatusEnum {
+  DRAFT = 'draft',
+  ACTIVE = 'active',
+  EXPIRED = 'expired',
+  TERMINATED = 'terminated',
+  CANCELLED = 'cancelled',
 }
 
 export enum ServiceChargeFrequencyEnum {

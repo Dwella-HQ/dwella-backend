@@ -50,6 +50,9 @@ export class PropertyAccessGuard implements CanActivate {
       case 'landlord':
         await this.propertyAccessService.assertLandlord(user, id);
         break;
+      case 'contract':
+        await this.propertyAccessService.assertContract(user, id);
+        break;
       default:
         await this.propertyAccessService.assertProperty(user, id);
     }

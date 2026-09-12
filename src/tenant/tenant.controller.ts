@@ -127,7 +127,6 @@ export class TenantController {
     @Param('id') id: string,
     @Body() updateTenantDto: UpdateTenantDto,
   ) {
-    // eslint-disable-next-line @typescript-eslint/await-thenable
     const data = await this.tenantService.update(id, updateTenantDto);
     return {
       success: true,

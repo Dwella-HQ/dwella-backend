@@ -9,7 +9,7 @@ import { JOB_NAMES } from 'src/utils/constants';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { RentWorker } from './rent.worker';
 import { PropertyModule } from 'src/property/property.module';
-import { TenantModule } from 'src/tenant/tenant.module';
+import { ContractModule } from 'src/contract/contract.module';
 
 @Module({
   imports: [
@@ -21,7 +21,7 @@ import { TenantModule } from 'src/tenant/tenant.module';
       name: JOB_NAMES.RENT_MANAGEMENT_JOB,
       adapter: BullMQAdapter,
     }),
-    TenantModule,
+    ContractModule,
     PropertyModule,
   ],
   controllers: [RentController],

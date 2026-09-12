@@ -204,8 +204,8 @@ export class WalletService {
     return wallet.save();
   }
 
-  async findWalletForLease(
-    leaseId: string,
+  async findWalletForContract(
+    contractId: string,
     currency: CurrenciesEnum = CurrenciesEnum.NGN,
   ) {
     const wallet = await this.walletRepository.findOne({
@@ -213,8 +213,8 @@ export class WalletService {
         landlord: {
           properties: {
             units: {
-              leases: {
-                id: leaseId,
+              contracts: {
+                id: contractId,
               },
             },
           },
@@ -224,7 +224,7 @@ export class WalletService {
       relationLoadStrategy: 'query',
     });
     if (!wallet) {
-      throw new NotFoundException('Wallet not found for lease');
+      throw new NotFoundException('Wallet not found for contract');
     }
     return wallet;
   }

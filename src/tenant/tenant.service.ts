@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   BadRequestException,
   Injectable,
@@ -7,7 +6,6 @@ import {
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Lease } from './entities/lease.entity';
 import { Tenant } from './entities/tenant.entity';
 import { LessThan, MoreThan, Repository } from 'typeorm';
 import { UserService } from 'src/user/user.service';
@@ -22,11 +20,11 @@ import { EnvironmentVariables } from 'src/config/env.config';
 import { ConfigService } from '@nestjs/config';
 import { addDays } from 'date-fns';
 import { generateRandomString } from 'src/utils/misc';
-import { QueryLeaseDto } from './dto/query-lease.dto';
 import { OnEvent } from '@nestjs/event-emitter';
 import { User } from 'src/user/entities/user.entity';
 import { QueryInviteDto } from './dto/query-invite.dto';
 import { PropertyAccessService } from 'src/property-access/property-access.service';
+import { ContractService } from 'src/contract/contract.service';
 
 @Injectable()
 export class TenantService {
@@ -35,14 +33,13 @@ export class TenantService {
     private readonly tenantRepository: Repository<Tenant>,
     @InjectRepository(TenantInvite)
     private readonly tenantInviteRepository: Repository<TenantInvite>,
-    @InjectRepository(Lease)
-    private readonly leaseRepository: Repository<Lease>,
     private readonly userService: UserService,
     private readonly propertyService: PropertyService,
     private readonly fileService: FileService,
     private readonly emailService: EmailService,
     private readonly configService: ConfigService<EnvironmentVariables>,
     private readonly propertyAccessService: PropertyAccessService,
+    private readonly contractService: ContractService,
   ) {}
 
   async create(createTenantDto: CreateTenantDto, requester?: User) {
@@ -57,26 +54,8 @@ export class TenantService {
       throw new BadRequestException('Unit is already occupied by a tenant');
     }
     const user = await this.userService.findOne(createTenantDto.userId);
-    const lease = this.leaseRepository.create({
-      unit,
-      startDate: createTenantDto.leaseStartDate,
-      endDate: createTenantDto.leaseEndDate,
-      rentFrequency: createTenantDto.rentFrequency,
-      rentAmount: createTenantDto.rentAmount,
-      securityDeposit: createTenantDto.securityDeposit,
-      serviceCharge: createTenantDto.serviceCharge,
-      serviceChargeFrequency: createTenantDto.serviceChargeFrequency,
-    });
-    if (createTenantDto.leaseDocumentId) {
-      const document = await this.fileService.findFileById(
-        createTenantDto.leaseDocumentId,
-      );
-      lease.document = document;
-    }
-    const savedLease = await this.leaseRepository.save(lease);
     const tenant = this.tenantRepository.create({
       user,
-      leases: [savedLease],
       currentUnit: unit,
       employerContact: createTenantDto.employerContact,
       employerName: createTenantDto.employerName,
@@ -91,7 +70,20 @@ export class TenantService {
       );
       tenant.idDocument = idDocument;
     }
-    return await this.tenantRepository.save(tenant);
+    const savedTenant = await this.tenantRepository.save(tenant);
+    await this.contractService.saveLeaseContract({
+      tenant: savedTenant,
+      unit,
+      startDate: createTenantDto.leaseStartDate,
+      endDate: createTenantDto.leaseEndDate,
+      rentFrequency: createTenantDto.rentFrequency,
+      rentAmount: createTenantDto.rentAmount,
+      securityDeposit: createTenantDto.securityDeposit,
+      serviceCharge: createTenantDto.serviceCharge,
+      serviceChargeFrequency: createTenantDto.serviceChargeFrequency,
+      documentId: createTenantDto.leaseDocumentId,
+    });
+    return savedTenant;
   }
 
   @OnEvent('tenant.created')
@@ -109,7 +101,7 @@ export class TenantService {
       return [];
     }
     const tenants = await this.tenantRepository.find({
-      relations: ['user', 'leases', 'currentUnit', 'currentUnit.property'],
+      relations: ['user', 'contracts', 'currentUnit', 'currentUnit.property'],
       order: { createdAt: 'DESC' },
       take: limit + 1,
       skip: cursor ? 1 : 0,
@@ -129,7 +121,7 @@ export class TenantService {
       where: { id },
       relations: {
         user: true,
-        leases: true,
+        contracts: true,
         currentUnit: true,
       },
     });
@@ -146,7 +138,7 @@ export class TenantService {
       },
       relations: {
         user: true,
-        leases: true,
+        contracts: true,
         currentUnit: true,
       },
     });
@@ -161,7 +153,7 @@ export class TenantService {
       where: { user: { id: userId } },
       relations: {
         user: true,
-        leases: true,
+        contracts: true,
         currentUnit: true,
       },
     });
@@ -179,7 +171,7 @@ export class TenantService {
       where: { currentUnit: { id: unitId } },
       relations: {
         user: true,
-        leases: true,
+        contracts: true,
         currentUnit: true,
       },
     });
@@ -191,7 +183,7 @@ export class TenantService {
       where: { currentUnit: { property: { id: propertyId } } },
       relations: {
         user: true,
-        leases: true,
+        contracts: true,
         currentUnit: true,
       },
     });
@@ -203,15 +195,33 @@ export class TenantService {
       where: { currentUnit: { property: { landlord: { id: landlordId } } } },
       relations: {
         user: true,
-        leases: true,
+        contracts: true,
         currentUnit: true,
       },
     });
     return tenants;
   }
 
-  update(id: string, updateTenantDto: UpdateTenantDto) {
-    return `This action updates a #${id} tenant`;
+  /**
+   * Patches tenant-identity fields only. Lease terms/pricing are contract
+   * fields now — update those via `PATCH /contract/:id`.
+   */
+  async update(id: string, updateTenantDto: UpdateTenantDto) {
+    const tenant = await this.findOne(id);
+    tenant.idType = updateTenantDto.idType ?? tenant.idType;
+    tenant.idNumber = updateTenantDto.idNumber ?? tenant.idNumber;
+    tenant.isEmployed = updateTenantDto.isEmployed ?? tenant.isEmployed;
+    tenant.employerName = updateTenantDto.employerName ?? tenant.employerName;
+    tenant.employerContact =
+      updateTenantDto.employerContact ?? tenant.employerContact;
+    tenant.nextOfKinDetails =
+      updateTenantDto.nextOfKinDetails ?? tenant.nextOfKinDetails;
+    if (updateTenantDto.idDocumentId) {
+      tenant.idDocument = await this.fileService.findFileById(
+        updateTenantDto.idDocumentId,
+      );
+    }
+    return this.tenantRepository.save(tenant);
   }
 
   async remove(id: string) {
@@ -353,22 +363,19 @@ export class TenantService {
           id: invite.idDocumentId,
         },
       });
-      const lease = this.leaseRepository.create({
-        tenant,
-        unit: invite.unit,
-        startDate: invite.leaseStartDate,
-        endDate: invite.leaseEndDate,
-        rentFrequency: invite.rentFrequency,
-        rentAmount: invite.rentAmount,
-        securityDeposit: invite.securityDeposit,
-        serviceCharge: invite.serviceCharge,
-        serviceChargeFrequency: invite.serviceChargeFrequency,
-        document: {
-          id: invite.documentId,
-        },
-      });
       await Promise.all([
-        this.leaseRepository.save(lease),
+        this.contractService.saveLeaseContract({
+          tenant,
+          unit: invite.unit,
+          startDate: invite.leaseStartDate,
+          endDate: invite.leaseEndDate,
+          rentFrequency: invite.rentFrequency,
+          rentAmount: invite.rentAmount,
+          securityDeposit: invite.securityDeposit,
+          serviceCharge: invite.serviceCharge,
+          serviceChargeFrequency: invite.serviceChargeFrequency,
+          documentId: invite.documentId,
+        }),
         this.tenantInviteRepository.save(invite),
       ]);
 
@@ -390,22 +397,19 @@ export class TenantService {
       nextOfKinDetails: invite.nextOfKinDetails,
     });
 
-    const lease = this.leaseRepository.create({
-      unit: invite.unit,
-      tenant,
-      startDate: invite.leaseStartDate,
-      endDate: invite.leaseEndDate,
-      rentFrequency: invite.rentFrequency,
-      rentAmount: invite.rentAmount,
-      securityDeposit: invite.securityDeposit,
-      serviceCharge: invite.serviceCharge,
-      serviceChargeFrequency: invite.serviceChargeFrequency,
-      document: {
-        id: invite.documentId,
-      },
-    });
     await Promise.all([
-      this.leaseRepository.save(lease),
+      this.contractService.saveLeaseContract({
+        tenant,
+        unit: invite.unit,
+        startDate: invite.leaseStartDate,
+        endDate: invite.leaseEndDate,
+        rentFrequency: invite.rentFrequency,
+        rentAmount: invite.rentAmount,
+        securityDeposit: invite.securityDeposit,
+        serviceCharge: invite.serviceCharge,
+        serviceChargeFrequency: invite.serviceChargeFrequency,
+        documentId: invite.documentId,
+      }),
       user.save(),
       this.tenantInviteRepository.save(invite),
     ]);
@@ -463,44 +467,6 @@ export class TenantService {
     if (query.status) {
       queryBuilder.andWhere('invite.status = :status', {
         status: query.status,
-      });
-    }
-    return queryBuilder.getMany();
-  }
-
-  async queryLease(queryLeaseDto: QueryLeaseDto) {
-    const queryBuilder = this.leaseRepository.createQueryBuilder('lease');
-    queryBuilder.leftJoinAndSelect('lease.tenant', 'tenant');
-    queryBuilder.leftJoinAndSelect('lease.unit', 'unit');
-    queryBuilder.leftJoinAndSelect('unit.property', 'property');
-    if (queryLeaseDto.tenantId) {
-      queryBuilder.andWhere('lease.tenantId = :tenantId', {
-        tenantId: queryLeaseDto.tenantId,
-      });
-    }
-    if (queryLeaseDto.propertyId) {
-      queryBuilder.andWhere('unit.propertyId = :propertyId', {
-        propertyId: queryLeaseDto.propertyId,
-      });
-    }
-    if (queryLeaseDto.leaseId) {
-      queryBuilder.andWhere('lease.id = :leaseId', {
-        leaseId: queryLeaseDto.leaseId,
-      });
-    }
-    if (queryLeaseDto.active !== undefined) {
-      queryBuilder.andWhere('lease.isActive = :active', {
-        active: queryLeaseDto.active,
-      });
-    }
-    if (queryLeaseDto.startDate) {
-      queryBuilder.andWhere('lease.startDate >= :startDate', {
-        startDate: queryLeaseDto.startDate,
-      });
-    }
-    if (queryLeaseDto.endDate) {
-      queryBuilder.andWhere('lease.endDate <= :endDate', {
-        endDate: queryLeaseDto.endDate,
       });
     }
     return queryBuilder.getMany();

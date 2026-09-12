@@ -1,5 +1,5 @@
 import { RentPayment } from 'src/rent-payment/entities/rent-payment.entity';
-import { Lease } from 'src/tenant/entities/lease.entity';
+import { Contract } from 'src/contract/entities/contract.entity';
 import { CurrenciesEnum, RentStatusEnum } from 'src/utils/constants';
 import { ColumnNumericTransformer } from 'src/utils/misc';
 import {
@@ -20,12 +20,12 @@ export class Rent extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @JoinColumn({ name: 'leaseId' })
-  @ManyToOne(() => Lease, (lease) => lease.rents)
-  lease: Relation<Lease>;
+  @JoinColumn({ name: 'contractId' })
+  @ManyToOne(() => Contract, (contract) => contract.rents)
+  contract: Relation<Contract>;
 
   @Column()
-  leaseId: string;
+  contractId: string;
 
   @Column('decimal', {
     precision: 10,

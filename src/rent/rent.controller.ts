@@ -25,12 +25,12 @@ import { User } from 'src/user/entities/user.entity';
 export class RentController {
   constructor(private readonly rentService: RentService) {}
 
-  @Get('lease/:leaseId')
-  async getRentsByLease(
-    @Param('leaseId') leaseId: string,
+  @Get('contract/:contractId')
+  async getRentsByContract(
+    @Param('contractId') contractId: string,
     @CurrentUser() user: User,
   ) {
-    const data = await this.rentService.getRentsByLeaseId(leaseId, user);
+    const data = await this.rentService.getRentsByContractId(contractId, user);
     return {
       success: true,
       message: 'Rents fetched successfully',

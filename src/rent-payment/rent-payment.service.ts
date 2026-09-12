@@ -59,7 +59,9 @@ export class RentPaymentService {
     if (rent.status === RentStatusEnum.PAID) {
       throw new BadRequestException('Rent is already paid');
     }
-    const wallet = await this.walletService.findWalletForLease(rent.lease.id);
+    const wallet = await this.walletService.findWalletForContract(
+      rent.contract.id,
+    );
     const rentPayment = this.rentPaymentRepository.create({
       wallet: wallet,
       rent: rent,
@@ -67,7 +69,7 @@ export class RentPaymentService {
       lateFee: rent.lateFee,
       amount: rent.amount,
       currency: wallet.currency,
-      narration: `Rent payment for ${rent.lease.unit!.name} from ${format(rent.startDate, 'do MMMM yyyy')} to ${format(rent.endDate, 'do MMMM yyyy')}`,
+      narration: `Rent payment for ${rent.contract.unit!.name} from ${format(rent.startDate, 'do MMMM yyyy')} to ${format(rent.endDate, 'do MMMM yyyy')}`,
       indempotencyKey: idempotencyKey,
     });
     const transaction = await this.transactionService.createCredit({
@@ -76,8 +78,9 @@ export class RentPaymentService {
       narration: rentPayment.narration,
       action: TransactionActionEnum.RENT_PAYMENT,
       senderDetails: {
-        fullName: rent.lease.tenant!.user.fullName,
-        email: rent.lease.tenant!.user.email,
+        fullName:
+          rent.contract.tenant?.user.fullName ?? rent.contract.guest!.fullName,
+        email: rent.contract.tenant?.user.email ?? rent.contract.guest!.email!,
       },
       walletId: wallet.id,
     });

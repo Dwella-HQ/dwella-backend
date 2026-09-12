@@ -10,7 +10,7 @@ import {
   Relation,
   UpdateDateColumn,
 } from 'typeorm';
-import { Lease } from './lease.entity';
+import { Contract } from 'src/contract/entities/contract.entity';
 import { Unit } from 'src/property/entities/unit.entity';
 import { File } from 'src/file/entities/file.entity';
 import { NextOfKinDetails } from 'src/utils/shared.dto';
@@ -27,8 +27,8 @@ export class Tenant {
   @OneToOne(() => User, (user) => user.tenant, { eager: true })
   user: Relation<User>;
 
-  @OneToMany(() => Lease, (lease) => lease.tenant)
-  leases: Relation<Lease>[];
+  @OneToMany(() => Contract, (contract) => contract.tenant)
+  contracts: Relation<Contract>[];
 
   @OneToOne(() => Unit, (unit) => unit.tenant, { nullable: false })
   currentUnit: Relation<Unit>;
